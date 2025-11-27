@@ -1,864 +1,199 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DedSec OS v2.0</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
-        
-        * {
-            font-family: 'Share Tech Mono', monospace;
-            user-select: none;
-            -webkit-user-select: none;
-        }
-
-        body {
-            background: #000;
-            overflow: hidden;
-            position: relative;
-        }
-
-        /* Glitch Effect */
-        @keyframes glitch {
-            0% { transform: translate(0); filter: hue-rotate(0deg); }
-            20% { transform: translate(-2px, 2px); filter: hue-rotate(90deg); }
-            40% { transform: translate(-2px, -2px); filter: hue-rotate(180deg); }
-            60% { transform: translate(2px, 2px); filter: hue-rotate(270deg); }
-            80% { transform: translate(2px, -2px); filter: hue-rotate(360deg); }
-            100% { transform: translate(0); filter: hue-rotate(0deg); }
-        }
-
-        @keyframes glitchText {
-            0%, 100% { 
-                text-shadow: 
-                    0.02em 0 0 #00ffff,
-                    -0.02em -0 0 #ff00ff,
-                    0.025em 0.05em 0 #ffff00;
-            }
-            25% {
-                text-shadow: 
-                    0.025em 0.05em 0 #00ffff,
-                    -0.05em -0.025em 0 #ff00ff,
-                    0.02em 0 0 #ffff00;
-            }
-            50% {
-                text-shadow: 
-                    -0.05em -0.025em 0 #00ffff,
-                    0.025em 0.025em 0 #ff00ff,
-                    -0.05em -0.05em 0 #ffff00;
-            }
-        }
-
-        @keyframes scanline {
-            0% { transform: translateY(-100%); }
-            100% { transform: translateY(100vh); }
-        }
-
-        @keyframes noise {
-            0%, 100% { opacity: 0; }
-            10% { opacity: 0.1; }
-            50% { opacity: 0.5; }
-            60% { opacity: 0.2; }
-            90% { opacity: 0.3; }
-        }
-
-        .glitch {
-            animation: glitch 0.3s infinite;
-        }
-
-        .glitch-text {
-            animation: glitchText 2s infinite;
-        }
-
-        .scanline {
-            position: fixed;
-            width: 100%;
-            height: 2px;
-            background: linear-gradient(to bottom, transparent, #00ff00, transparent);
-            animation: scanline 8s linear infinite;
-            pointer-events: none;
-            z-index: 9999;
-            opacity: 0.5;
-        }
-
-        .noise {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIj48ZmlsdGVyIGlkPSJmIj48ZmVUdXJidWxlbmNlIHR5cGU9ImZyYWN0YWxOb2lzZSIgYmFzZUZyZXF1ZW5jeT0iOSIgbnVtT2N0YXZlcz0iNCIgc2VlZD0iNSIvPjwvZmlsdGVyPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbHRlcj0idXJsKCNmKSIgb3BhY2l0eT0iMC4wMyIvPjwvc3ZnPg==');
-            animation: noise 0.5s steps(10) infinite;
-            pointer-events: none;
-            z-index: 9998;
-        }
-
-        .neon-border {
-            border: 2px solid #00ff00;
-            box-shadow: 
-                0 0 10px #00ff00,
-                inset 0 0 10px rgba(0, 255, 0, 0.2);
-        }
-
-        .app-icon {
-            width: 60px;
-            height: 60px;
-            background: linear-gradient(135deg, #0a0a0a, #1a1a1a);
-            border: 1px solid #00ff00;
-            border-radius: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.3s;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .app-icon:hover {
-            transform: scale(1.1);
-            box-shadow: 0 0 20px #00ff00;
-        }
-
-        .app-icon:active {
-            transform: scale(0.95);
-        }
-
-        .app-window {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, rgba(0,0,0,0.95), rgba(10,10,10,0.98));
-            z-index: 1000;
-            display: none;
-            flex-direction: column;
-        }
-
-        .app-window.active {
-            display: flex;
-        }
-
-        .app-header {
-            background: linear-gradient(90deg, #00ff00, #00ffff);
-            padding: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 2px solid #00ff00;
-        }
-
-        .close-btn {
-            width: 30px;
-            height: 30px;
-            background: #ff0000;
-            border: 2px solid #fff;
-            border-radius: 50%;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-        }
-
-        .close-btn:hover {
-            background: #ff3333;
-            transform: scale(1.1);
-        }
-
-        .cyber-button {
-            background: linear-gradient(135deg, #00ff00, #00ffff);
-            color: #000;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-            text-transform: uppercase;
-            transition: all 0.3s;
-            margin: 5px;
-        }
-
-        .cyber-button:hover {
-            box-shadow: 0 0 20px #00ff00;
-            transform: translateY(-2px);
-        }
-
-        .cyber-button:active {
-            transform: translateY(0);
-        }
-
-        .ascii-skull {
-            color: #00ff00;
-            font-size: 10px;
-            line-height: 1;
-            white-space: pre;
-            text-align: center;
-        }
-
-        video {
-            width: 100%;
-            height: auto;
-            max-height: 50vh;
-            background: #000;
-        }
-
-        .data-overlay {
-            position: absolute;
-            background: rgba(0, 255, 0, 0.1);
-            border: 2px solid #00ff00;
-            padding: 10px;
-            color: #00ff00;
-            font-size: 12px;
-            backdrop-filter: blur(5px);
-            animation: glitch 0.5s infinite;
-        }
-
-        .loading-bar {
-            width: 100%;
-            height: 20px;
-            background: #111;
-            border: 1px solid #00ff00;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .loading-progress {
-            height: 100%;
-            background: linear-gradient(90deg, #00ff00, #00ffff);
-            animation: loading 2s ease-in-out;
-        }
-
-        @keyframes loading {
-            0% { width: 0%; }
-            100% { width: 100%; }
-        }
-
-        .upgrade-tree {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 20px;
-            padding: 20px;
-        }
-
-        .upgrade-item {
-            background: rgba(0, 255, 0, 0.1);
-            border: 2px solid #00ff00;
-            padding: 15px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .upgrade-item:hover {
-            background: rgba(0, 255, 0, 0.3);
-            transform: scale(1.05);
-        }
-
-        .fake-app {
-            background: rgba(0, 255, 255, 0.1);
-            border: 1px solid #00ffff;
-            padding: 10px;
-            margin: 10px;
-            cursor: pointer;
-        }
-
-        .fake-app:hover {
-            background: rgba(0, 255, 255, 0.2);
-        }
-    </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>DedSec Phone — Pixel UI</title>
+<style>
+:root{
+  --bg:#000;
+  --pink:#ff22c8;
+  --neon:#00ffcc;
+  --muted:#9aa0a6;
+  --panel: rgba(255,255,255,0.03);
+  --mono: 'Courier New', monospace;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;font-family:var(--mono);background:var(--bg);color:#e6e6e6}
+.container{max-width:420px;margin:6px auto;border-radius:14px;overflow:hidden;background:linear-gradient(180deg,#050505,#0a0a0a);box-shadow:0 20px 50px rgba(0,0,0,.8)}
+.screen{padding:12px;min-height:780px;position:relative}
+/* Wallpaper: recreate skull mosaic + big logo */
+.wallpaper{position:absolute;inset:0;background-color:#000;background-image:
+  radial-gradient(circle at 10% 8%, rgba(255,255,255,0.02) 0 2px, transparent 2px 6px),
+  repeating-linear-gradient(0deg, rgba(255,255,255,0.01) 0 1px, transparent 1px 3px);
+  z-index:0;}
+.wallpaper::before{content:'';position:absolute;inset:60px 18px 120px 18px;background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="800" height="800"><g fill="none" stroke="%23000" stroke-width="10"></g><text x="50" y="300" font-family="monospace" font-size="120" fill="%23FFFFFF" opacity="0.06">DEDSEC</text></svg>');background-position:center;background-repeat:no-repeat;background-size:cover;opacity:.28}
+.topbar{position:relative;z-index:2;display:flex;align-items:center;gap:10px}
+.xpbar{flex:1;height:18px;background:#111;border-radius:6px;padding:2px;display:flex;align-items:center;gap:8px}
+.xpinner{height:12px;background:linear-gradient(90deg,var(--pink),#9b00ff);border-radius:6px;flex:1;position:relative;overflow:hidden}
+.xp-label{font-size:12px;padding-left:8px;color:#fff;font-weight:700}
+.stats{margin-left:10px;font-size:12px;color:var(--muted)}
+.header-row{display:flex;align-items:center;justify-content:space-between;margin:10px 0}
+/* Grid */
+.apps{position:relative;z-index:2;display:grid;grid-template-columns:repeat(4,1fr);gap:14px;padding:18px}
+.app{display:flex;flex-direction:column;align-items:center;text-align:center;font-size:12px}
+.icon{width:68px;height:68px;border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,0.04);box-shadow:0 6px 14px rgba(0,0,0,0.8)}
+.icon img{width:56px;height:56px;display:block}
+.label{margin-top:8px;max-width:74px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* bottom dock */
+.dock{display:flex;gap:18px;justify-content:space-around;padding:10px 24px;position:relative;z-index:2}
+.dock .icon{width:68px;height:68px}
+/* modal app window */
+.modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:linear-gradient(180deg,rgba(0,0,0,0.45),rgba(0,0,0,0.7));z-index:80}
+.modal.open{display:flex}
+.card{width:95%;max-width:420px;height:86vh;background:linear-gradient(180deg,#070707,#0f0f0f);border-radius:12px;padding:12px;overflow:hidden;border:1px solid rgba(255,255,255,0.04)}
+.card header{display:flex;align-items:center;justify-content:space-between}
+.btn{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:8px 10px;border-radius:8px;color:#ddd;cursor:pointer}
+.cam-wrap{margin-top:10px}
+video{width:100%;height:auto;border-radius:8px;background:#000}
+.log{margin-top:10px;padding:8px;background:rgba(255,255,255,0.02);border-radius:8px;max-height:28vh;overflow:auto}
+.small{font-size:12px;color:var(--muted)}
+/* XP skull badges */
+.skulls{display:flex;gap:6px;align-items:center}
+.skull{width:22px;height:22px;border-radius:50%;background:#fff;color:#000;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:12px}
+/* responsive tweaks */
+@media (max-width:420px){.apps{gap:10px;padding:12px}}
+</style>
 </head>
-<body class="bg-black text-green-400 min-h-screen">
-    <div class="scanline"></div>
-    <div class="noise"></div>
-    
-    <!-- Phone Frame -->
-    <div class="min-h-screen flex flex-col relative">
-        <!-- Status Bar -->
-        <div class="bg-black border-b border-green-400 p-2 flex justify-between items-center">
-            <span class="text-xs glitch-text">DedSec OS v2.0</span>
-            <span class="text-xs" id="time">00:00</span>
-            <span class="text-xs">⚡ 100%</span>
-        </div>
-        
-        <!-- Home Screen -->
-        <div id="homeScreen" class="flex-1 p-4">
-            <div class="grid grid-cols-3 gap-4">
-                <!-- DedSec App -->
-                <div class="flex flex-col items-center" onclick="openApp('dedsec')">
-                    <div class="app-icon">
-                        <span class="text-2xl">💀</span>
-                    </div>
-                    <span class="text-xs mt-1">DedSec</span>
-                </div>
-                
-                <!-- Profiler -->
-                <div class="flex flex-col items-center" onclick="openApp('profiler')">
-                    <div class="app-icon">
-                        <span class="text-2xl">👁</span>
-                    </div>
-                    <span class="text-xs mt-1">Profiler</span>
-                </div>
-                
-                <!-- Car Controller -->
-                <div class="flex flex-col items-center" onclick="openApp('car')">
-                    <div class="app-icon">
-                        <span class="text-2xl">🚗</span>
-                    </div>
-                    <span class="text-xs mt-1">CarCtrl</span>
-                </div>
-                
-                <!-- Traffic Light -->
-                <div class="flex flex-col items-center" onclick="openApp('traffic')">
-                    <div class="app-icon">
-                        <span class="text-2xl">🚦</span>
-                    </div>
-                    <span class="text-xs mt-1">Traffic</span>
-                </div>
-                
-                <!-- Research -->
-                <div class="flex flex-col items-center" onclick="openApp('research')">
-                    <div class="app-icon">
-                        <span class="text-2xl">🔬</span>
-                    </div>
-                    <span class="text-xs mt-1">Research</span>
-                </div>
-                
-                <!-- Media Player -->
-                <div class="flex flex-col items-center" onclick="openApp('media')">
-                    <div class="app-icon">
-                        <span class="text-2xl">🎵</span>
-                    </div>
-                    <span class="text-xs mt-1">Media</span>
-                </div>
-                
-                <!-- Know-It-All -->
-                <div class="flex flex-col items-center" onclick="openApp('wiki')">
-                    <div class="app-icon">
-                        <span class="text-2xl">📚</span>
-                    </div>
-                    <span class="text-xs mt-1">Know-It</span>
-                </div>
-                
-                <!-- App Shop -->
-                <div class="flex flex-col items-center" onclick="openApp('shop')">
-                    <div class="app-icon">
-                        <span class="text-2xl">🛒</span>
-                    </div>
-                    <span class="text-xs mt-1">AppShop</span>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- App Windows -->
-    
-    <!-- DedSec App -->
-    <div id="dedsec-app" class="app-window">
-        <div class="app-header">
-            <h2 class="text-black font-bold">DedSec Hub</h2>
-            <div class="close-btn" onclick="closeApp('dedsec-app')">×</div>
-        </div>
-        <div class="flex-1 overflow-auto p-4">
-            <div class="ascii-skull mb-4">
-     _____ 
-    /     \
-   | () () |
-    \  ^  /
-     |||||
-     |||||
-            </div>
-            <div class="bg-red-900 bg-opacity-50 border border-red-500 p-4 mb-4 glitch">
-                <h3 class="text-red-400 font-bold">⚠ SYSTEM BREACH DETECTED</h3>
-                <p class="text-xs mt-2">Multiple intrusion attempts blocked</p>
-            </div>
-            <div class="bg-green-900 bg-opacity-30 border border-green-400 p-4 mb-4">
-                <h3 class="font-bold">Recent Activity</h3>
-                <ul class="text-xs mt-2">
-                    <li>• Backdoor installed: City MainFrame</li>
-                    <li>• Data extracted: 47.3TB</li>
-                    <li>• Botnet nodes: 12,847 active</li>
-                    <li>• Current bounty: $2,450,000</li>
-                </ul>
-            </div>
-            <div class="grid grid-cols-2 gap-2">
-                <button class="cyber-button" onclick="showNotification('Initiating DDoS...')">DDoS Attack</button>
-                <button class="cyber-button" onclick="showNotification('Scrambling signals...')">Signal Jam</button>
-                <button class="cyber-button" onclick="showNotification('Injecting malware...')">Inject Virus</button>
-                <button class="cyber-button" onclick="showNotification('Spoofing identity...')">ID Spoof</button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Profiler App -->
-    <div id="profiler-app" class="app-window">
-        <div class="app-header">
-            <h2 class="text-black font-bold">Profiler Scanner</h2>
-            <div class="close-btn" onclick="closeApp('profiler-app')">×</div>
-        </div>
-        <div class="flex-1 overflow-auto p-4">
-            <video id="profilerVideo" autoplay playsinline class="w-full mb-4"></video>
-            <div id="profilerData" class="hidden bg-green-900 bg-opacity-30 border border-green-400 p-4">
-                <h3 class="font-bold mb-2">Subject Profile:</h3>
-                <div id="profileInfo" class="text-xs"></div>
-            </div>
-            <button class="cyber-button w-full" onclick="startProfiler()">Activate Scanner</button>
-        </div>
-    </div>
-    
-    <!-- Car Controller App -->
-    <div id="car-app" class="app-window">
-        <div class="app-header">
-            <h2 class="text-black font-bold">Vehicle Control</h2>
-            <div class="close-btn" onclick="closeApp('car-app')">×</div>
-        </div>
-        <div class="flex-1 overflow-auto p-4">
-            <video id="carVideo" autoplay playsinline class="w-full mb-4"></video>
-            <div id="carControls" class="hidden">
-                <div class="bg-cyan-900 bg-opacity-30 border border-cyan-400 p-4 mb-4">
-                    <h3 class="font-bold">Vehicle ID: <span id="carId">CAR-ID-X00000</span></h3>
-                </div>
-                <div class="grid grid-cols-2 gap-2">
-                    <button class="cyber-button" onclick="carAction('start')">🔑 Remote Start</button>
-                    <button class="cyber-button" onclick="carAction('unlock')">🔓 Unlock Doors</button>
-                    <button class="cyber-button" onclick="carAction('left')">⬅️ Turn Left</button>
-                    <button class="cyber-button" onclick="carAction('right')">➡️ Turn Right</button>
-                    <button class="cyber-button" onclick="carAction('alarm')">🚨 Trigger Alarm</button>
-                    <button class="cyber-button" onclick="carAction('shutdown')">⛔ Shutdown</button>
-                </div>
-            </div>
-            <button class="cyber-button w-full" onclick="startCarScanner()">Scan for Vehicles</button>
-        </div>
-    </div>
-    
-    <!-- Traffic Light App -->
-    <div id="traffic-app" class="app-window">
-        <div class="app-header">
-            <h2 class="text-black font-bold">Traffic Override</h2>
-            <div class="close-btn" onclick="closeApp('traffic-app')">×</div>
-        </div>
-        <div class="flex-1 overflow-auto p-4">
-            <video id="trafficVideo" autoplay playsinline class="w-full mb-4"></video>
-            <div id="trafficControls" class="hidden">
-                <div class="loading-bar mb-4">
-                    <div class="loading-progress"></div>
-                </div>
-                <div class="grid grid-cols-1 gap-2">
-                    <button class="cyber-button bg-green-500" onclick="trafficAction('green')">🟢 Force Green</button>
-                    <button class="cyber-button bg-red-500" onclick="trafficAction('red')">🔴 Force Red</button>
-                    <button class="cyber-button bg-yellow-500" onclick="trafficAction('cycle')">🔄 Cycle Sequence</button>
-                    <button class="cyber-button" onclick="trafficAction('chaos')">💥 Chaos Mode</button>
-                </div>
-            </div>
-            <button class="cyber-button w-full" onclick="startTrafficScanner()">Detect Traffic Lights</button>
-        </div>
-    </div>
-    
-    <!-- Research App -->
-    <div id="research-app" class="app-window">
-        <div class="app-header">
-            <h2 class="text-black font-bold">Research Lab</h2>
-            <div class="close-btn" onclick="closeApp('research-app')">×</div>
-        </div>
-        <div class="flex-1 overflow-auto p-4">
-            <h3 class="font-bold mb-4 text-cyan-400">Hack Upgrades</h3>
-            <div class="upgrade-tree">
-                <div class="upgrade-item" onclick="unlockUpgrade('Signal Jammer')">
-                    <div class="text-2xl mb-2">📡</div>
-                    <div class="font-bold">Signal Jammer</div>
-                    <div class="text-xs mt-2">Block all communications</div>
-                </div>
-                <div class="upgrade-item" onclick="unlockUpgrade('Network Worm')">
-                    <div class="text-2xl mb-2">🐛</div>
-                    <div class="font-bold">Network Worm</div>
-                    <div class="text-xs mt-2">Spread through systems</div>
-                </div>
-                <div class="upgrade-item" onclick="unlockUpgrade('Authority Scrambler')">
-                    <div class="text-2xl mb-2">🔀</div>
-                    <div class="font-bold">Authority Scrambler</div>
-                    <div class="text-xs mt-2">Confuse law enforcement</div>
-                </div>
-                <div class="upgrade-item" onclick="unlockUpgrade('Data Siphon')">
-                    <div class="text-2xl mb-2">💾</div>
-                    <div class="font-bold">Data Siphon</div>
-                    <div class="text-xs mt-2">Extract all information</div>
-                </div>
-                <div class="upgrade-item" onclick="unlockUpgrade('Ghost Protocol')">
-                    <div class="text-2xl mb-2">👻</div>
-                    <div class="font-bold">Ghost Protocol</div>
-                    <div class="text-xs mt-2">Become invisible</div>
-                </div>
-                <div class="upgrade-item" onclick="unlockUpgrade('Chaos Engine')">
-                    <div class="text-2xl mb-2">⚡</div>
-                    <div class="font-bold">Chaos Engine</div>
-                    <div class="text-xs mt-2">Maximum disruption</div>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Media Player App -->
-    <div id="media-app" class="app-window">
-        <div class="app-header">
-            <h2 class="text-black font-bold">Glitch Media</h2>
-            <div class="close-btn" onclick="closeApp('media-app')">×</div>
-        </div>
-        <div class="flex-1 overflow-auto p-4">
-            <div class="bg-purple-900 bg-opacity-30 border border-purple-400 p-4 mb-4">
-                <h3 class="font-bold mb-4">Cyber Tracks</h3>
-                <div class="space-y-2">
-                    <div class="p-2 bg-black bg-opacity-50 cursor-pointer hover:bg-opacity-70" onclick="playTrack('System Breach')">
-                        ▶️ System Breach - 3:42
-                    </div>
-                    <div class="p-2 bg-black bg-opacity-50 cursor-pointer hover:bg-opacity-70" onclick="playTrack('Digital Anarchy')">
-                        ▶️ Digital Anarchy - 4:15
-                    </div>
-                    <div class="p-2 bg-black bg-opacity-50 cursor-pointer hover:bg-opacity-70" onclick="playTrack('Neon Dreams')">
-                        ▶️ Neon Dreams - 5:23
-                    </div>
-                    <div class="p-2 bg-black bg-opacity-50 cursor-pointer hover:bg-opacity-70" onclick="playTrack('Hack the Planet')">
-                        ▶️ Hack the Planet - 3:58
-                    </div>
-                    <div class="p-2 bg-black bg-opacity-50 cursor-pointer hover:bg-opacity-70" onclick="playTrack('Ghost in Machine')">
-                        ▶️ Ghost in Machine - 6:01
-                    </div>
-                </div>
-            </div>
-            <div id="nowPlaying" class="hidden bg-green-900 bg-opacity-30 border border-green-400 p-4">
-                <h3 class="font-bold">Now Playing:</h3>
-                <p id="trackName" class="text-cyan-400 mt-2"></p>
-                <div class="loading-bar mt-4">
-                    <div class="loading-progress"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Know-It-All App -->
-    <div id="wiki-app" class="app-window">
-        <div class="app-header">
-            <h2 class="text-black font-bold">Know-It-All Database</h2>
-            <div class="close-btn" onclick="closeApp('wiki-app')">×</div>
-        </div>
-        <div class="flex-1 overflow-auto p-4">
-            <input type="text" id="searchQuery" placeholder="Search database..." class="w-full p-2 bg-black border border-green-400 text-green-400 mb-4">
-            <button class="cyber-button w-full mb-4" onclick="searchDatabase()">Access Data</button>
-            <div id="searchResults" class="space-y-4"></div>
-            <div class="bg-cyan-900 bg-opacity-30 border border-cyan-400 p-4">
-                <h3 class="font-bold mb-2">Random Facts:</h3>
-                <ul class="text-xs space-y-1" id="randomFacts"></ul>
-            </div>
-        </div>
-    </div>
-    
-    <!-- App Shop -->
-    <div id="shop-app" class="app-window">
-        <div class="app-header">
-            <h2 class="text-black font-bold">Underground App Shop</h2>
-            <div class="close-btn" onclick="closeApp('shop-app')">×</div>
-        </div>
-        <div class="flex-1 overflow-auto p-4">
-            <h3 class="font-bold mb-4 text-purple-400 glitch-text">Featured Apps</h3>
-            <div class="space-y-2">
-                <div class="fake-app">
-                    <h4 class="font-bold">CryptoMiner Pro</h4>
-                    <p class="text-xs">Mine cryptocurrency on any device</p>
-                    <button class="cyber-button text-xs mt-2" onclick="downloadApp('CryptoMiner Pro')">DOWNLOAD</button>
-                </div>
-                <div class="fake-app">
-                    <h4 class="font-bold">FakeID Generator</h4>
-                    <p class="text-xs">Create unlimited fake identities</p>
-                    <button class="cyber-button text-xs mt-2" onclick="downloadApp('FakeID Generator')">DOWNLOAD</button>
-                </div>
-                <div class="fake-app">
-                    <h4 class="font-bold">WiFi Destroyer</h4>
-                    <p class="text-xs">Crash any network instantly</p>
-                    <button class="cyber-button text-xs mt-2" onclick="downloadApp('WiFi Destroyer')">DOWNLOAD</button>
-                </div>
-                <div class="fake-app">
-                    <h4 class="font-bold">Bank Vault Cracker</h4>
-                    <p class="text-xs">Digital lockpicking toolkit</p>
-                    <button class="cyber-button text-xs mt-2" onclick="downloadApp('Bank Vault Cracker')">DOWNLOAD</button>
-                </div>
-                <div class="fake-app">
-                    <h4 class="font-bold">Surveillance Blocker</h4>
-                    <p class="text-xs">Become invisible to all cameras</p>
-                    <button class="cyber-button text-xs mt-2" onclick="downloadApp('Surveillance Blocker')">DOWNLOAD</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Notification System -->
-    <div id="notification" class="fixed top-20 left-1/2 transform -translate-x-1/2 bg-green-900 bg-opacity-90 border border-green-400 px-6 py-3 rounded hidden z-50">
-        <span id="notificationText"></span>
+<body>
+<div class="container">
+  <div class="screen">
+    <div class="wallpaper" aria-hidden></div>
+    <div class="topbar">
+      <div class="xpbar" style="width:74%">
+        <div class="xpinner" id="xpInner" style="width:60%"></div>
+        <div class="xp-label">8348822/10048822</div>
+      </div>
+      <div class="skulls"><div class="skull">☠</div><div class="skull">☠</div><div class="skull">☠</div></div>
+      <div class="stats">+8</div>
     </div>
 
-    <script>
-        // Time display
-        function updateTime() {
-            const now = new Date();
-            document.getElementById('time').textContent = now.toTimeString().slice(0, 5);
-        }
-        setInterval(updateTime, 1000);
-        updateTime();
+    <div class="header-row">
+      <div class="small">¥185903</div>
+      <div class="small">online • 4G • 83%</div>
+    </div>
 
-        // Random data generators
-        const firstNames = ['Alex', 'Jordan', 'Sam', 'Casey', 'Morgan', 'Taylor', 'Riley', 'Avery', 'Quinn', 'Blake'];
-        const lastNames = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis', 'Rodriguez', 'Martinez'];
-        const jobs = ['Software Engineer', 'Accountant', 'Teacher', 'Doctor', 'Lawyer', 'Artist', 'Chef', 'Pilot', 'Nurse', 'Mechanic'];
-        const crimes = ['None', 'Jaywalking', 'Parking Violation', 'Speeding', 'Tax Evasion', 'Digital Piracy', 'Conspiracy', 'Hacking'];
-        const hobbies = ['Gaming', 'Reading', 'Cooking', 'Sports', 'Music', 'Art', 'Travel', 'Photography', 'Dancing', 'Writing'];
-        const traits = ['Ambitious', 'Creative', 'Paranoid', 'Optimistic', 'Cynical', 'Friendly', 'Introverted', 'Risk-taker', 'Analytical', 'Impulsive'];
+    <div class="apps" id="homeGrid">
+      <!-- icons recreated to look like screenshot -> SVG icons embedded for style -->
+      <div class="app" data-app="maps"><div class="icon"><img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='56' height='56'><rect width='56' height='56' rx='8' fill='%23ffffff' opacity='0.12'/><path d='M8 36 L24 20 L40 28 L48 16' stroke='%2300aaff' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>"/></div><div class="label">Nudle Maps</div></div>
 
-        function randomItem(array) {
-            return array[Math.floor(Math.random() * array.length)];
-        }
+      <div class="app" data-app="dedsec"><div class="icon"><img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='56' height='56'><rect width='56' height='56' rx='8' fill='%23ffffff' opacity='0.06'/><g transform='translate(6,6)'><circle cx='22' cy='18' r='8' fill='%23000000'/><path d='M0 36 L44 36' stroke='%23fff' stroke-width='4' opacity='0.06'/></g></svg>"/></div><div class="label">DedSec App</div></div>
 
-        function randomNumber(min, max) {
-            return Math.floor(Math.random() * (max - min + 1)) + min;
-        }
+      <div class="app" data-app="research"><div class="icon"><img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='56' height='56'><rect width='56' height='56' rx='8' fill='%23000000' /><text x='7' y='34' font-family='monospace' font-size='22' fill='%23fff' opacity='0.9'>R</text></svg>"/></div><div class="label">./Research</div></div>
 
-        function generateID() {
-            return Math.random().toString(36).substring(2, 9).toUpperCase();
-        }
+      <div class="app" data-app="car"><div class="icon"><img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='56' height='56'><rect width='56' height='56' rx='8' fill='%23001111' /><path d='M6 34 q8 -12 22 -12 q14 0 22 12' stroke='%23fff' stroke-width='2' fill='%23001111' opacity='0.9' /></svg>"/></div><div class="label">Car on Demand</div></div>
 
-        // App management
-        function openApp(appName) {
-            document.getElementById(appName + '-app').classList.add('active');
-        }
+      <div class="app" data-app="shop"><div class="icon"><img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='56' height='56'><rect width='56' height='56' rx='8' fill='%231a1a1a' /><path d='M14 12 h28 v28 h-28 z' stroke='%23fff' stroke-width='2' opacity='0.06'/></svg>"/></div><div class="label">App Shop</div></div>
 
-        function closeApp(appId) {
-            document.getElementById(appId).classList.remove('active');
-            // Stop video streams when closing camera apps
-            if (appId === 'profiler-app') {
-                const video = document.getElementById('profilerVideo');
-                if (video.srcObject) {
-                    video.srcObject.getTracks().forEach(track => track.stop());
-                    video.srcObject = null;
-                }
-            }
-            if (appId === 'car-app') {
-                const video = document.getElementById('carVideo');
-                if (video.srcObject) {
-                    video.srcObject.getTracks().forEach(track => track.stop());
-                    video.srcObject = null;
-                }
-            }
-            if (appId === 'traffic-app') {
-                const video = document.getElementById('trafficVideo');
-                if (video.srcObject) {
-                    video.srcObject.getTracks().forEach(track => track.stop());
-                    video.srcObject = null;
-                }
-            }
-        }
+      <div class="app" data-app="media"><div class="icon"><img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='56' height='56'><rect width='56' height='56' rx='8' fill='%23111111' /><path d='M20 18 L36 28 L20 38 z' fill='%23ff66cc' opacity='0.9'/></svg>"/></div><div class="label">Midia Player</div></div>
 
-        // Notification system
-        function showNotification(message) {
-            const notification = document.getElementById('notification');
-            document.getElementById('notificationText').textContent = message;
-            notification.classList.remove('hidden');
-            setTimeout(() => {
-                notification.classList.add('hidden');
-            }, 3000);
-        }
+      <div class="app" data-app="driver"><div class="icon"><img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='56' height='56'><rect width='56' height='56' rx='8' fill='%23111111' /><text x='12' y='34' font-family='monospace' font-size='22' fill='%23ffd166' opacity='0.95'>D</text></svg>"/></div><div class="label">Driver SF</div></div>
 
-        // Profiler functions
-        function startProfiler() {
-            navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
-                .then(stream => {
-                    document.getElementById('profilerVideo').srcObject = stream;
-                    setTimeout(() => {
-                        generateProfile();
-                    }, 2000);
-                })
-                .catch(err => {
-                    showNotification('Camera access denied!');
-                    // Generate fake profile anyway for demo
-                    generateProfile();
-                });
-        }
+      <div class="app" data-app="scout"><div class="icon"><img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='56' height='56'><rect width='56' height='56' rx='8' fill='%23111111' /><circle cx='28' cy='28' r='10' fill='%2300ff66' opacity='0.6'/></svg>"/></div><div class="label">ScoutX</div></div>
 
-        function generateProfile() {
-            const profileData = {
-                name: `${randomItem(firstNames)} ${randomItem(lastNames)}`,
-                id: `ID-${generateID()}`,
-                job: randomItem(jobs),
-                income: `$${randomNumber(25, 250)},${randomNumber(100, 999)}`,
-                trait: randomItem(traits),
-                crime: randomItem(crimes),
-                hobby: randomItem(hobbies),
-                threat: randomNumber(1, 10)
-            };
+    </div>
 
-            document.getElementById('profileInfo').innerHTML = `
-                <p><strong>Name:</strong> ${profileData.name}</p>
-                <p><strong>ID:</strong> ${profileData.id}</p>
-                <p><strong>Occupation:</strong> ${profileData.job}</p>
-                <p><strong>Income:</strong> ${profileData.income}/year</p>
-                <p><strong>Personality:</strong> ${profileData.trait}</p>
-                <p><strong>Criminal History:</strong> ${profileData.crime}</p>
-                <p><strong>Known Hobbies:</strong> ${profileData.hobby}</p>
-                <p><strong>Threat Level:</strong> ${profileData.threat}/10</p>
-            `;
-            document.getElementById('profilerData').classList.remove('hidden');
-            showNotification('Subject identified!');
-        }
+    <div class="dock">
+      <div class="app" data-app="camera"><div class="icon"><img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='60' height='60'><rect width='60' height='60' rx='12' fill='%23111111'/><circle cx='30' cy='30' r='12' fill='%2300aaff' opacity='0.8'/></svg>"/></div><div class="label">Camera</div></div>
+      <div class="app" data-app="knowit"><div class="icon"><img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='60' height='60'><rect width='60' height='60' rx='12' fill='%23111111'/><text x='18' y='36' font-family='monospace' font-size='18' fill='%23fff'>i</text></svg>"/></div><div class="label">Know-It-All</div></div>
+      <div class="app" data-app="phone"><div class="icon"><img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='60' height='60'><rect width='60' height='60' rx='12' fill='%23111111'/><path d='M20 14 q8 12 20 0' stroke='%23fff' stroke-width='2'/></svg>"/></div><div class="label">Phone</div></div>
+      <div class="app" data-app="multi"><div class="icon"><img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='60' height='60'><rect width='60' height='60' rx='12' fill='%23111111'/><rect x='10' y='14' width='40' height='12' rx='3' fill='%23ffd166' opacity='0.9'/></svg>"/></div><div class="label">Multiplayer</div></div>
+    </div>
 
-        // Car Controller functions
-        function startCarScanner() {
-            navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
-                .then(stream => {
-                    document.getElementById('carVideo').srcObject = stream;
-                    setTimeout(() => {
-                        detectCar();
-                    }, 2000);
-                })
-                .catch(err => {
-                    showNotification('Camera access denied!');
-                    // Show controls anyway for demo
-                    detectCar();
-                });
-        }
+  </div>
+</div>
 
-        function detectCar() {
-            document.getElementById('carId').textContent = `CAR-ID-${generateID()}`;
-            document.getElementById('carControls').classList.remove('hidden');
-            showNotification('Vehicle detected! Control established.');
-        }
+<!-- Modal -->
+<div class="modal" id="modal" aria-hidden>
+  <div class="card">
+    <header>
+      <div id="appTitle" style="font-weight:900"></div>
+      <div><button class="btn" id="closeBtn">CLOSE</button></div>
+    </header>
+    <div id="appBody"></div>
+  </div>
+</div>
 
-        function carAction(action) {
-            const messages = {
-                'start': 'Engine started remotely!',
-                'unlock': 'Doors unlocked!',
-                'left': 'Steering left...',
-                'right': 'Steering right...',
-                'alarm': 'Alarm triggered!',
-                'shutdown': 'Engine shutdown initiated!'
-            };
-            showNotification(messages[action]);
-        }
+<script>
+// --- improved camera heuristics and more robust starter apps ---
+const apps = document.querySelectorAll('.app');
+const modal = document.getElementById('modal');
+const appTitle = document.getElementById('appTitle');
+const appBody = document.getElementById('appBody');
+const closeBtn = document.getElementById('closeBtn');
+let currentStream = null; let currentVideo = null; let workingCanvas=null; let wctx=null; let prevFrame=null;
 
-        // Traffic Light functions
-        function startTrafficScanner() {
-            navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
-                .then(stream => {
-                    document.getElementById('trafficVideo').srcObject = stream;
-                    setTimeout(() => {
-                        detectTrafficLight();
-                    }, 2000);
-                })
-                .catch(err => {
-                    showNotification('Camera access denied!');
-                    // Show controls anyway for demo
-                    detectTrafficLight();
-                });
-        }
+apps.forEach(a=> a.addEventListener('click', ()=> openApp(a.dataset.app)));
+closeBtn.addEventListener('click', closeApp);
 
-        function detectTrafficLight() {
-            document.getElementById('trafficControls').classList.remove('hidden');
-            showNotification('Traffic system compromised!');
-        }
+function openApp(name){ modal.setAttribute('aria-hidden','false'); modal.classList.add('open'); appTitle.textContent = name.toUpperCase(); appBody.innerHTML='';
+  if(name==='profiler' || name==='camera' || name==='car' || name==='traffic') loadCameraApp(name);
+  else if(name==='dedsec') loadDedsec();
+  else loadSimpleApp(name);
+}
+function closeApp(){ modal.setAttribute('aria-hidden','true'); modal.classList.remove('open'); stopCurrentStream(); appBody.innerHTML=''; }
 
-        function trafficAction(action) {
-            const messages = {
-                'green': 'Forcing all lights GREEN...',
-                'red': 'Forcing all lights RED...',
-                'cycle': 'Cycling sequence initiated...',
-                'chaos': 'CHAOS MODE ACTIVATED!'
-            };
-            showNotification(messages[action]);
-        }
+async function startCamera(constraints={video:{facingMode:'environment',width:640,height:480}, audio:false}){
+  try{ const s = await navigator.mediaDevices.getUserMedia(constraints); currentStream = s; return s; }catch(e){ throw e }
+}
+function attachVideo(container){
+  if(!currentStream) return; currentVideo = document.createElement('video'); currentVideo.autoplay=true; currentVideo.playsInline=true; currentVideo.muted=true; currentVideo.srcObject=currentStream; container.appendChild(currentVideo);
+  workingCanvas = document.createElement('canvas'); workingCanvas.width=320; workingCanvas.height=240; wctx = workingCanvas.getContext('2d');
+}
+function stopCurrentStream(){ if(currentStream){ currentStream.getTracks().forEach(t=>t.stop()); currentStream=null } if(currentVideo){ currentVideo.srcObject=null; currentVideo.remove(); currentVideo=null } prevFrame=null }
 
-        // Research functions
-        function unlockUpgrade(upgrade) {
-            showNotification(`${upgrade} UNLOCKED!`);
-        }
+function sample(){ if(!wctx || !currentVideo) return null; try{ wctx.drawImage(currentVideo,0,0,workingCanvas.width,workingCanvas.height); return wctx.getImageData(0,0,workingCanvas.width,workingCanvas.height); }catch(e){ return null } }
 
-        // Media Player functions
-        function playTrack(trackName) {
-            document.getElementById('trackName').textContent = trackName;
-            document.getElementById('nowPlaying').classList.remove('hidden');
-            showNotification(`Now playing: ${trackName}`);
-        }
+// more robust human detector: combine skin heuristic + blob motion and require sustained detection across multiple samples
+function detectHumanStable(samples=3){ let hits=0; for(let i=0;i<samples;i++){ const img = sample(); if(!img) continue; if(detectHuman(img)) hits++; }
+ return hits>=2; }
+function detectHuman(img){ const d=img.data; let skin=0, motion=0; if(!prevFrame) prevFrame=new Uint8ClampedArray(d); for(let i=0;i<d.length;i+=4){ const r=d[i],g=d[i+1],b=d[i+2]; if(r>95 && g>40 && b>20 && r>g && r>b && (r-g)>15) skin++; const diff = Math.abs(r-prevFrame[i]) + Math.abs(g-prevFrame[i+1]) + Math.abs(b-prevFrame[i+2]); if(diff>70) motion++; }
+ const px = d.length/4; const sr=skin/px; const mr=motion/px; prevFrame.set(d); return (sr>0.007 && mr>0.015) || mr>0.04; }
 
-        // Know-It-All functions
-        function searchDatabase() {
-            const query = document.getElementById('searchQuery').value;
-            if (!query) {
-                showNotification('Enter search term!');
-                return;
-            }
+// car detection: look for large contiguous motion and bright highlights
+function detectCar(img){ const d=img.data; let motion=0, bright=0; if(!prevFrame) prevFrame=new Uint8ClampedArray(d); for(let i=0;i<d.length;i+=4){ const r=d[i],g=d[i+1],b=d[i+2]; const lum = 0.2126*r+0.7152*g+0.0722*b; if(lum>160) bright++; const diff = Math.abs(r-prevFrame[i]) + Math.abs(g-prevFrame[i+1]) + Math.abs(b-prevFrame[i+2]); if(diff>90) motion++; }
+ const px = d.length/4; prevFrame.set(d); return (motion/px>0.03 && bright/px>0.02) || motion/px>0.06; }
 
-            const results = [
-                `${query}: A sophisticated algorithm used by DedSec operatives worldwide.`,
-                `${query}: First discovered in ${randomNumber(1990, 2023)} by underground hackers.`,
-                `${query}: Classified information level ${randomNumber(1, 10)}.`,
-                `${query}: Known vulnerabilities: ${randomNumber(5, 50)} exploits documented.`,
-                `${query}: Connected to ${randomNumber(100, 10000)} data nodes globally.`
-            ];
+function detectTrafficLight(img){ const d=img.data; let r=0,g=0; for(let i=0;i<d.length;i+=4){ const R=d[i],G=d[i+1],B=d[i+2]; if(R>160 && R>G+50 && R>B+50) r++; if(G>160 && G>R+50 && G>B+50) g++; }
+ const px=d.length/4; if(r/px>0.0025) return 'red'; if(g/px>0.0025) return 'green'; return null }
 
-            document.getElementById('searchResults').innerHTML = `
-                <div class="bg-purple-900 bg-opacity-30 border border-purple-400 p-4">
-                    <h4 class="font-bold mb-2">Search Results:</h4>
-                    <p class="text-xs">${randomItem(results)}</p>
-                </div>
-            `;
-        }
+// Bootstrapped camera-based app loader
+async function loadCameraApp(name){ appBody.innerHTML = `<div style="font-weight:800;margin-top:6px">${name.toUpperCase()}</div><div class="small">Camera-based toy — no recognition, all simulated.</div><div class='cam-wrap' id='camWrap'></div><div style='margin-top:8px'><button class='btn' id='startCam'>Start</button> <button class='btn' id='actionBtn'>Action</button> <button class='btn' id='stopCam'>Stop</button></div><div class='log' id='log'>Ready.</div>`;
+  const camWrap = document.getElementById('camWrap'); const log = document.getElementById('log');
+  document.getElementById('startCam').onclick = async ()=>{ log.textContent='Starting camera...'; try{ await startCamera(); attachVideo(camWrap); log.textContent='Camera live. Wait ~1s for warmup.'; setTimeout(()=>log.textContent='Ready to scan.',900); }catch(e){ log.textContent='Camera error: '+e.message } };
+  document.getElementById('stopCam').onclick = ()=>{ stopCurrentStream(); camWrap.innerHTML=''; log.textContent='Stopped.' };
+  document.getElementById('actionBtn').onclick = async ()=>{
+    if(!currentVideo){ log.textContent='Start camera first.'; return; }
+    log.textContent='Scanning...'; // sample multiple frames for stability
+    let frames=[]; for(let i=0;i<6;i++){ const img=sample(); if(img) frames.push(img); await new Promise(r=>setTimeout(r,120)); }
+    // human
+    const foundHuman = frames.some(f=> detectHuman(f));
+    const foundCar = frames.some(f=> detectCar(f));
+    const foundLight = frames.map(f=> detectTrafficLight(f)).find(x=>x);
+    if(name==='camera' || name==='profiler'){
+      if(foundHuman){ const prof = makeFakeProfile(); log.innerHTML = formatProfile(prof);} else { log.textContent='No human detected. Try pointing at a person and move slightly.' }
+    }
+    if(name==='car'){
+      if(foundCar){ const id='CAR-'+Math.random().toString(36).slice(2,10).toUpperCase(); log.innerHTML=`Vehicle found: <strong>${id}</strong><br/><button class='btn' onclick="fakeCar('${id}','start')">Remote Start</button> <button class='btn' onclick="fakeCar('${id}','left')">Turn Left</button> <div style='margin-top:6px' class='small'>All actions are visual simulations.</div>` } else { log.textContent='No car-like object detected.' }
+    }
+    if(name==='traffic'){
+      if(foundLight){ log.innerHTML=`Traffic light: <strong>${foundLight.toUpperCase()}</strong><div style='margin-top:6px'><button class='btn' onclick="fakeLight('forceGreen')">Force Green</button> <button class='btn' onclick="fakeLight('forceRed')">Force Red</button></div>` } else log.textContent='No traffic light detected.'
+    }
+  };
+}
 
-        // Generate random facts
-        function generateRandomFacts() {
-            const facts = [
-                `• There are ${randomNumber(1000, 50000)} active backdoors in government systems`,
-                `• DedSec has ${randomNumber(10000, 100000)} members worldwide`,
-                `• ${randomNumber(70, 95)}% of smart devices are hackable`,
-                `• The deep web is ${randomNumber(100, 500)}x larger than surface web`,
-                `• Average person is recorded ${randomNumber(50, 200)} times per day`
-            ];
-            document.getElementById('randomFacts').innerHTML = facts.join('\n');
-        }
-        generateRandomFacts();
+function loadDedsec(){ appBody.innerHTML=`<div style='font-weight:900'>DEDSEC HUB</div><div class='small'>Home of the visual toys. Pick an app.</div><div style='margin-top:10px' class='log'>Replica UI loaded – camera features simulate detection using pixel heuristics. Nothing leaves your device.</div>` }
+function loadSimpleApp(name){ appBody.innerHTML = `<div style='font-weight:900'>${name.toUpperCase()}</div><div class='small'>This is a starter mock for ${name}. Tell me which app to fully flesh out next.</div><div class='log'>Examples: Profiler -> polished ID card, Car -> animated HUD, Traffic -> timeline demo.</div>` }
 
-        // App Shop functions
-        function downloadApp(appName) {
-            showNotification(`Downloading ${appName}... [FAKE DOWNLOAD]`);
-            setTimeout(() => {
-                showNotification(`${appName} installed! [NOT REALLY]`);
-            }, 2000);
-        }
+// fake actions used in injected markup
+window.fakeCar = function(id,action){ const el = document.querySelector('.log'); if(el) el.innerHTML += `<div style='margin-top:8px'>Simulating ${action} on <strong>${id}</strong> <span style='color:#8f8'>(visual)</span></div>` }
+window.fakeLight = function(cmd){ const el=document.querySelector('.log'); if(el) el.innerHTML += `<div style='margin-top:8px'>${cmd} executed (local visual only)</div>` }
 
-        // Add glitch effect randomly
-        setInterval(() => {
-            const elements = document.querySelectorAll('.app-icon, h2, h3');
-            const randomElement = elements[Math.floor(Math.random() * elements.length)];
-            randomElement.classList.add('glitch');
-            setTimeout(() => {
-                randomElement.classList.remove('glitch');
-            }, 300);
-        }, 3000);
+// Fake profile generator and formatter
+function makeFakeProfile(){ const first=['Alex','Sam','Taylor','Jordan','Riley','Morgan','Casey','Kai','Devon','Sky']; const last=['Hart','Mills','Rey','Nguyen','Ortiz','Vega','Blake','Stone','Rowe','Khan']; const jobs=['Barista','Coder','Delivery Rider','Artist','Paramedic','Student','Teacher','Bartender','Mechanic','DJ']; const traits=['Cautious','Outgoing','Methodical','Chaotic','Charismatic','Secretive']; const crimes=['None','Petty theft (2016)','Trespassing (2019)','Public disturbance (2020)','Fraud allegation (2017)']; const p={name:rand(first)+' '+rand(last),id:'ID-'+Math.random().toString(36).slice(2,10).toUpperCase(),job:rand(jobs),traits:rand(traits),crimes:rand(crimes),hobbies:rand(['Skating','Photography','Gaming','Gardening','Cooking']),income:'$'+(Math.floor(15000+Math.random()*90000)).toLocaleString()}; return p }
+function formatProfile(p){ return `<div style='font-weight:800'>${p.name}</div><div class='small'>ID: ${p.id}</div><div style='margin-top:6px'>Job: ${p.job}<br/>Traits: ${p.traits}<br/>Crimes: ${p.crimes}<br/>Hobbies: ${p.hobbies}<br/>Income: ${p.income}</div><div style='margin-top:8px' class='small'>This is fake data for entertainment only.</div>` }
+function rand(a){ return a[Math.floor(Math.random()*a.length)] }
 
-        // Periodic "hacking" notifications
-        const hackMessages = [
-            'Firewall breach detected!',
-            'New botnet node activated',
-            'Data extraction complete',
-            'Backdoor installed successfully',
-            'Anonymous tip received',
-            'Police scanner intercepted',
-            'Encryption cracked',
-            'New zero-day discovered'
-        ];
-
-        setInterval(() => {
-            if (Math.random() > 0.7) {
-                showNotification(randomItem(hackMessages));
-            }
-        }, 10000);
-    </script>
+</script>
 </body>
 </html>
