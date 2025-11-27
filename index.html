@@ -1,523 +1,1619 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DedSec Scanner</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
-        
-        * {
-            font-family: 'Share Tech Mono', monospace;
-        }
-        
-        body {
-            background: #0a0a0a;
-            color: #e0e0e0;
-            overflow-x: hidden;
-        }
-        
-        .glitch {
-            position: relative;
-            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-        }
-        
-        .scan-line {
-            position: absolute;
-            width: 100%;
-            height: 2px;
-            background: linear-gradient(90deg, transparent, #00ffff, transparent);
-            animation: scan 3s linear infinite;
-            opacity: 0.5;
-        }
-        
-        @keyframes scan {
-            0% { top: 0; }
-            100% { top: 100%; }
-        }
-        
-        .device-card {
-            background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
-            border: 1px solid #404040;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .device-card:hover {
-            border-color: #00ffff;
-            box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
-            transform: translateX(5px);
-        }
-        
-        .device-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(0, 255, 255, 0.1), transparent);
-            transition: left 0.5s;
-        }
-        
-        .device-card:hover::before {
-            left: 100%;
-        }
-        
-        .signal-strength {
-            display: flex;
-            gap: 2px;
-            align-items: flex-end;
-        }
-        
-        .signal-bar {
-            width: 4px;
-            background: #404040;
-            transition: background 0.3s;
-        }
-        
-        .signal-bar.active {
-            background: #00ffff;
-            box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
-        }
-        
-        .pulse {
-            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-        
-        .radar {
-            width: 200px;
-            height: 200px;
-            border-radius: 50%;
-            border: 2px solid #00ffff;
-            position: relative;
-            box-shadow: 0 0 30px rgba(0, 255, 255, 0.3), inset 0 0 30px rgba(0, 255, 255, 0.1);
-        }
-        
-        .radar::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 2px;
-            height: 50%;
-            background: linear-gradient(180deg, #00ffff, transparent);
-            transform-origin: top center;
-            animation: rotate 3s linear infinite;
-        }
-        
-        .radar-ring {
-            position: absolute;
-            border: 1px solid rgba(0, 255, 255, 0.2);
-            border-radius: 50%;
-        }
-        
-        @keyframes rotate {
-            from { transform: translate(-50%, -100%) rotate(0deg); }
-            to { transform: translate(-50%, -100%) rotate(360deg); }
-        }
-        
-        .btn-scan {
-            background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
-            border: 2px solid #00ffff;
-            color: #00ffff;
-            padding: 12px 30px;
-            cursor: pointer;
-            transition: all 0.3s;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
-        
-        .btn-scan:hover {
-            background: #00ffff;
-            color: #0a0a0a;
-            box-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
-        }
-        
-        .btn-scan:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-        
-        .status-indicator {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: #00ffff;
-            box-shadow: 0 0 10px rgba(0, 255, 255, 0.8);
-            animation: blink 1s infinite;
-        }
-        
-        @keyframes blink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.3; }
-        }
-        
-        .dedsec-logo {
-            font-size: 3rem;
-            font-weight: bold;
-            color: #00ffff;
-            text-shadow: 0 0 20px rgba(0, 255, 255, 0.8);
-        }
-        
-        .grid-bg {
-            background-image: 
-                linear-gradient(rgba(0, 255, 255, 0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 255, 255, 0.03) 1px, transparent 1px);
-            background-size: 50px 50px;
-        }
-        
-        .distance-meter {
-            background: #1a1a1a;
-            border: 1px solid #404040;
-            padding: 4px 12px;
-            border-radius: 2px;
-            color: #00ffff;
-            font-size: 0.85rem;
-        }
-        
-        .type-badge {
-            padding: 2px 8px;
-            border-radius: 2px;
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        
-        .type-bluetooth {
-            background: rgba(0, 100, 255, 0.2);
-            color: #0099ff;
-            border: 1px solid #0099ff;
-        }
-        
-        .type-wifi {
-            background: rgba(255, 165, 0, 0.2);
-            color: #ffa500;
-            border: 1px solid #ffa500;
-        }
-        
-        .console-log {
-            background: #0d0d0d;
-            border: 1px solid #2a2a2a;
-            max-height: 150px;
-            overflow-y: auto;
-            font-size: 0.8rem;
-        }
-        
-        .console-log::-webkit-scrollbar {
-            width: 8px;
-        }
-        
-        .console-log::-webkit-scrollbar-track {
-            background: #0d0d0d;
-        }
-        
-        .console-log::-webkit-scrollbar-thumb {
-            background: #404040;
-        }
-        
-        .console-log::-webkit-scrollbar-thumb:hover {
-            background: #00ffff;
-        }
-    </style>
-</head>
-<body class="grid-bg">
-    <div class="scan-line"></div>
-    
-    <div class="container mx-auto px-4 py-8 max-w-7xl">
-        <!-- Header -->
-        <div class="text-center mb-8">
-            <div class="dedsec-logo mb-2">◢◤ DEDSEC</div>
-            <p class="text-gray-400 text-sm tracking-widest">NETWORK SCANNER v2.4.1</p>
-        </div>
-        
-        <!-- Control Panel -->
-        <div class="bg-gradient-to-r from-gray-900 to-gray-800 border border-gray-700 p-6 mb-6 rounded-sm">
-            <div class="flex flex-col md:flex-row items-center justify-between gap-4">
-                <div class="flex items-center gap-4">
-                    <div class="radar hidden md:block">
-                        <div class="radar-ring" style="width: 100%; height: 100%; top: 0; left: 0;"></div>
-                        <div class="radar-ring" style="width: 66%; height: 66%; top: 17%; left: 17%;"></div>
-                        <div class="radar-ring" style="width: 33%; height: 33%; top: 33.5%; left: 33.5%;"></div>
-                    </div>
-                    
-                    <div>
-                        <div class="flex items-center gap-2 mb-2">
-                            <div class="status-indicator"></div>
-                            <span class="text-sm text-gray-400">SYSTEM STATUS: <span id="systemStatus" class="text-cyan-400">READY</span></span>
-                        </div>
-                        <div class="text-sm text-gray-400 mb-1">DEVICES DETECTED: <span id="deviceCount" class="text-cyan-400 text-xl font-bold">0</span></div>
-                        <div class="text-sm text-gray-400">SCAN RANGE: <span class="text-cyan-400">~100m</span></div>
-                    </div>
-                </div>
-                
-                <div class="flex flex-col gap-3">
-                    <button id="scanBluetooth" class="btn-scan">
-                        ⚡ SCAN BLUETOOTH
-                    </button>
-                    <button id="scanWifi" class="btn-scan">
-                        📡 SCAN WIFI
-                    </button>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Console Log -->
-        <div class="console-log p-4 mb-6 rounded-sm">
-            <div id="consoleOutput" class="space-y-1">
-                <div class="text-cyan-400">&gt; System initialized...</div>
-                <div class="text-gray-500">&gt; Awaiting user input...</div>
-            </div>
-        </div>
-        
-        <!-- Devices List -->
-        <div id="devicesList" class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <!-- Devices will be populated here -->
-        </div>
-        
-        <!-- Empty State -->
-        <div id="emptyState" class="text-center py-16">
-            <div class="text-6xl mb-4 opacity-20">📡</div>
-            <p class="text-gray-500 text-lg">NO DEVICES DETECTED</p>
-            <p class="text-gray-600 text-sm mt-2">Initiate scan to discover nearby devices</p>
-        </div>
-    </div>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DEDSEC PHONE — Browser Demo</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <style>
+    :root{
+      --accent: 34 197 94; /* emerald-500 */
+      --accent2: 6 182 212; /* cyan-500 */
+      --danger: 239 68 68;
+      --glitch: .35;
+    }
 
-    <script>
-        let devices = [];
-        let scanCount = 0;
-        
-        const systemStatus = document.getElementById('systemStatus');
-        const deviceCount = document.getElementById('deviceCount');
-        const devicesList = document.getElementById('devicesList');
-        const emptyState = document.getElementById('emptyState');
-        const consoleOutput = document.getElementById('consoleOutput');
-        const scanBluetoothBtn = document.getElementById('scanBluetooth');
-        const scanWifiBtn = document.getElementById('scanWifi');
-        
-        function addConsoleLog(message, type = 'info') {
-            const colors = {
-                info: 'text-cyan-400',
-                success: 'text-green-400',
-                warning: 'text-yellow-400',
-                error: 'text-red-400'
-            };
-            
-            const logEntry = document.createElement('div');
-            logEntry.className = colors[type];
-            logEntry.textContent = `> ${message}`;
-            consoleOutput.appendChild(logEntry);
-            consoleOutput.scrollTop = consoleOutput.scrollHeight;
-            
-            // Keep only last 10 logs
-            while (consoleOutput.children.length > 10) {
-                consoleOutput.removeChild(consoleOutput.firstChild);
-            }
+    html, body { height: 100%; }
+    body { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+
+    .crt{ position: relative; }
+    .crt::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      background: repeating-linear-gradient(
+        to bottom,
+        rgba(255,255,255,0.06),
+        rgba(255,255,255,0.06) 1px,
+        rgba(0,0,0,0) 3px,
+        rgba(0,0,0,0) 7px
+      );
+      opacity: .10;
+      mix-blend-mode: overlay;
+    }
+    .crt::after{
+      content:"";
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      background:
+        radial-gradient(circle at 50% 20%, rgba(0,0,0,.0), rgba(0,0,0,.55) 70%),
+        radial-gradient(circle at 20% 0%, rgba(var(--accent), .18), transparent 45%),
+        radial-gradient(circle at 80% 85%, rgba(var(--accent2), .14), transparent 50%);
+      opacity: 1;
+    }
+
+    .accentText{ color: rgb(var(--accent)); }
+    .accentSoft{ color: rgba(var(--accent), .75); }
+    .accentBorder{ border-color: rgba(var(--accent), .35); }
+    .accentBg{ background-color: rgba(var(--accent), .12); }
+    .accentGlow{ box-shadow: 0 0 26px rgba(var(--accent), .22); }
+    .dangerText{ color: rgb(var(--danger)); }
+
+    .glow{ text-shadow: 0 0 12px rgba(var(--accent), .55); }
+
+    .glitch{
+      position: relative;
+      display: inline-block;
+      letter-spacing: .06em;
+    }
+    .glitch::before,
+    .glitch::after{
+      content: attr(data-text);
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      opacity: calc(var(--glitch) + .05);
+      pointer-events: none;
+      filter: saturate(1.3);
+    }
+    .glitch::before{
+      transform: translate(2px, -1px);
+      color: rgba(var(--accent2), .95);
+      clip-path: inset(0 0 62% 0);
+      animation: glitchTop 2.2s infinite linear alternate-reverse;
+      text-shadow: -1px 0 rgba(var(--accent), .35);
+    }
+    .glitch::after{
+      transform: translate(-2px, 1px);
+      color: rgba(var(--accent), .95);
+      clip-path: inset(58% 0 0 0);
+      animation: glitchBottom 1.7s infinite linear alternate-reverse;
+      text-shadow: 1px 0 rgba(168, 85, 247, .35);
+    }
+    @keyframes glitchTop{
+      0%{ clip-path: inset(0 0 78% 0); }
+      12%{ clip-path: inset(0 0 46% 0); }
+      24%{ clip-path: inset(0 0 64% 0); }
+      45%{ clip-path: inset(0 0 36% 0); }
+      72%{ clip-path: inset(0 0 70% 0); }
+      100%{ clip-path: inset(0 0 50% 0); }
+    }
+    @keyframes glitchBottom{
+      0%{ clip-path: inset(62% 0 0 0); }
+      16%{ clip-path: inset(48% 0 0 0); }
+      44%{ clip-path: inset(70% 0 0 0); }
+      68%{ clip-path: inset(56% 0 0 0); }
+      100%{ clip-path: inset(66% 0 0 0); }
+    }
+
+    .btn{
+      border: 1px solid rgba(var(--accent), .32);
+      background: rgba(8, 12, 10, .72);
+      color: rgba(var(--accent), .85);
+      border-radius: 14px;
+      padding: 10px 12px;
+      transition: transform .08s ease, border-color .15s ease, background-color .15s ease;
+    }
+    .btn:hover{ border-color: rgba(var(--accent), .55); background: rgba(10, 16, 12, .78); }
+    .btn:active{ transform: translateY(1px) scale(.995); }
+
+    .btnDanger{
+      border: 1px solid rgba(var(--danger), .40);
+      color: rgba(var(--danger), .92);
+    }
+
+    .chip{
+      border: 1px solid rgba(var(--accent), .26);
+      background: rgba(4, 8, 6, .55);
+      border-radius: 999px;
+      padding: 2px 9px;
+      font-size: 11px;
+      color: rgba(var(--accent), .75);
+      white-space: nowrap;
+    }
+
+    .card{
+      border: 1px solid rgba(var(--accent), .22);
+      background: rgba(9, 12, 10, .66);
+      border-radius: 18px;
+    }
+
+    .mono{ font-family: inherit; }
+
+    .tap{
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    .toast{
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: 88px;
+      max-width: 85%;
+      border: 1px solid rgba(var(--accent), .30);
+      background: rgba(0,0,0,.66);
+      border-radius: 16px;
+      padding: 10px 12px;
+      font-size: 12px;
+      color: rgba(244, 244, 245, .92);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .18s ease, transform .18s ease;
+    }
+    .toast.show{ opacity: 1; transform: translateX(-50%) translateY(-6px); }
+
+    /* Make valid: canvas text crisp */
+    canvas{ image-rendering: crisp-edges; }
+  </style>
+</head>
+<body class="min-h-screen bg-black text-zinc-100">
+  <div class="min-h-screen flex items-center justify-center p-4">
+    <div class="w-[390px] max-w-full">
+      <div class="mb-3 text-center text-[11px] text-zinc-500 leading-relaxed">
+        DEDSEC-style UI demo (browser). It <span class="text-zinc-400">does not</span> identify real people or hack devices.
+        Camera + Bluetooth require <span class="text-zinc-300">HTTPS (or localhost)</span>.
+      </div>
+
+      <div id="phone" class="crt relative aspect-[9/19] rounded-[2.6rem] border accentBorder bg-zinc-950 overflow-hidden accentGlow">
+        <div class="absolute inset-0 pointer-events-none">
+          <div class="absolute -top-12 left-8 h-28 w-28 rounded-full" style="background: radial-gradient(circle, rgba(var(--accent),.18), transparent 65%);"></div>
+          <div class="absolute bottom-10 right-4 h-36 w-36 rounded-full" style="background: radial-gradient(circle, rgba(var(--accent2),.14), transparent 65%);"></div>
+        </div>
+
+        <header class="relative px-5 pt-5 pb-3 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <div class="w-2 h-2 rounded-full" style="background: rgb(var(--accent)); box-shadow: 0 0 12px rgba(var(--accent), .6);"></div>
+            <div class="text-[11px] tracking-[0.28em] accentSoft">DEDSEC</div>
+          </div>
+          <div class="flex items-center gap-2 text-[11px] text-zinc-300">
+            <span id="clock" class="tabular-nums">--:--</span>
+            <span id="secureTag" class="chip">SECURE</span>
+          </div>
+        </header>
+
+        <div class="relative px-5">
+          <div class="card p-4">
+            <div class="flex items-start justify-between gap-3">
+              <div class="min-w-0">
+                <h1 class="glitch text-xl font-semibold tracking-wide glow" data-text="DEDSEC PHONE">DEDSEC PHONE</h1>
+                <p class="mt-1 text-[11px] text-zinc-400 leading-relaxed">
+                  Scanner overlay + Bluetooth console + simulated ops. No facial identity lookup. Bluetooth only connects to devices you approve.
+                </p>
+              </div>
+              <button id="btnPanic" type="button" class="btn btnDanger tap text-[11px] px-3 py-2" title="Stops camera, disconnects Bluetooth, clears volatile data">
+                PANIC
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <main class="relative mt-4 px-5 pb-20">
+          <!-- HOME -->
+          <section data-view="home">
+            <div class="grid grid-cols-2 gap-3">
+              <button class="card tap p-4 text-left hover:border-emerald-400/40 transition" data-open="scanner" type="button">
+                <div class="flex items-center justify-between">
+                  <div class="text-[12px] accentSoft tracking-widest">SCANNER</div>
+                  <div class="chip">CAM</div>
+                </div>
+                <div class="mt-2 text-sm text-zinc-200">Human Scan</div>
+                <div class="mt-1 text-[11px] text-zinc-500">Camera overlay + face detection (if supported).</div>
+              </button>
+
+              <button class="card tap p-4 text-left hover:border-emerald-400/40 transition" data-open="bluetooth" type="button">
+                <div class="flex items-center justify-between">
+                  <div class="text-[12px] accentSoft tracking-widest">BLUETOOTH</div>
+                  <div class="chip">GATT</div>
+                </div>
+                <div class="mt-2 text-sm text-zinc-200">Device Console</div>
+                <div class="mt-1 text-[11px] text-zinc-500">Connect & inspect your devices (permission-based).</div>
+              </button>
+
+              <button class="card tap p-4 text-left hover:border-emerald-400/40 transition" data-open="tv" type="button">
+                <div class="flex items-center justify-between">
+                  <div class="text-[12px] accentSoft tracking-widest">REMOTE</div>
+                  <div class="chip">SIM</div>
+                </div>
+                <div class="mt-2 text-sm text-zinc-200">TV / Media</div>
+                <div class="mt-1 text-[11px] text-zinc-500">Simulation (web apps can't directly control TVs).</div>
+              </button>
+
+              <button class="card tap p-4 text-left hover:border-emerald-400/40 transition" data-open="logs" type="button">
+                <div class="flex items-center justify-between">
+                  <div class="text-[12px] accentSoft tracking-widest">LOGS</div>
+                  <div class="chip">SYS</div>
+                </div>
+                <div class="mt-2 text-sm text-zinc-200">Activity</div>
+                <div class="mt-1 text-[11px] text-zinc-500">See recent actions & events.</div>
+              </button>
+
+              <button class="card tap p-4 text-left hover:border-emerald-400/40 transition" data-open="settings" type="button">
+                <div class="flex items-center justify-between">
+                  <div class="text-[12px] accentSoft tracking-widest">SETTINGS</div>
+                  <div class="chip">UI</div>
+                </div>
+                <div class="mt-2 text-sm text-zinc-200">Tuning</div>
+                <div class="mt-1 text-[11px] text-zinc-500">Accent + glitch intensity + privacy.</div>
+              </button>
+
+              <div class="card p-4">
+                <div class="text-[12px] accentSoft tracking-widest">DISCLAIMER</div>
+                <div class="mt-2 text-[11px] text-zinc-500 leading-relaxed">
+                  This is a UI demo. It <span class="text-zinc-400">won’t</span> identify real people, hack Bluetooth devices, eject strangers, or turn off TVs.
+                  It only uses browser APIs with your explicit permission.
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- SCANNER -->
+          <section data-view="scanner" class="hidden">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="text-[12px] accentSoft tracking-widest">SCANNER</div>
+                <div class="text-[11px] text-zinc-500">Camera overlay + (optional) face detection.</div>
+              </div>
+              <div class="flex items-center gap-2">
+                <span id="camSupport" class="chip">CHECKING…</span>
+              </div>
+            </div>
+
+            <div class="mt-3 card overflow-hidden">
+              <div class="relative">
+                <video id="video" class="w-full aspect-video bg-black" playsinline muted></video>
+                <canvas id="overlay" class="absolute inset-0 w-full h-full"></canvas>
+                <div class="absolute top-3 left-3 flex items-center gap-2">
+                  <span id="camStatus" class="chip">CAM: OFF</span>
+                  <span id="scanStatus" class="chip">SCAN: IDLE</span>
+                </div>
+                <div class="absolute bottom-3 left-3 right-3 flex items-center justify-between gap-2">
+                  <div class="text-[11px] text-zinc-300/90"><span class="accentSoft">MODE</span>: <span id="scanMode">CODENAME</span></div>
+                  <div class="text-[11px] text-zinc-500"><span id="faceCount">0</span> target(s)</div>
+                </div>
+              </div>
+
+              <div class="p-3 grid grid-cols-2 gap-2">
+                <button id="btnCamStart" type="button" class="btn tap text-[12px]">Start Camera</button>
+                <button id="btnCamStop" type="button" class="btn tap text-[12px]">Stop</button>
+                <button id="btnCamSwitch" type="button" class="btn tap text-[12px]">Switch Lens</button>
+                <button id="btnSnapshot" type="button" class="btn tap text-[12px]">Snapshot</button>
+              </div>
+            </div>
+
+            <div class="mt-3 card p-3">
+              <div class="flex items-center justify-between">
+                <div class="text-[12px] accentSoft tracking-widest">TARGETS</div>
+                <div class="flex items-center gap-2">
+                  <button id="btnClearTags" type="button" class="btn tap text-[11px] px-3 py-2">Clear Tags</button>
+                </div>
+              </div>
+              <div id="facesList" class="mt-2 space-y-2"></div>
+
+              <div class="mt-3 text-[11px] text-zinc-500 leading-relaxed">
+                Notes: If your browser supports the <span class="text-zinc-400">FaceDetector</span> API, you’ll see face boxes.
+                The “names” shown are <span class="text-zinc-400">fake codenames</span> or aliases you set locally.
+              </div>
+            </div>
+          </section>
+
+          <!-- BLUETOOTH -->
+          <section data-view="bluetooth" class="hidden">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="text-[12px] accentSoft tracking-widest">BLUETOOTH</div>
+                <div class="text-[11px] text-zinc-500">Permission-based device console (Web Bluetooth).</div>
+              </div>
+              <span id="btSupport" class="chip">CHECKING…</span>
+            </div>
+
+            <div class="mt-3 card p-3">
+              <div class="text-[11px] text-zinc-500 leading-relaxed">
+                This console only connects to devices you <span class="text-zinc-400">explicitly select</span> in the browser prompt.
+                No scanning/hacking other people’s devices.
+              </div>
+              <div class="mt-3 grid grid-cols-2 gap-2">
+                <button id="btnBtFind" type="button" class="btn tap text-[12px]">Find Device</button>
+                <button id="btnBtDisconnectAll" type="button" class="btn tap text-[12px]">Disconnect All</button>
+              </div>
+            </div>
+
+            <div class="mt-3 grid grid-cols-1 gap-3">
+              <div class="card p-3">
+                <div class="flex items-center justify-between">
+                  <div class="text-[12px] accentSoft tracking-widest">DEVICES</div>
+                  <div class="text-[11px] text-zinc-500"><span id="btCount">0</span> known</div>
+                </div>
+                <div id="btList" class="mt-2 space-y-2"></div>
+              </div>
+
+              <div class="card p-3">
+                <div class="flex items-center justify-between">
+                  <div class="text-[12px] accentSoft tracking-widest">DETAILS</div>
+                  <span id="btSelected" class="chip">NONE</span>
+                </div>
+                <div id="btDetails" class="mt-2 text-[12px] text-zinc-200">
+                  <div class="text-[11px] text-zinc-500">Select a device to view details.</div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- TV -->
+          <section data-view="tv" class="hidden">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="text-[12px] accentSoft tracking-widest">REMOTE</div>
+                <div class="text-[11px] text-zinc-500">Simulation only (no real TV control from a web page).</div>
+              </div>
+              <span id="tvState" class="chip">POWER: OFF</span>
+            </div>
+
+            <div class="mt-3 card p-3">
+              <div class="flex items-center justify-between">
+                <div class="text-[12px] accentSoft tracking-widest">MEDIA NODE</div>
+                <div id="tvSignal" class="chip" style="opacity:.75">SIGNAL: IDLE</div>
+              </div>
+              <div class="mt-2 text-[11px] text-zinc-500 leading-relaxed">
+                Want real control? You’d need a <span class="text-zinc-400">legit</span> integration (e.g., your own smart-TV API / home automation) with authorization.
+                This view mimics the DedSec vibe without hacking.
+              </div>
+            </div>
+
+            <div class="mt-3 card p-3">
+              <div class="grid grid-cols-3 gap-2">
+                <button id="btnTvPower" type="button" class="btn tap">Power</button>
+                <button id="btnTvMute" type="button" class="btn tap">Mute</button>
+                <button id="btnTvInput" type="button" class="btn tap">Input</button>
+
+                <button id="btnTvChUp" type="button" class="btn tap">Ch +</button>
+                <button id="btnTvOk" type="button" class="btn tap">OK</button>
+                <button id="btnTvChDown" type="button" class="btn tap">Ch -</button>
+
+                <button id="btnTvVolUp" type="button" class="btn tap">Vol +</button>
+                <button id="btnTvMenu" type="button" class="btn tap">Menu</button>
+                <button id="btnTvVolDown" type="button" class="btn tap">Vol -</button>
+              </div>
+
+              <div class="mt-3">
+                <div class="flex items-center justify-between text-[11px] text-zinc-500">
+                  <div>CH: <span id="tvChannel" class="text-zinc-300 tabular-nums">1</span></div>
+                  <div>VOL: <span id="tvVolume" class="text-zinc-300 tabular-nums">30</span></div>
+                </div>
+                <input id="tvVolumeSlider" class="mt-2 w-full" type="range" min="0" max="100" value="30" />
+              </div>
+            </div>
+          </section>
+
+          <!-- LOGS -->
+          <section data-view="logs" class="hidden">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="text-[12px] accentSoft tracking-widest">LOGS</div>
+                <div class="text-[11px] text-zinc-500">Recent activity for this session.</div>
+              </div>
+              <button id="btnClearLogs" type="button" class="btn tap text-[11px] px-3 py-2">Clear</button>
+            </div>
+
+            <div class="mt-3 card p-3">
+              <div id="logsList" class="space-y-2"></div>
+              <div id="logsEmpty" class="text-[11px] text-zinc-500">No logs yet.</div>
+            </div>
+          </section>
+
+          <!-- SETTINGS -->
+          <section data-view="settings" class="hidden">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="text-[12px] accentSoft tracking-widest">SETTINGS</div>
+                <div class="text-[11px] text-zinc-500">UI + privacy toggles.</div>
+              </div>
+              <span class="chip">LOCAL</span>
+            </div>
+
+            <div class="mt-3 card p-3 space-y-4">
+              <div>
+                <div class="text-[12px] accentSoft tracking-widest">ACCENT</div>
+                <div class="mt-2 grid grid-cols-3 gap-2">
+                  <button class="btn tap" type="button" data-accent="emerald" title="Emerald">Emerald</button>
+                  <button class="btn tap" type="button" data-accent="cyan" title="Cyan">Cyan</button>
+                  <button class="btn tap" type="button" data-accent="purple" title="Purple">Purple</button>
+                </div>
+              </div>
+
+              <div>
+                <div class="flex items-center justify-between">
+                  <div class="text-[12px] accentSoft tracking-widest">GLITCH</div>
+                  <div class="chip"><span id="glitchVal">0.35</span></div>
+                </div>
+                <input id="glitchSlider" class="mt-2 w-full" type="range" min="0" max="1" step="0.01" value="0.35" />
+                <div class="mt-2 text-[11px] text-zinc-500">Changes the intensity of the title glitch effect.</div>
+              </div>
+
+              <div>
+                <div class="text-[12px] accentSoft tracking-widest">PRIVACY</div>
+                <div class="mt-2 space-y-2 text-[11px] text-zinc-500 leading-relaxed">
+                  <div class="flex items-start gap-2">
+                    <span class="chip">CAM</span>
+                    <div>Camera stream stays in your browser. No uploads.</div>
+                  </div>
+                  <div class="flex items-start gap-2">
+                    <span class="chip">BT</span>
+                    <div>Bluetooth only works if you pick a device in a browser permission prompt.</div>
+                  </div>
+                  <div class="flex items-start gap-2">
+                    <span class="chip">ID</span>
+                    <div>No real person identification is performed (only face boxes / fake codenames / your local aliases).</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        </main>
+
+        <nav class="absolute bottom-0 left-0 right-0 px-5 pb-5">
+          <div class="card flex items-center justify-between px-4 py-3">
+            <button id="btnBack" type="button" class="btn tap text-[12px] px-3 py-2">Back</button>
+            <button id="btnHome" type="button" class="btn tap text-[12px] px-3 py-2">Home</button>
+            <button id="btnRecent" type="button" class="btn tap text-[12px] px-3 py-2">Recent</button>
+          </div>
+        </nav>
+
+        <div id="toast" class="toast"></div>
+      </div>
+
+      <div class="mt-3 text-[11px] text-zinc-500 leading-relaxed">
+        Tip: For Bluetooth, use Chrome on Android/desktop. iOS Safari doesn’t support Web Bluetooth.
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (() => {
+      const qs = (s, el = document) => el.querySelector(s);
+      const qsa = (s, el = document) => Array.from(el.querySelectorAll(s));
+
+      const state = {
+        currentView: 'home',
+        history: ['home'],
+        logs: [],
+        toastTimer: null,
+        camera: {
+          stream: null,
+          running: false,
+          facing: 'environment',
+          detector: null,
+          raf: 0,
+          lastScanTs: 0,
+          lastFaces: [],
+          codenames: {},
+          aliases: {},
+          codenameMode: true
+        },
+        bt: {
+          supported: !!navigator.bluetooth,
+          devices: new Map(),
+          selectedId: null
+        },
+        tv: {
+          power: false,
+          muted: false,
+          volume: 30,
+          channel: 1
         }
-        
-        function calculateDistance(rssi) {
-            // Simplified distance calculation based on RSSI
-            // Real-world accuracy varies greatly
-            const txPower = -59; // Typical transmission power at 1m
-            if (rssi === 0) {
-                return -1;
-            }
-            
-            const ratio = rssi * 1.0 / txPower;
-            if (ratio < 1.0) {
-                return Math.pow(ratio, 10);
-            } else {
-                const distance = (0.89976) * Math.pow(ratio, 7.7095) + 0.111;
-                return Math.min(distance, 100); // Cap at 100m
-            }
+      };
+
+      // ---------- utilities ----------
+      const pad2 = (n) => String(n).padStart(2, '0');
+      const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
+
+      function nowTime() {
+        const d = new Date();
+        return `${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}`;
+      }
+
+      function escapeHtml(str) {
+        return String(str)
+          .replaceAll('&', '&amp;')
+          .replaceAll('<', '&lt;')
+          .replaceAll('>', '&gt;')
+          .replaceAll('"', '&quot;')
+          .replaceAll("'", '&#039;');
+      }
+
+      function toast(msg, tone = 'info') {
+        const el = qs('#toast');
+        if (!el) return;
+        el.textContent = msg;
+        el.style.borderColor = tone === 'danger' ? 'rgba(239,68,68,.45)' : 'rgba(var(--accent), .30)';
+        el.classList.add('show');
+        clearTimeout(state.toastTimer);
+        state.toastTimer = setTimeout(() => el.classList.remove('show'), 1700);
+      }
+
+      function addLog(message, level = 'INFO') {
+        state.logs.unshift({ t: nowTime(), level, message });
+        if (state.logs.length > 120) state.logs.length = 120;
+        renderLogs();
+      }
+
+      // ---------- routing ----------
+      const viewEls = qsa('[data-view]');
+      function setView(name, push = true) {
+        if (!name) return;
+        if (state.currentView === name) return;
+
+        viewEls.forEach(v => {
+          v.classList.toggle('hidden', v.getAttribute('data-view') !== name);
+        });
+
+        state.currentView = name;
+        if (push) {
+          state.history.push(name);
+          if (state.history.length > 30) state.history.shift();
         }
-        
-        function getSignalStrength(rssi) {
-            if (rssi >= -50) return 5;
-            if (rssi >= -60) return 4;
-            if (rssi >= -70) return 3;
-            if (rssi >= -80) return 2;
-            return 1;
+
+        addLog(`VIEW → ${name.toUpperCase()}`);
+      }
+
+      function goBack() {
+        if (state.history.length <= 1) {
+          setView('home', false);
+          state.history = ['home'];
+          return;
         }
-        
-        function renderSignalBars(strength) {
-            let html = '';
-            for (let i = 1; i <= 5; i++) {
-                const height = i * 4 + 8;
-                const active = i <= strength ? 'active' : '';
-                html += `<div class="signal-bar ${active}" style="height: ${height}px;"></div>`;
-            }
-            return html;
+        state.history.pop();
+        const prev = state.history[state.history.length - 1] || 'home';
+        viewEls.forEach(v => v.classList.toggle('hidden', v.getAttribute('data-view') !== prev));
+        state.currentView = prev;
+        addLog(`BACK → ${prev.toUpperCase()}`);
+      }
+
+      function goHome() {
+        setView('home', true);
+      }
+
+      function showRecent() {
+        const last = state.history[state.history.length - 1];
+        const prev = state.history[state.history.length - 2];
+        toast(prev ? `Recent: ${prev}` : `Recent: ${last}`);
+      }
+
+      // ---------- clock ----------
+      function updateClock() {
+        const el = qs('#clock');
+        if (!el) return;
+        const d = new Date();
+        el.textContent = `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+      }
+
+      // ---------- camera scanner ----------
+      const video = qs('#video');
+      const overlay = qs('#overlay');
+      const ctx = overlay.getContext('2d', { alpha: true });
+
+      function supportsCamera() {
+        return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+      }
+
+      function supportsFaceDetector() {
+        return 'FaceDetector' in window;
+      }
+
+      const CODEWORDS = [
+        'LYNX', 'GHOST', 'SPARROW', 'NOVA', 'VANTA', 'ORBIT', 'NULL', 'DRIFT', 'EMBER',
+        'KITE', 'CIPHER', 'WRAITH', 'MIRAGE', 'RAVEN', 'ECHO', 'HEX', 'SIGMA', 'VECTOR'
+      ];
+
+      function codenameForIndex(i) {
+        if (state.camera.codenames[i]) return state.camera.codenames[i];
+        const word = CODEWORDS[(Math.floor(Math.random() * CODEWORDS.length) + i) % CODEWORDS.length];
+        const num = String(Math.floor(Math.random() * 90) + 10);
+        const code = `${word}-${num}`;
+        state.camera.codenames[i] = code;
+        return code;
+      }
+
+      function labelForFaceIndex(i) {
+        const alias = state.camera.aliases[i];
+        if (alias && alias.trim()) return alias.trim();
+        return state.camera.codenameMode ? codenameForIndex(i) : 'UNKNOWN';
+      }
+
+      async function startCamera() {
+        if (!supportsCamera()) {
+          toast('Camera API not available in this browser.', 'danger');
+          addLog('Camera start failed: unsupported', 'WARN');
+          return;
         }
-        
-        function renderDevices() {
-            if (devices.length === 0) {
-                emptyState.classList.remove('hidden');
-                devicesList.innerHTML = '';
-                return;
-            }
-            
-            emptyState.classList.add('hidden');
-            deviceCount.textContent = devices.length;
-            
-            devicesList.innerHTML = devices.map((device, index) => {
-                const strength = getSignalStrength(device.rssi);
-                const distance = calculateDistance(device.rssi).toFixed(1);
-                
-                return `
-                    <div class="device-card p-5 rounded-sm" style="animation: fadeIn 0.3s ease-in-out ${index * 0.05}s both;">
-                        <div class="flex justify-between items-start mb-3">
-                            <div class="flex-1">
-                                <div class="flex items-center gap-2 mb-2">
-                                    <span class="type-badge type-${device.type}">${device.type}</span>
-                                    <span class="text-xs text-gray-500">${device.id}</span>
-                                </div>
-                                <h3 class="text-lg font-bold text-cyan-400 mb-1">${device.name}</h3>
-                                <p class="text-xs text-gray-500">MAC: ${device.mac || 'N/A'}</p>
-                            </div>
-                            <div class="signal-strength">
-                                ${renderSignalBars(strength)}
-                            </div>
-                        </div>
-                        
-                        <div class="flex items-center justify-between mt-3 pt-3 border-t border-gray-700">
-                            <div class="distance-meter">
-                                📍 ~${distance}m
-                            </div>
-                            <div class="text-xs text-gray-500">
-                                RSSI: <span class="text-cyan-400">${device.rssi} dBm</span>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-        
-        function generateMacAddress() {
-            return Array.from({length: 6}, () => 
-                Math.floor(Math.random() * 256).toString(16).padStart(2, '0')
-            ).join(':').toUpperCase();
-        }
-        
-        async function scanBluetooth() {
+
+        try {
+          await stopCamera();
+
+          const constraints = {
+            video: {
+              facingMode: state.camera.facing,
+              width: { ideal: 1280 },
+              height: { ideal: 720 }
+            },
+            audio: false
+          };
+
+          const stream = await navigator.mediaDevices.getUserMedia(constraints);
+          state.camera.stream = stream;
+          video.srcObject = stream;
+          await video.play();
+
+          state.camera.running = true;
+
+          // FaceDetector
+          state.camera.detector = null;
+          if (supportsFaceDetector()) {
             try {
-                addConsoleLog('Initiating Bluetooth scan...', 'info');
-                systemStatus.textContent = 'SCANNING BLUETOOTH';
-                scanBluetoothBtn.disabled = true;
-                
-                // Request Bluetooth device
-                const device = await navigator.bluetooth.requestDevice({
-                    acceptAllDevices: true,
-                    optionalServices: ['battery_service', 'device_information']
-                });
-                
-                if (device) {
-                    const newDevice = {
-                        id: `BT-${scanCount++}`,
-                        name: device.name || 'Unknown Device',
-                        type: 'bluetooth',
-                        mac: generateMacAddress(),
-                        rssi: -Math.floor(Math.random() * 50 + 40), // -40 to -90
-                        timestamp: Date.now()
-                    };
-                    
-                    devices.unshift(newDevice);
-                    addConsoleLog(`Bluetooth device detected: ${newDevice.name}`, 'success');
-                    renderDevices();
-                }
-                
-            } catch (error) {
-                if (error.name === 'NotFoundError') {
-                    addConsoleLog('Scan cancelled by user', 'warning');
-                } else {
-                    addConsoleLog(`Bluetooth error: ${error.message}`, 'error');
-                    console.error('Bluetooth error:', error);
-                }
-            } finally {
-                systemStatus.textContent = 'READY';
-                scanBluetoothBtn.disabled = false;
+              state.camera.detector = new FaceDetector({ fastMode: true, maxDetectedFaces: 6 });
+            } catch (e) {
+              state.camera.detector = null;
             }
+          }
+
+          qs('#camStatus').textContent = 'CAM: ON';
+          qs('#scanStatus').textContent = state.camera.detector ? 'SCAN: FACE' : 'SCAN: OVERLAY';
+
+          addLog(`Camera started (${state.camera.facing})`);
+          toast('Camera ON');
+
+          state.camera.lastScanTs = 0;
+          state.camera.raf = requestAnimationFrame(scanLoop);
+        } catch (err) {
+          addLog(`Camera start failed: ${err?.message || err}`, 'WARN');
+          toast('Camera permission denied or unavailable.', 'danger');
+          qs('#camStatus').textContent = 'CAM: OFF';
+          qs('#scanStatus').textContent = 'SCAN: IDLE';
         }
-        
-        async function scanWifi() {
-            addConsoleLog('Initiating WiFi scan...', 'info');
-            systemStatus.textContent = 'SCANNING WIFI';
-            scanWifiBtn.disabled = true;
-            
-            // Simulate WiFi scan (real WiFi scanning requires native app or browser APIs not widely available)
-            setTimeout(() => {
-                const wifiNames = [
-                    'HOME-NETWORK-5G',
-                    'Starbucks WiFi',
-                    'Xfinity Hotspot',
-                    'NETGEAR-2.4G',
-                    'TP-Link_Office',
-                    'FBI_Surveillance_Van',
-                    'Pretty Fly for a WiFi',
-                    'DIRECT-Printer',
-                    'AndroidAP',
-                    'iPhone Network'
-                ];
-                
-                const randomName = wifiNames[Math.floor(Math.random() * wifiNames.length)];
-                
-                const newDevice = {
-                    id: `WIFI-${scanCount++}`,
-                    name: randomName,
-                    type: 'wifi',
-                    mac: generateMacAddress(),
-                    rssi: -Math.floor(Math.random() * 60 + 30), // -30 to -90
-                    timestamp: Date.now()
-                };
-                
-                devices.unshift(newDevice);
-                addConsoleLog(`WiFi network detected: ${newDevice.name}`, 'success');
-                renderDevices();
-                
-                systemStatus.textContent = 'READY';
-                scanWifiBtn.disabled = false;
-            }, 1500);
+      }
+
+      async function stopCamera() {
+        state.camera.running = false;
+        if (state.camera.raf) cancelAnimationFrame(state.camera.raf);
+        state.camera.raf = 0;
+
+        if (state.camera.stream) {
+          for (const tr of state.camera.stream.getTracks()) {
+            try { tr.stop(); } catch {}
+          }
+          state.camera.stream = null;
         }
-        
-        // Event Listeners
-        scanBluetoothBtn.addEventListener('click', scanBluetooth);
-        scanWifiBtn.addEventListener('click', scanWifi);
-        
-        // Add fadeIn animation
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes fadeIn {
-                from {
-                    opacity: 0;
-                    transform: translateX(-20px);
-                }
-                to {
-                    opacity: 1;
-                    transform: translateX(0);
-                }
+
+        if (video) {
+          try { video.pause(); } catch {}
+          video.srcObject = null;
+        }
+
+        // clear overlay
+        resizeOverlay();
+        ctx.clearRect(0, 0, overlay.width, overlay.height);
+
+        qs('#camStatus').textContent = 'CAM: OFF';
+        qs('#scanStatus').textContent = 'SCAN: IDLE';
+        qs('#faceCount').textContent = '0';
+        qs('#facesList').innerHTML = '';
+
+        return true;
+      }
+
+      function resizeOverlay() {
+        // Match canvas to the rendered video size
+        const rect = video.getBoundingClientRect();
+        const dpr = window.devicePixelRatio || 1;
+        const w = Math.max(1, Math.floor(rect.width * dpr));
+        const h = Math.max(1, Math.floor(rect.height * dpr));
+        if (overlay.width !== w || overlay.height !== h) {
+          overlay.width = w;
+          overlay.height = h;
+        }
+      }
+
+      function drawOverlayBase(ts) {
+        // overlay aesthetic: scanline + noise
+        const w = overlay.width;
+        const h = overlay.height;
+
+        ctx.clearRect(0, 0, w, h);
+
+        // subtle vignette
+        const g = ctx.createRadialGradient(w * 0.5, h * 0.35, Math.min(w, h) * 0.1, w * 0.5, h * 0.5, Math.max(w, h) * 0.75);
+        g.addColorStop(0, 'rgba(0,0,0,0.0)');
+        g.addColorStop(1, 'rgba(0,0,0,0.55)');
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, w, h);
+
+        // scanline sweep
+        const y = (ts * 0.06) % (h + 120) - 120;
+        const grad = ctx.createLinearGradient(0, y, 0, y + 120);
+        grad.addColorStop(0.0, 'rgba(0,0,0,0)');
+        grad.addColorStop(0.45, `rgba(${getComputedStyle(document.documentElement).getPropertyValue('--accent')}, 0.0)`);
+        grad.addColorStop(0.5, `rgba(${getComputedStyle(document.documentElement).getPropertyValue('--accent')}, 0.12)`);
+        grad.addColorStop(0.55, `rgba(${getComputedStyle(document.documentElement).getPropertyValue('--accent')}, 0.0)`);
+        grad.addColorStop(1.0, 'rgba(0,0,0,0)');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, y, w, 120);
+
+        // noise flecks
+        const flecks = 90;
+        ctx.fillStyle = 'rgba(255,255,255,0.04)';
+        for (let i = 0; i < flecks; i++) {
+          const nx = Math.random() * w;
+          const ny = Math.random() * h;
+          const nw = Math.random() * 2.2;
+          const nh = Math.random() * 1.2;
+          if (Math.random() < 0.2) ctx.fillRect(nx, ny, nw * 4, nh);
+          else ctx.fillRect(nx, ny, nw, nh);
+        }
+
+        // UI corner ticks
+        ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(12, 12, w - 24, h - 24);
+      }
+
+      function drawFaceBox(box, label) {
+        const w = overlay.width;
+        const h = overlay.height;
+
+        // FaceDetector returns CSS pixels; our canvas is in device pixels sized to rect.
+        const rect = video.getBoundingClientRect();
+        const dpr = window.devicePixelRatio || 1;
+        const sx = (overlay.width / (rect.width * dpr)) || 1;
+        const sy = (overlay.height / (rect.height * dpr)) || 1;
+
+        // Convert from CSS px to canvas px
+        const x = box.x * dpr * sx;
+        const y = box.y * dpr * sy;
+        const bw = box.width * dpr * sx;
+        const bh = box.height * dpr * sy;
+
+        const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+
+        ctx.save();
+        ctx.strokeStyle = `rgba(${accent}, 0.85)`;
+        ctx.lineWidth = 2;
+        ctx.shadowColor = `rgba(${accent}, 0.35)`;
+        ctx.shadowBlur = 14;
+
+        // corner-only box
+        const corner = Math.max(10, Math.min(bw, bh) * 0.18);
+        ctx.beginPath();
+        // TL
+        ctx.moveTo(x, y + corner);
+        ctx.lineTo(x, y);
+        ctx.lineTo(x + corner, y);
+        // TR
+        ctx.moveTo(x + bw - corner, y);
+        ctx.lineTo(x + bw, y);
+        ctx.lineTo(x + bw, y + corner);
+        // BR
+        ctx.moveTo(x + bw, y + bh - corner);
+        ctx.lineTo(x + bw, y + bh);
+        ctx.lineTo(x + bw - corner, y + bh);
+        // BL
+        ctx.moveTo(x + corner, y + bh);
+        ctx.lineTo(x, y + bh);
+        ctx.lineTo(x, y + bh - corner);
+        ctx.stroke();
+
+        // label
+        const fontSize = Math.max(11, Math.round((overlay.width / 390) * 12));
+        ctx.shadowBlur = 0;
+        ctx.font = `${fontSize}px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace`;
+        const text = `SUBJECT: ${label}`;
+        const pad = 6;
+        const tw = ctx.measureText(text).width;
+        ctx.fillStyle = 'rgba(0,0,0,0.55)';
+        ctx.fillRect(x, Math.max(0, y - (fontSize + pad * 2)), tw + pad * 2, fontSize + pad * 2);
+        ctx.fillStyle = `rgba(${accent}, 0.95)`;
+        ctx.fillText(text, x + pad, Math.max(fontSize + pad, y - pad));
+
+        // extra HUD text
+        const lines = [
+          `SIG: ${Math.floor(60 + Math.random()*40)}%`,
+          `ID: ${Math.floor(1000 + Math.random()*9000)}`
+        ];
+        ctx.fillStyle = 'rgba(244,244,245,0.70)';
+        ctx.font = `${Math.max(10, fontSize - 2)}px ui-monospace, monospace`;
+        let yy = y + bh + 14;
+        for (const ln of lines) {
+          if (yy > h - 10) break;
+          ctx.fillText(ln, x, yy);
+          yy += 14;
+        }
+
+        ctx.restore();
+      }
+
+      async function scanLoop(ts) {
+        if (!state.camera.running) return;
+        state.camera.raf = requestAnimationFrame(scanLoop);
+
+        // Throttle detection a bit to keep things smooth
+        if (ts - state.camera.lastScanTs < 125) {
+          resizeOverlay();
+          drawOverlayBase(ts);
+          // draw last faces for stability
+          for (let i = 0; i < state.camera.lastFaces.length; i++) {
+            const f = state.camera.lastFaces[i];
+            if (f?.boundingBox) drawFaceBox(f.boundingBox, labelForFaceIndex(i));
+          }
+          return;
+        }
+        state.camera.lastScanTs = ts;
+
+        resizeOverlay();
+        drawOverlayBase(ts);
+
+        let faces = [];
+        if (state.camera.detector && video.readyState >= 2) {
+          try {
+            faces = await state.camera.detector.detect(video);
+          } catch {
+            faces = [];
+          }
+        }
+
+        state.camera.lastFaces = faces;
+
+        // draw
+        for (let i = 0; i < faces.length; i++) {
+          const f = faces[i];
+          if (f?.boundingBox) {
+            drawFaceBox(f.boundingBox, labelForFaceIndex(i));
+          }
+        }
+
+        qs('#faceCount').textContent = String(faces.length);
+        renderFacesList(faces);
+      }
+
+      function renderFacesList(faces) {
+        const list = qs('#facesList');
+        if (!list) return;
+
+        if (!faces || faces.length === 0) {
+          list.innerHTML = `<div class="text-[11px] text-zinc-500">No targets detected.</div>`;
+          return;
+        }
+
+        const items = faces.map((_, i) => {
+          const label = labelForFaceIndex(i);
+          const alias = state.camera.aliases[i] || '';
+          const isCustom = !!alias;
+          return `
+            <div class="flex items-center justify-between gap-2 border border-emerald-500/15 rounded-2xl p-3" style="background: rgba(0,0,0,.35);">
+              <div class="min-w-0">
+                <div class="text-[12px] text-zinc-200">Face #${i + 1} <span class="chip" style="margin-left:8px;">${escapeHtml(label)}</span></div>
+                <div class="mt-1 text-[11px] text-zinc-500">Tag: ${isCustom ? `<span class="text-zinc-300">${escapeHtml(alias)}</span>` : `<span class="text-zinc-500">(not set)</span>`}</div>
+              </div>
+              <div class="flex items-center gap-2">
+                <button class="btn tap text-[11px] px-3 py-2" type="button" data-tag-face="${i}">Tag</button>
+                <button class="btn tap text-[11px] px-3 py-2" type="button" data-clear-face="${i}">Clear</button>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        list.innerHTML = items;
+      }
+
+      async function snapshot() {
+        if (!state.camera.running || !video.videoWidth || !video.videoHeight) {
+          toast('Camera not running.', 'danger');
+          return;
+        }
+
+        const c = document.createElement('canvas');
+        c.width = video.videoWidth;
+        c.height = video.videoHeight;
+        const cctx = c.getContext('2d');
+        cctx.drawImage(video, 0, 0);
+
+        // overlay a small HUD label
+        cctx.fillStyle = 'rgba(0,0,0,0.55)';
+        cctx.fillRect(16, 16, 220, 42);
+        cctx.fillStyle = 'rgba(34,197,94,0.95)';
+        cctx.font = '14px ui-monospace, monospace';
+        cctx.fillText('DEDSEC SCAN • DEMO', 28, 42);
+
+        c.toBlob((blob) => {
+          if (!blob) return;
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `dedsec-snapshot-${Date.now()}.png`;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          setTimeout(() => URL.revokeObjectURL(url), 2000);
+          toast('Snapshot saved');
+          addLog('Snapshot captured');
+        }, 'image/png');
+      }
+
+      // ---------- bluetooth ----------
+      function btRecordToUiName(rec) {
+        const name = rec?.device?.name || 'Unnamed device';
+        const idShort = (rec?.device?.id || '').slice(0, 8);
+        return `${name}${idShort ? ` • ${idShort}` : ''}`;
+      }
+
+      function dataViewToU8(dv) {
+        return new Uint8Array(dv.buffer, dv.byteOffset, dv.byteLength);
+      }
+
+      function dataViewToHex(dv) {
+        const arr = dataViewToU8(dv);
+        return Array.from(arr).map(b => b.toString(16).padStart(2,'0')).join(' ');
+      }
+
+      function tryDecodeText(dv) {
+        const arr = dataViewToU8(dv);
+        const txt = new TextDecoder('utf-8', { fatal: false }).decode(arr).replace(/\0/g, '').trim();
+        if (!txt) return null;
+        // heuristic: mostly printable
+        const printable = txt.split('').filter(ch => ch >= ' ' && ch <= '~').length;
+        if (printable / txt.length < 0.7) return null;
+        return txt;
+      }
+
+      function normalizeUuid(u) {
+        return String(u).toLowerCase();
+      }
+
+      async function btFindDevice() {
+        if (!state.bt.supported) {
+          toast('Web Bluetooth not supported here.', 'danger');
+          addLog('Bluetooth unsupported', 'WARN');
+          return;
+        }
+
+        try {
+          const device = await navigator.bluetooth.requestDevice({
+            acceptAllDevices: true,
+            optionalServices: ['battery_service', 'device_information', 'generic_access']
+          });
+
+          const rec = {
+            device,
+            server: null,
+            connected: false,
+            lastError: null,
+            battery: null,
+            info: {},
+            services: []
+          };
+
+          state.bt.devices.set(device.id, rec);
+          state.bt.selectedId = device.id;
+
+          device.addEventListener('gattserverdisconnected', () => {
+            const r = state.bt.devices.get(device.id);
+            if (r) {
+              r.connected = false;
+              r.server = null;
+              addLog(`BT disconnected: ${device.name || device.id}`, 'INFO');
+              toast('Bluetooth disconnected');
+              renderBt();
             }
+          });
+
+          addLog(`BT selected: ${device.name || device.id}`);
+          toast('Device added');
+          renderBt();
+        } catch (err) {
+          addLog(`BT find canceled/failed: ${err?.message || err}`, 'WARN');
+          toast('Bluetooth request canceled', 'danger');
+        }
+      }
+
+      async function btConnect(id) {
+        const rec = state.bt.devices.get(id);
+        if (!rec) return;
+        if (!rec.device.gatt) {
+          toast('GATT not available on this device.', 'danger');
+          return;
+        }
+
+        try {
+          toast('Connecting…');
+          rec.server = await rec.device.gatt.connect();
+          rec.connected = true;
+          rec.lastError = null;
+          addLog(`BT connected: ${rec.device.name || rec.device.id}`);
+          await btReadQuick(id);
+          renderBt();
+          toast('Connected');
+        } catch (err) {
+          rec.lastError = err?.message || String(err);
+          rec.connected = false;
+          rec.server = null;
+          addLog(`BT connect failed: ${rec.lastError}`, 'WARN');
+          toast('Connect failed', 'danger');
+          renderBt();
+        }
+      }
+
+      function btDisconnect(id) {
+        const rec = state.bt.devices.get(id);
+        if (!rec) return;
+        try {
+          rec.device.gatt?.disconnect();
+        } catch {}
+        rec.connected = false;
+        rec.server = null;
+        addLog(`BT disconnected (manual): ${rec.device.name || rec.device.id}`);
+        renderBt();
+        toast('Disconnected');
+      }
+
+       async function btDisconnectAll() {
+        for (const [id, rec] of state.bt.devices.entries()) {
+          try { rec.device.gatt?.disconnect(); } catch {}
+          rec.connected = false;
+          rec.server = null;
+        }
+        addLog('BT disconnect all');
+        renderBt();
+        toast('All disconnected');
+      }
+
+      async function btReadQuick(id) {
+        const rec = state.bt.devices.get(id);
+        if (!rec?.connected || !rec.server) return;
+
+        // Battery
+        try {
+          const bs = await rec.server.getPrimaryService('battery_service');
+          const bc = await bs.getCharacteristic('battery_level');
+          const dv = await bc.readValue();
+          rec.battery = dv.getUint8(0);
+        } catch {
+          rec.battery = null;
+        }
+
+        // Device Information
+        try {
+          const dis = await rec.server.getPrimaryService('device_information');
+          const charIds = [
+            ['manufacturer', 'manufacturer_name_string'],
+            ['model', 'model_number_string'],
+            ['serial', 'serial_number_string'],
+            ['hw', 'hardware_revision_string'],
+            ['fw', 'firmware_revision_string'],
+            ['sw', 'software_revision_string']
+          ];
+          for (const [key, uuid] of charIds) {
+            try {
+              const c = await dis.getCharacteristic(uuid);
+              const dv = await c.readValue();
+              rec.info[key] = tryDecodeText(dv) || dataViewToHex(dv);
+            } catch {}
+          }
+        } catch {
+          rec.info = rec.info || {};
+        }
+
+        // Services list (light)
+        try {
+          const services = await rec.server.getPrimaryServices();
+          rec.services = services.map(s => ({ uuid: s.uuid, _service: s, chars: null }));
+        } catch {
+          rec.services = [];
+        }
+      }
+
+      async function btExplore(id) {
+        const rec = state.bt.devices.get(id);
+        if (!rec?.connected || !rec.server) return;
+
+        toast('Loading services…');
+        addLog(`BT explore: ${rec.device.name || rec.device.id}`);
+
+        try {
+          const services = await rec.server.getPrimaryServices();
+          const out = [];
+          for (const s of services) {
+            const chars = await s.getCharacteristics();
+            out.push({
+              uuid: s.uuid,
+              _service: s,
+              chars: chars.map(c => ({
+                uuid: c.uuid,
+                properties: c.properties,
+                _char: c,
+                value: null
+              }))
+            });
+          }
+          rec.services = out;
+          renderBt();
+          toast('Services ready');
+        } catch (err) {
+          rec.lastError = err?.message || String(err);
+          addLog(`BT explore failed: ${rec.lastError}`, 'WARN');
+          toast('Explore failed', 'danger');
+          renderBt();
+        }
+      }
+
+      async function btReadChar(id, suuid, cuuid) {
+        const rec = state.bt.devices.get(id);
+        if (!rec?.connected) return;
+
+        const svc = rec.services?.find(s => normalizeUuid(s.uuid) === normalizeUuid(suuid));
+        const ch = svc?.chars?.find(c => normalizeUuid(c.uuid) === normalizeUuid(cuuid));
+        if (!svc || !ch || !ch._char) return;
+
+        if (!ch.properties?.read) {
+          toast('Characteristic not readable.', 'danger');
+          return;
+        }
+
+        try {
+          const dv = await ch._char.readValue();
+          const txt = tryDecodeText(dv);
+          ch.value = txt ? `${txt}` : dataViewToHex(dv);
+          addLog(`BT read: ${cuuid.slice(0, 8)}…`);
+          renderBt();
+          toast('Read OK');
+        } catch (err) {
+          addLog(`BT read failed: ${err?.message || err}`, 'WARN');
+          toast('Read failed', 'danger');
+        }
+      }
+
+      function renderBt() {
+        qs('#btSupport').textContent = state.bt.supported ? 'SUPPORTED' : 'UNSUPPORTED';
+        qs('#btSupport').style.borderColor = state.bt.supported ? 'rgba(var(--accent), .30)' : 'rgba(239,68,68,.35)';
+        qs('#btCount').textContent = String(state.bt.devices.size);
+
+        // list
+        const list = qs('#btList');
+        if (state.bt.devices.size === 0) {
+          list.innerHTML = `<div class="text-[11px] text-zinc-500">No devices added yet.</div>`;
+        } else {
+          list.innerHTML = Array.from(state.bt.devices.values()).map(rec => {
+            const sel = rec.device.id === state.bt.selectedId;
+            const connected = !!rec.connected;
+            const badge = connected ? `<span class="chip">CONNECTED</span>` : `<span class="chip" style="opacity:.7">OFFLINE</span>`;
+            const err = rec.lastError ? `<div class="mt-1 text-[11px]" style="color: rgba(239,68,68,.85)">ERR: ${escapeHtml(rec.lastError)}</div>` : '';
+
+            return `
+              <div class="border rounded-2xl p-3" style="border-color: ${sel ? 'rgba(var(--accent), .55)' : 'rgba(var(--accent), .18)'}; background: rgba(0,0,0,.25);">
+                <div class="flex items-center justify-between gap-2">
+                  <button class="tap text-left min-w-0" type="button" data-bt-select="${escapeHtml(rec.device.id)}">
+                    <div class="text-[12px] text-zinc-200 truncate">${escapeHtml(rec.device.name || 'Unnamed device')}</div>
+                    <div class="text-[11px] text-zinc-500 truncate">${escapeHtml(rec.device.id)}</div>
+                  </button>
+                  <div class="flex items-center gap-2">${badge}</div>
+                </div>
+                <div class="mt-2 grid grid-cols-2 gap-2">
+                  ${connected
+                    ? `<button class="btn tap text-[11px]" type="button" data-bt-disconnect="${escapeHtml(rec.device.id)}">Disconnect</button>`
+                    : `<button class="btn tap text-[11px]" type="button" data-bt-connect="${escapeHtml(rec.device.id)}">Connect</button>`
+                  }
+                  <button class="btn tap text-[11px]" type="button" data-bt-explore="${escapeHtml(rec.device.id)}">Explore</button>
+                </div>
+                ${err}
+              </div>
+            `;
+          }).join('');
+        }
+
+        // details
+        const selId = state.bt.selectedId;
+        const selRec = selId ? state.bt.devices.get(selId) : null;
+        qs('#btSelected').textContent = selRec ? (selRec.device.name || 'SELECTED') : 'NONE';
+
+        const details = qs('#btDetails');
+        if (!selRec) {
+          details.innerHTML = `<div class="text-[11px] text-zinc-500">Select a device to view details.</div>`;
+          return;
+        }
+
+        const rows = [];
+        rows.push(`<div class="text-[11px] text-zinc-500">Device</div><div class="text-[12px] text-zinc-200">${escapeHtml(btRecordToUiName(selRec))}</div>`);
+        rows.push(`<div class="text-[11px] text-zinc-500">Status</div><div class="text-[12px]">${selRec.connected ? `<span class="accentText">CONNECTED</span>` : `<span class="text-zinc-400">OFFLINE</span>`}</div>`);
+        rows.push(`<div class="text-[11px] text-zinc-500">Battery</div><div class="text-[12px] text-zinc-200">${selRec.battery == null ? 'N/A' : `${selRec.battery}%`}</div>`);
+
+        const info = selRec.info || {};
+        const infoGrid = Object.keys(info).length
+          ? Object.entries(info).map(([k,v]) => `
+              <div class="text-[11px] text-zinc-500">${escapeHtml(k.toUpperCase())}</div>
+              <div class="text-[12px] text-zinc-200 break-words">${escapeHtml(v)}</div>
+            `).join('')
+          : `<div class="text-[11px] text-zinc-500">No device info read yet. Connect first.</div>`;
+
+        const svcUi = (selRec.services && selRec.services.length)
+          ? selRec.services.map(s => {
+              const chars = s.chars;
+              const charsUi = Array.isArray(chars)
+                ? chars.map(c => {
+                    const props = [];
+                    if (c.properties?.read) props.push('R');
+                    if (c.properties?.write || c.properties?.writeWithoutResponse) props.push('W');
+                    if (c.properties?.notify || c.properties?.indicate) props.push('N');
+
+                    const canRead = !!c.properties?.read;
+                    const canWrite = !!(c.properties?.write || c.properties?.writeWithoutResponse);
+
+                    return `
+                      <div class="rounded-2xl border p-3" style="border-color: rgba(var(--accent), .18); background: rgba(0,0,0,.22);">
+                        <div class="flex items-start justify-between gap-2">
+                          <div class="min-w-0">
+                            <div class="text-[12px] text-zinc-200 truncate">CHAR: ${escapeHtml(c.uuid)}</div>
+                            <div class="mt-1 text-[11px] text-zinc-500">PROPS: <span class="text-zinc-300">${props.join(' ') || '—'}</span></div>
+                          </div>
+                          <div class="flex items-center gap-2">
+                            ${canRead ? `<button class="btn tap text-[11px] px-3 py-2" type="button" data-bt-read="${escapeHtml(selId)}" data-suuid="${escapeHtml(s.uuid)}" data-cuuid="${escapeHtml(c.uuid)}">Read</button>` : `<span class="chip" style="opacity:.7">NO READ</span>`}
+                          </div>
+                        </div>
+                        <div class="mt-2 text-[11px] text-zinc-500">
+                          ${c.value ? `<div class="break-words">VAL: <span class="text-zinc-300">${escapeHtml(c.value)}</span></div>` : `<div>VAL: —</div>`}
+                          ${canWrite ? `<div class="mt-1" style="color: rgba(244,244,245,.55)">Write disabled in this demo (safety).</div>` : ''}
+                        </div>
+                      </div>
+                    `;
+                  }).join('')
+                : `<div class="text-[11px] text-zinc-500">Click Explore to load characteristics.</div>`;
+
+              return `
+                <div class="rounded-2xl border p-3" style="border-color: rgba(var(--accent), .22); background: rgba(0,0,0,.20);">
+                  <div class="text-[12px] text-zinc-200">SERVICE: ${escapeHtml(s.uuid)}</div>
+                  <div class="mt-2 space-y-2">${charsUi}</div>
+                </div>
+              `;
+            }).join('')
+          : `<div class="text-[11px] text-zinc-500">No services loaded yet. Connect + Explore.</div>`;
+
+        details.innerHTML = `
+          <div class="grid grid-cols-2 gap-x-3 gap-y-2">
+            ${rows.join('')}
+          </div>
+
+          <div class="mt-3">
+            <div class="text-[12px] accentSoft tracking-widest">DEVICE INFO</div>
+            <div class="mt-2 grid grid-cols-2 gap-x-3 gap-y-2">${infoGrid}</div>
+          </div>
+
+          <div class="mt-4">
+            <div class="flex items-center justify-between">
+              <div class="text-[12px] accentSoft tracking-widest">GATT</div>
+              <div class="flex items-center gap-2">
+                ${selRec.connected ? `<button class="btn tap text-[11px] px-3 py-2" type="button" data-bt-refresh="${escapeHtml(selId)}">Refresh</button>` : ''}
+              </div>
+            </div>
+            <div class="mt-2 space-y-3">${svcUi}</div>
+          </div>
         `;
-        document.head.appendChild(style);
-        
-        // Auto-refresh distances (simulate RSSI changes)
-        setInterval(() => {
-            if (devices.length > 0) {
-                devices = devices.map(device => ({
-                    ...device,
-                    rssi: device.rssi + (Math.random() * 6 - 3) // Slight variation
-                }));
-                renderDevices();
+      }
+
+      // ---------- TV simulation ----------
+      function tvUpdateUi() {
+        qs('#tvState').textContent = `POWER: ${state.tv.power ? 'ON' : 'OFF'}`;
+        qs('#tvChannel').textContent = String(state.tv.channel);
+        qs('#tvVolume').textContent = String(state.tv.volume);
+        qs('#tvVolumeSlider').value = String(state.tv.volume);
+      }
+
+      function tvSignal(action) {
+        const el = qs('#tvSignal');
+        el.textContent = `SIGNAL: ${action}`;
+        el.style.borderColor = 'rgba(var(--accent2), .35)';
+        clearTimeout(el._t);
+        el._t = setTimeout(() => {
+          el.textContent = 'SIGNAL: IDLE';
+          el.style.borderColor = 'rgba(var(--accent), .26)';
+        }, 900);
+      }
+
+      function tvAction(action) {
+        addLog(`TV: ${action}`);
+        toast(`TV: ${action}`);
+        tvSignal(action);
+        tvUpdateUi();
+      }
+
+      // ---------- logs UI ----------
+      function renderLogs() {
+        const list = qs('#logsList');
+        const empty = qs('#logsEmpty');
+        if (!list || !empty) return;
+
+        if (state.logs.length === 0) {
+          empty.classList.remove('hidden');
+          list.innerHTML = '';
+          return;
+        }
+
+        empty.classList.add('hidden');
+        list.innerHTML = state.logs.slice(0, 60).map((l) => {
+          const levelColor = l.level === 'WARN' ? 'rgba(239,68,68,.85)' : 'rgba(var(--accent), .75)';
+          return `
+            <div class="border rounded-2xl p-3" style="border-color: rgba(var(--accent), .16); background: rgba(0,0,0,.22);">
+              <div class="flex items-center justify-between">
+                <div class="text-[11px]" style="color: ${levelColor}">${escapeHtml(l.level)}</div>
+                <div class="text-[11px] text-zinc-500 tabular-nums">${escapeHtml(l.t)}</div>
+              </div>
+              <div class="mt-1 text-[12px] text-zinc-200 break-words">${escapeHtml(l.message)}</div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // ---------- PANIC ----------
+      async function panic() {
+        addLog('PANIC triggered', 'WARN');
+        toast('PANIC: shutdown', 'danger');
+
+        // stop cam
+        await stopCamera();
+
+        // disconnect BT
+        await btDisconnectAll();
+
+        // clear volatile target tags
+        state.camera.aliases = {};
+        state.camera.codenames = {};
+        state.camera.lastFaces = [];
+
+        // UI flash
+        const phone = qs('#phone');
+        const flash = document.createElement('div');
+        flash.className = 'absolute inset-0';
+        flash.style.background = 'rgba(239,68,68,.16)';
+        flash.style.pointerEvents = 'none';
+        phone.appendChild(flash);
+        setTimeout(() => flash.remove(), 240);
+      }
+
+      // ---------- settings ----------
+      function setAccent(which) {
+        const root = document.documentElement;
+        if (which === 'emerald') {
+          root.style.setProperty('--accent', '34 197 94');
+          root.style.setProperty('--accent2', '6 182 212');
+        } else if (which === 'cyan') {
+          root.style.setProperty('--accent', '6 182 212');
+          root.style.setProperty('--accent2', '34 197 94');
+        } else if (which === 'purple') {
+          root.style.setProperty('--accent', '168 85 247');
+          root.style.setProperty('--accent2', '6 182 212');
+        }
+        addLog(`Accent set: ${which}`);
+        toast(`Accent: ${which}`);
+        renderBt();
+      }
+
+      function setGlitch(val) {
+        const v = clamp(Number(val), 0, 1);
+        document.documentElement.style.setProperty('--glitch', String(v));
+        qs('#glitchVal').textContent = v.toFixed(2);
+      }
+
+      // ---------- event wiring ----------
+      function init() {
+        // open view buttons
+        qsa('[data-open]').forEach(btn => {
+          btn.addEventListener('click', () => setView(btn.getAttribute('data-open'), true));
+        });
+
+        // bottom nav
+        qs('#btnBack').addEventListener('click', goBack);
+        qs('#btnHome').addEventListener('click', goHome);
+        qs('#btnRecent').addEventListener('click', showRecent);
+
+        // panic
+        qs('#btnPanic').addEventListener('click', panic);
+
+        // camera support badge
+        const camSupport = qs('#camSupport');
+        const camOk = supportsCamera();
+        const faceOk = supportsFaceDetector();
+        camSupport.textContent = camOk ? (faceOk ? 'FACE OK' : 'NO FACE') : 'NO CAM';
+        camSupport.style.borderColor = camOk ? 'rgba(var(--accent), .30)' : 'rgba(239,68,68,.35)';
+
+        // camera controls
+        qs('#btnCamStart').addEventListener('click', startCamera);
+        qs('#btnCamStop').addEventListener('click', async () => {
+          await stopCamera();
+          addLog('Camera stopped');
+          toast('Camera OFF');
+        });
+        qs('#btnCamSwitch').addEventListener('click', async () => {
+          state.camera.facing = state.camera.facing === 'environment' ? 'user' : 'environment';
+          addLog(`Camera lens: ${state.camera.facing}`);
+          toast(`Lens: ${state.camera.facing}`);
+          if (state.camera.running) await startCamera();
+        });
+        qs('#btnSnapshot').addEventListener('click', snapshot);
+
+        // tag/clear per face
+        qs('#facesList').addEventListener('click', (e) => {
+          const tagBtn = e.target.closest('[data-tag-face]');
+          if (tagBtn) {
+            const idx = Number(tagBtn.getAttribute('data-tag-face'));
+            const current = state.camera.aliases[idx] || '';
+            const input = prompt(`Set alias for Face #${idx + 1} (local only):`, current);
+            if (input == null) return;
+            const safe = input.trim().slice(0, 30);
+            if (!safe) {
+              delete state.camera.aliases[idx];
+              toast('Alias cleared');
+              addLog(`Face #${idx + 1} alias cleared`);
+            } else {
+              state.camera.aliases[idx] = safe;
+              toast('Alias set');
+              addLog(`Face #${idx + 1} tagged: ${safe}`);
             }
-        }, 5000);
-        
-        addConsoleLog('All systems online. Ready for operation.', 'success');
-    </script>
+            renderFacesList(state.camera.lastFaces);
+            return;
+          }
+
+          const clearBtn = e.target.closest('[data-clear-face]');
+          if (clearBtn) {
+            const idx = Number(clearBtn.getAttribute('data-clear-face'));
+            delete state.camera.aliases[idx];
+            delete state.camera.codenames[idx];
+            toast('Entry cleared');
+            addLog(`Face #${idx + 1} cleared`);
+            renderFacesList(state.camera.lastFaces);
+          }
+        });
+
+        qs('#btnClearTags').addEventListener('click', () => {
+          state.camera.aliases = {};
+          state.camera.codenames = {};
+          toast('Tags cleared');
+          addLog('Scanner tags cleared');
+          renderFacesList(state.camera.lastFaces);
+        });
+
+        // bluetooth
+        renderBt();
+        qs('#btnBtFind').addEventListener('click', btFindDevice);
+        qs('#btnBtDisconnectAll').addEventListener('click', btDisconnectAll);
+
+        qs('#btList').addEventListener('click', (e) => {
+          const sel = e.target.closest('[data-bt-select]');
+          if (sel) {
+            state.bt.selectedId = sel.getAttribute('data-bt-select');
+            addLog(`BT selected: ${state.bt.selectedId}`);
+            renderBt();
+            return;
+          }
+          const c = e.target.closest('[data-bt-connect]');
+          if (c) return btConnect(c.getAttribute('data-bt-connect'));
+          const d = e.target.closest('[data-bt-disconnect]');
+          if (d) return btDisconnect(d.getAttribute('data-bt-disconnect'));
+          const x = e.target.closest('[data-bt-explore]');
+          if (x) {
+            const id = x.getAttribute('data-bt-explore');
+            state.bt.selectedId = id;
+            renderBt();
+            return btExplore(id);
+          }
+        });
+
+        qs('#btDetails').addEventListener('click', (e) => {
+          const read = e.target.closest('[data-bt-read]');
+          if (read) {
+            const id = read.getAttribute('data-bt-read');
+            const suuid = read.getAttribute('data-suuid');
+            const cuuid = read.getAttribute('data-cuuid');
+            return btReadChar(id, suuid, cuuid);
+          }
+          const refresh = e.target.closest('[data-bt-refresh]');
+          if (refresh) {
+            const id = refresh.getAttribute('data-bt-refresh');
+            return btExplore(id);
+          }
+        });
+
+        // tv
+        tvUpdateUi();
+        qs('#tvVolumeSlider').addEventListener('input', (e) => {
+          state.tv.volume = clamp(Number(e.target.value), 0, 100);
+          tvAction(`VOL SET ${state.tv.volume}`);
+        });
+        qs('#btnTvPower').addEventListener('click', () => {
+          state.tv.power = !state.tv.power;
+          tvAction(state.tv.power ? 'POWER ON' : 'POWER OFF');
+        });
+        qs('#btnTvMute').addEventListener('click', () => {
+          state.tv.muted = !state.tv.muted;
+          tvAction(state.tv.muted ? 'MUTE ON' : 'MUTE OFF');
+        });
+        qs('#btnTvInput').addEventListener('click', () => tvAction('INPUT')); 
+        qs('#btnTvMenu').addEventListener('click', () => tvAction('MENU')); 
+        qs('#btnTvOk').addEventListener('click', () => tvAction('OK')); 
+        qs('#btnTvChUp').addEventListener('click', () => {
+          state.tv.channel = clamp(state.tv.channel + 1, 1, 999);
+          tvAction(`CH ${state.tv.channel}`);
+        });
+        qs('#btnTvChDown').addEventListener('click', () => {
+          state.tv.channel = clamp(state.tv.channel - 1, 1, 999);
+          tvAction(`CH ${state.tv.channel}`);
+        });
+        qs('#btnTvVolUp').addEventListener('click', () => {
+          state.tv.volume = clamp(state.tv.volume + 5, 0, 100);
+          tvAction(`VOL ${state.tv.volume}`);
+        });
+        qs('#btnTvVolDown').addEventListener('click', () => {
+          state.tv.volume = clamp(state.tv.volume - 5, 0, 100);
+          tvAction(`VOL ${state.tv.volume}`);
+        });
+
+        // logs
+        qs('#btnClearLogs').addEventListener('click', () => {
+          state.logs = [];
+          renderLogs();
+          toast('Logs cleared');
+        });
+
+        // settings
+        qsa('[data-accent]').forEach(b => {
+          b.addEventListener('click', () => setAccent(b.getAttribute('data-accent')));
+        });
+        const glitchSlider = qs('#glitchSlider');
+        glitchSlider.addEventListener('input', (e) => setGlitch(e.target.value));
+        setGlitch(glitchSlider.value);
+
+        // general
+        updateClock();
+        setInterval(updateClock, 1000);
+
+        // initial logs
+        addLog('Boot sequence complete');
+        addLog(`Camera API: ${supportsCamera() ? 'OK' : 'NO'}`);
+        addLog(`FaceDetector: ${supportsFaceDetector() ? 'OK' : 'NO'}`);
+        addLog(`Web Bluetooth: ${state.bt.supported ? 'OK' : 'NO'}`);
+
+        // stop camera on view change away from scanner? keep running for vibe.
+        // But we’ll auto-stop if leaving scanner to be polite.
+        const origSetView = setView;
+        window.addEventListener('click', (e) => {
+          const btn = e.target.closest('[data-open]');
+          if (!btn) return;
+          const dest = btn.getAttribute('data-open');
+          if (state.currentView === 'scanner' && dest !== 'scanner') {
+            stopCamera();
+          }
+        });
+
+        window.addEventListener('visibilitychange', () => {
+          if (document.hidden) {
+            stopCamera();
+          }
+        });
+
+        window.addEventListener('resize', () => {
+          if (state.camera.running) resizeOverlay();
+        });
+      }
+
+      init();
+    })();
+  </script>
 </body>
 </html>
