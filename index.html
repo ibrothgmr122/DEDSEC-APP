@@ -1,1619 +1,1742 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>DEDSEC PHONE — Browser Demo</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#ff6a00" />
+  <title>Flipper Pocket (UI Simulator)</title>
+
+  <!-- Tailwind CSS (required) -->
   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+
   <style>
     :root{
-      --accent: 34 197 94; /* emerald-500 */
-      --accent2: 6 182 212; /* cyan-500 */
-      --danger: 239 68 68;
-      --glitch: .35;
+      --case:#ff6a00;
+      --case2:#ff7d1f;
+      --caseShadow: rgba(0,0,0,.25);
+      --screenBg: #cfe6cf;
+      --screenInk: #0b1a12;
+      --screenBorder: rgba(0,0,0,.35);
+      --btn: #111;
+      --btn2: #222;
+      --btnHalo: rgba(255,255,255,.22);
+      --emboss: rgba(255,255,255,.20);
+      --deboss: rgba(0,0,0,.18);
+      --bezel: rgba(255,255,255,.25);
+      --gloss: rgba(255,255,255,.35);
+      --gloss2: rgba(255,255,255,.08);
+      --fontPixel: "Press Start 2P", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --fontUI: Inter, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
+      --brightness: 1;
     }
 
-    html, body { height: 100%; }
-    body { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+    html, body {
+      height: 100%;
+      overscroll-behavior: none;
+      touch-action: manipulation;
+      font-family: var(--fontUI);
+      background: radial-gradient(1200px 900px at 30% 20%, #1d2430 0%, #0b1020 45%, #070a12 100%);
+      color: #e8eefc;
+    }
 
-    .crt{ position: relative; }
-    .crt::before{
+    /* Prevent text selection while pressing buttons */
+    .noselect{ user-select:none; -webkit-user-select:none; }
+
+    /* Device shell */
+    .flipper {
+      width: min(92vw, 860px);
+      aspect-ratio: 2.05 / 1; /* landscape device */
+      border-radius: 34px;
+      background:
+        radial-gradient(120% 120% at 20% 10%, rgba(255,255,255,.35) 0%, rgba(255,255,255,0) 35%),
+        linear-gradient(180deg, var(--case2), var(--case) 55%, #f85f00);
+      box-shadow:
+        0 22px 60px var(--caseShadow),
+        inset 0 2px 0 rgba(255,255,255,.35),
+        inset 0 -10px 18px rgba(0,0,0,.22);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .flipper::before {
       content:"";
       position:absolute;
-      inset:0;
+      inset: 10px;
+      border-radius: 26px;
+      box-shadow: inset 0 0 0 2px rgba(255,255,255,.12);
       pointer-events:none;
+    }
+
+    /* Subtle embossed icons across the case (not exact trademarks) */
+    .case-pattern {
+      position:absolute;
+      inset: 0;
+      opacity: .22;
+      pointer-events:none;
+      mix-blend-mode: soft-light;
+      filter: saturate(.9);
+      background:
+        radial-gradient(circle at 20% 78%, rgba(255,255,255,.35) 0 2px, transparent 3px),
+        radial-gradient(circle at 24% 80%, rgba(255,255,255,.25) 0 2px, transparent 3px),
+        radial-gradient(circle at 28% 78%, rgba(255,255,255,.28) 0 2px, transparent 3px),
+        radial-gradient(circle at 68% 18%, rgba(0,0,0,.18) 0 2px, transparent 3px),
+        radial-gradient(circle at 72% 16%, rgba(0,0,0,.12) 0 2px, transparent 3px),
+        radial-gradient(circle at 76% 18%, rgba(0,0,0,.15) 0 2px, transparent 3px),
+        linear-gradient(135deg, rgba(255,255,255,.20), rgba(255,255,255,0) 50%),
+        repeating-linear-gradient(45deg, rgba(255,255,255,.10) 0 1px, rgba(0,0,0,0) 1px 9px);
+    }
+
+    /* Layout inside device */
+    .flipper-inner {
+      position:absolute;
+      inset: 18px;
+      display:grid;
+      grid-template-columns: 1.25fr 0.85fr;
+      gap: 18px;
+    }
+
+    .left-side {
+      display:flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .brandbar {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+      padding: 2px 4px;
+    }
+
+    .brand {
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      font-weight: 800;
+      letter-spacing: .02em;
+    }
+
+    .brand .mark {
+      width: 44px;
+      height: 22px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, rgba(255,255,255,.35), rgba(255,255,255,.08));
+      box-shadow: inset 0 0 0 2px rgba(255,255,255,.18);
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Simple dolphin-ish blob (original, not exact logo) */
+    .brand .mark svg{ position:absolute; inset:0; }
+
+    .badge {
+      display:flex;
+      align-items:center;
+      gap: 8px;
+      font-size: 12px;
+      color: rgba(255,255,255,.9);
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(0,0,0,.18);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.14);
+    }
+
+    .screen {
+      flex: 1;
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(0,0,0,.08));
+      padding: 12px;
+      box-shadow:
+        inset 0 0 0 2px rgba(255,255,255,.18),
+        inset 0 -10px 20px rgba(0,0,0,.18);
+    }
+
+    .screen-inner {
+      height: 100%;
+      border-radius: 12px;
+      background:
+        radial-gradient(120% 100% at 30% 25%, rgba(255,255,255,.35), rgba(255,255,255,0) 55%),
+        linear-gradient(180deg, #e6f7e6, var(--screenBg));
+      box-shadow:
+        inset 0 0 0 2px var(--screenBorder),
+        inset 0 -8px 18px rgba(0,0,0,.12);
+      color: var(--screenInk);
+      font-family: var(--fontPixel);
+      letter-spacing: .01em;
+      transform: translateZ(0);
+      filter: saturate(.9) contrast(1.02) brightness(var(--brightness));
+      position: relative;
+      overflow: hidden;
+    }
+
+    .scanlines {
+      position:absolute;
+      inset:0;
       background: repeating-linear-gradient(
         to bottom,
-        rgba(255,255,255,0.06),
-        rgba(255,255,255,0.06) 1px,
-        rgba(0,0,0,0) 3px,
-        rgba(0,0,0,0) 7px
+        rgba(0,0,0,.05) 0,
+        rgba(0,0,0,.05) 1px,
+        rgba(0,0,0,0) 2px,
+        rgba(0,0,0,0) 4px
       );
-      opacity: .10;
-      mix-blend-mode: overlay;
+      opacity: .40;
+      pointer-events:none;
+      mix-blend-mode: multiply;
     }
-    .crt::after{
+
+    .screen-ui {
+      position:absolute;
+      inset: 10px;
+      display:flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .status {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      font-size: 10px;
+      opacity: .9;
+    }
+
+    .status .right {
+      display:flex;
+      gap: 10px;
+      align-items:center;
+    }
+
+    .battery {
+      width: 30px;
+      height: 12px;
+      border-radius: 3px;
+      border: 2px solid rgba(0,0,0,.70);
+      position: relative;
+      box-sizing: border-box;
+    }
+    .battery:after{
       content:"";
       position:absolute;
-      inset:0;
-      pointer-events:none;
-      background:
-        radial-gradient(circle at 50% 20%, rgba(0,0,0,.0), rgba(0,0,0,.55) 70%),
-        radial-gradient(circle at 20% 0%, rgba(var(--accent), .18), transparent 45%),
-        radial-gradient(circle at 80% 85%, rgba(var(--accent2), .14), transparent 50%);
-      opacity: 1;
+      right: -5px;
+      top: 3px;
+      width: 3px;
+      height: 6px;
+      border-radius: 1px;
+      background: rgba(0,0,0,.7);
+    }
+    .battery .fill{
+      position:absolute;
+      left: 2px;
+      top: 2px;
+      bottom: 2px;
+      width: 70%;
+      border-radius: 2px;
+      background: rgba(0,0,0,.75);
     }
 
-    .accentText{ color: rgb(var(--accent)); }
-    .accentSoft{ color: rgba(var(--accent), .75); }
-    .accentBorder{ border-color: rgba(var(--accent), .35); }
-    .accentBg{ background-color: rgba(var(--accent), .12); }
-    .accentGlow{ box-shadow: 0 0 26px rgba(var(--accent), .22); }
-    .dangerText{ color: rgb(var(--danger)); }
-
-    .glow{ text-shadow: 0 0 12px rgba(var(--accent), .55); }
-
-    .glitch{
-      position: relative;
-      display: inline-block;
-      letter-spacing: .06em;
+    .content {
+      flex: 1;
+      border-radius: 10px;
+      padding: 6px;
+      box-shadow: inset 0 0 0 2px rgba(0,0,0,.22);
+      background: rgba(255,255,255,.14);
+      overflow: hidden;
     }
-    .glitch::before,
-    .glitch::after{
-      content: attr(data-text);
-      position: absolute;
-      left: 0;
-      top: 0;
+
+    .footer {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      font-size: 9px;
+      opacity: .95;
+      padding-top: 2px;
+    }
+
+    .menu-item {
+      display:flex;
+      align-items:center;
+      gap: 8px;
+      padding: 6px 6px;
+      border-radius: 8px;
+      font-size: 10px;
+      line-height: 1.15;
+    }
+    .menu-item .icon{ width: 14px; height: 14px; display:inline-flex; }
+    .menu-item.sel{
+      background: rgba(0,0,0,.78);
+      color: #e9ffe9;
+      box-shadow: inset 0 0 0 2px rgba(0,0,0,.9);
+    }
+
+    .mono-box {
+      border-radius: 10px;
+      box-shadow: inset 0 0 0 2px rgba(0,0,0,.22);
+      background: rgba(255,255,255,.14);
+      padding: 8px;
+      font-size: 10px;
+      line-height: 1.45;
+    }
+
+    .right-side {
+      display:flex;
+      flex-direction: column;
+      gap: 14px;
+      align-items: center;
+    }
+
+    /* D-pad and buttons */
+    .controls {
       width: 100%;
-      opacity: calc(var(--glitch) + .05);
-      pointer-events: none;
-      filter: saturate(1.3);
-    }
-    .glitch::before{
-      transform: translate(2px, -1px);
-      color: rgba(var(--accent2), .95);
-      clip-path: inset(0 0 62% 0);
-      animation: glitchTop 2.2s infinite linear alternate-reverse;
-      text-shadow: -1px 0 rgba(var(--accent), .35);
-    }
-    .glitch::after{
-      transform: translate(-2px, 1px);
-      color: rgba(var(--accent), .95);
-      clip-path: inset(58% 0 0 0);
-      animation: glitchBottom 1.7s infinite linear alternate-reverse;
-      text-shadow: 1px 0 rgba(168, 85, 247, .35);
-    }
-    @keyframes glitchTop{
-      0%{ clip-path: inset(0 0 78% 0); }
-      12%{ clip-path: inset(0 0 46% 0); }
-      24%{ clip-path: inset(0 0 64% 0); }
-      45%{ clip-path: inset(0 0 36% 0); }
-      72%{ clip-path: inset(0 0 70% 0); }
-      100%{ clip-path: inset(0 0 50% 0); }
-    }
-    @keyframes glitchBottom{
-      0%{ clip-path: inset(62% 0 0 0); }
-      16%{ clip-path: inset(48% 0 0 0); }
-      44%{ clip-path: inset(70% 0 0 0); }
-      68%{ clip-path: inset(56% 0 0 0); }
-      100%{ clip-path: inset(66% 0 0 0); }
+      flex: 1;
+      display:flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 16px;
+      padding: 6px;
     }
 
-    .btn{
-      border: 1px solid rgba(var(--accent), .32);
-      background: rgba(8, 12, 10, .72);
-      color: rgba(var(--accent), .85);
-      border-radius: 14px;
-      padding: 10px 12px;
-      transition: transform .08s ease, border-color .15s ease, background-color .15s ease;
-    }
-    .btn:hover{ border-color: rgba(var(--accent), .55); background: rgba(10, 16, 12, .78); }
-    .btn:active{ transform: translateY(1px) scale(.995); }
-
-    .btnDanger{
-      border: 1px solid rgba(var(--danger), .40);
-      color: rgba(var(--danger), .92);
+    .ctrl-row {
+      width: 100%;
+      display:flex;
+      justify-content: space-between;
+      align-items:center;
+      gap: 14px;
     }
 
-    .chip{
-      border: 1px solid rgba(var(--accent), .26);
-      background: rgba(4, 8, 6, .55);
-      border-radius: 999px;
-      padding: 2px 9px;
-      font-size: 11px;
-      color: rgba(var(--accent), .75);
-      white-space: nowrap;
-    }
-
-    .card{
-      border: 1px solid rgba(var(--accent), .22);
-      background: rgba(9, 12, 10, .66);
-      border-radius: 18px;
-    }
-
-    .mono{ font-family: inherit; }
-
-    .tap{
+    .btn {
       -webkit-tap-highlight-color: transparent;
-      user-select: none;
-    }
-
-    .toast{
-      position: absolute;
-      left: 50%;
-      transform: translateX(-50%);
-      bottom: 88px;
-      max-width: 85%;
-      border: 1px solid rgba(var(--accent), .30);
-      background: rgba(0,0,0,.66);
+      touch-action: manipulation;
+      width: 70px;
+      height: 46px;
       border-radius: 16px;
-      padding: 10px 12px;
-      font-size: 12px;
-      color: rgba(244, 244, 245, .92);
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity .18s ease, transform .18s ease;
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(0,0,0,.25)),
+                  radial-gradient(140% 140% at 35% 15%, rgba(255,255,255,.20), rgba(255,255,255,0) 55%),
+                  linear-gradient(180deg, var(--btn2), var(--btn));
+      box-shadow:
+        0 14px 22px rgba(0,0,0,.28),
+        inset 0 2px 0 rgba(255,255,255,.10),
+        inset 0 -10px 14px rgba(0,0,0,.35);
+      position: relative;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color: rgba(255,255,255,.92);
+      font-weight: 700;
+      font-size: 14px;
+      letter-spacing: .02em;
     }
-    .toast.show{ opacity: 1; transform: translateX(-50%) translateY(-6px); }
 
-    /* Make valid: canvas text crisp */
-    canvas{ image-rendering: crisp-edges; }
+    .btn:before{
+      content:"";
+      position:absolute;
+      inset: 7px;
+      border-radius: 12px;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.10);
+      pointer-events:none;
+    }
+
+    .btn:active, .btn.pressed{
+      transform: translateY(2px);
+      box-shadow:
+        0 10px 18px rgba(0,0,0,.22),
+        inset 0 2px 0 rgba(255,255,255,.08),
+        inset 0 -12px 16px rgba(0,0,0,.40);
+    }
+
+    .dpad {
+      width: 190px;
+      height: 190px;
+      position: relative;
+      display:grid;
+      place-items:center;
+    }
+
+    .dpad .plate{
+      position:absolute;
+      inset: 0;
+      border-radius: 34px;
+      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(0,0,0,.18)),
+                  radial-gradient(140% 140% at 35% 15%, rgba(255,255,255,.20), rgba(255,255,255,0) 55%),
+                  linear-gradient(180deg, #262626, #0e0e0e);
+      box-shadow:
+        0 18px 26px rgba(0,0,0,.28),
+        inset 0 2px 0 rgba(255,255,255,.10),
+        inset 0 -14px 18px rgba(0,0,0,.42);
+    }
+
+    .dpad .arm {
+      width: 62px;
+      height: 62px;
+      border-radius: 18px;
+      position:absolute;
+      display:grid;
+      place-items:center;
+      color: rgba(255,255,255,.92);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(0,0,0,.25)),
+                  linear-gradient(180deg, #1f1f1f, #0a0a0a);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.10),
+        inset 0 -10px 14px rgba(0,0,0,.45);
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+
+    .dpad .arm:active, .dpad .arm.pressed{
+      transform: translateY(2px);
+    }
+
+    .dpad .up{ top: 12px; left: 50%; transform: translateX(-50%); }
+    .dpad .down{ bottom: 12px; left: 50%; transform: translateX(-50%); }
+    .dpad .left{ left: 12px; top: 50%; transform: translateY(-50%); }
+    .dpad .right{ right: 12px; top: 50%; transform: translateY(-50%); }
+
+    .dpad .ok {
+      width: 76px;
+      height: 76px;
+      border-radius: 26px;
+      position: relative;
+      z-index: 2;
+      display:grid;
+      place-items:center;
+      background:
+        radial-gradient(120% 120% at 35% 20%, rgba(255,255,255,.25), rgba(255,255,255,0) 58%),
+        linear-gradient(180deg, #2a2a2a, #0b0b0b);
+      box-shadow:
+        0 12px 16px rgba(0,0,0,.26),
+        inset 0 2px 0 rgba(255,255,255,.12),
+        inset 0 -14px 18px rgba(0,0,0,.46);
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+      color: rgba(255,255,255,.92);
+      font-weight: 900;
+      letter-spacing: .04em;
+      font-size: 12px;
+    }
+
+    .dpad .ok:active, .dpad .ok.pressed{
+      transform: translateY(2px);
+    }
+
+    /* Portrait overlay */
+    .rotate-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      display: none;
+      background: rgba(0,0,0,.72);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+
+    .rotate-overlay.show{ display: grid; place-items: center; }
+
+    .rotate-card {
+      width: min(92vw, 560px);
+      border-radius: 22px;
+      background: rgba(15,20,35,.92);
+      box-shadow: 0 20px 60px rgba(0,0,0,.45);
+      padding: 18px;
+      border: 1px solid rgba(255,255,255,.12);
+    }
+
+    .rotate-icon {
+      width: 86px;
+      height: 86px;
+      border-radius: 20px;
+      display:grid;
+      place-items:center;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.12);
+      margin-bottom: 12px;
+    }
+
+    /* Prevent iOS callout on long press */
+    * { -webkit-touch-callout: none; }
+
+    /* Small mobile tweaks */
+    @media (max-height: 420px) {
+      .flipper-inner{ inset: 14px; }
+    }
+
+    @media (max-width: 520px) {
+      .btn{ width: 62px; }
+      .dpad{ width: 168px; height: 168px; }
+      .dpad .arm{ width: 56px; height: 56px; }
+      .dpad .ok{ width: 70px; height: 70px; }
+    }
   </style>
 </head>
-<body class="min-h-screen bg-black text-zinc-100">
-  <div class="min-h-screen flex items-center justify-center p-4">
-    <div class="w-[390px] max-w-full">
-      <div class="mb-3 text-center text-[11px] text-zinc-500 leading-relaxed">
-        DEDSEC-style UI demo (browser). It <span class="text-zinc-400">does not</span> identify real people or hack devices.
-        Camera + Bluetooth require <span class="text-zinc-300">HTTPS (or localhost)</span>.
-      </div>
 
-      <div id="phone" class="crt relative aspect-[9/19] rounded-[2.6rem] border accentBorder bg-zinc-950 overflow-hidden accentGlow">
-        <div class="absolute inset-0 pointer-events-none">
-          <div class="absolute -top-12 left-8 h-28 w-28 rounded-full" style="background: radial-gradient(circle, rgba(var(--accent),.18), transparent 65%);"></div>
-          <div class="absolute bottom-10 right-4 h-36 w-36 rounded-full" style="background: radial-gradient(circle, rgba(var(--accent2),.14), transparent 65%);"></div>
+<body class="noselect">
+  <div id="rotateOverlay" class="rotate-overlay">
+    <div class="rotate-card">
+      <div class="flex items-center gap-3">
+        <div class="rotate-icon">
+          <svg viewBox="0 0 24 24" fill="none" class="w-10 h-10" aria-hidden="true">
+            <path d="M8 3h8a2 2 0 0 1 2 2v11" stroke="rgba(255,255,255,.85)" stroke-width="2" stroke-linecap="round"/>
+            <path d="M16 21H8a2 2 0 0 1-2-2V8" stroke="rgba(255,255,255,.85)" stroke-width="2" stroke-linecap="round"/>
+            <path d="M7 5H5v2" stroke="rgba(255,255,255,.85)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M17 19h2v-2" stroke="rgba(255,255,255,.85)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M5 7c1.7-2 4.2-3.2 7-3.2 4.2 0 7.7 2.6 9 6.2" stroke="rgba(255,255,255,.55)" stroke-width="2" stroke-linecap="round"/>
+            <path d="M19 17c-1.7 2-4.2 3.2-7 3.2-4.2 0-7.7-2.6-9-6.2" stroke="rgba(255,255,255,.55)" stroke-width="2" stroke-linecap="round"/>
+          </svg>
         </div>
-
-        <header class="relative px-5 pt-5 pb-3 flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <div class="w-2 h-2 rounded-full" style="background: rgb(var(--accent)); box-shadow: 0 0 12px rgba(var(--accent), .6);"></div>
-            <div class="text-[11px] tracking-[0.28em] accentSoft">DEDSEC</div>
-          </div>
-          <div class="flex items-center gap-2 text-[11px] text-zinc-300">
-            <span id="clock" class="tabular-nums">--:--</span>
-            <span id="secureTag" class="chip">SECURE</span>
-          </div>
-        </header>
-
-        <div class="relative px-5">
-          <div class="card p-4">
-            <div class="flex items-start justify-between gap-3">
-              <div class="min-w-0">
-                <h1 class="glitch text-xl font-semibold tracking-wide glow" data-text="DEDSEC PHONE">DEDSEC PHONE</h1>
-                <p class="mt-1 text-[11px] text-zinc-400 leading-relaxed">
-                  Scanner overlay + Bluetooth console + simulated ops. No facial identity lookup. Bluetooth only connects to devices you approve.
-                </p>
-              </div>
-              <button id="btnPanic" type="button" class="btn btnDanger tap text-[11px] px-3 py-2" title="Stops camera, disconnects Bluetooth, clears volatile data">
-                PANIC
-              </button>
-            </div>
-          </div>
+        <div>
+          <div class="text-lg font-semibold">Rotate to Landscape</div>
+          <div class="text-sm text-white/70">This is a Flipper-style UI simulator. For the full device layout, rotate your phone.</div>
         </div>
-
-        <main class="relative mt-4 px-5 pb-20">
-          <!-- HOME -->
-          <section data-view="home">
-            <div class="grid grid-cols-2 gap-3">
-              <button class="card tap p-4 text-left hover:border-emerald-400/40 transition" data-open="scanner" type="button">
-                <div class="flex items-center justify-between">
-                  <div class="text-[12px] accentSoft tracking-widest">SCANNER</div>
-                  <div class="chip">CAM</div>
-                </div>
-                <div class="mt-2 text-sm text-zinc-200">Human Scan</div>
-                <div class="mt-1 text-[11px] text-zinc-500">Camera overlay + face detection (if supported).</div>
-              </button>
-
-              <button class="card tap p-4 text-left hover:border-emerald-400/40 transition" data-open="bluetooth" type="button">
-                <div class="flex items-center justify-between">
-                  <div class="text-[12px] accentSoft tracking-widest">BLUETOOTH</div>
-                  <div class="chip">GATT</div>
-                </div>
-                <div class="mt-2 text-sm text-zinc-200">Device Console</div>
-                <div class="mt-1 text-[11px] text-zinc-500">Connect & inspect your devices (permission-based).</div>
-              </button>
-
-              <button class="card tap p-4 text-left hover:border-emerald-400/40 transition" data-open="tv" type="button">
-                <div class="flex items-center justify-between">
-                  <div class="text-[12px] accentSoft tracking-widest">REMOTE</div>
-                  <div class="chip">SIM</div>
-                </div>
-                <div class="mt-2 text-sm text-zinc-200">TV / Media</div>
-                <div class="mt-1 text-[11px] text-zinc-500">Simulation (web apps can't directly control TVs).</div>
-              </button>
-
-              <button class="card tap p-4 text-left hover:border-emerald-400/40 transition" data-open="logs" type="button">
-                <div class="flex items-center justify-between">
-                  <div class="text-[12px] accentSoft tracking-widest">LOGS</div>
-                  <div class="chip">SYS</div>
-                </div>
-                <div class="mt-2 text-sm text-zinc-200">Activity</div>
-                <div class="mt-1 text-[11px] text-zinc-500">See recent actions & events.</div>
-              </button>
-
-              <button class="card tap p-4 text-left hover:border-emerald-400/40 transition" data-open="settings" type="button">
-                <div class="flex items-center justify-between">
-                  <div class="text-[12px] accentSoft tracking-widest">SETTINGS</div>
-                  <div class="chip">UI</div>
-                </div>
-                <div class="mt-2 text-sm text-zinc-200">Tuning</div>
-                <div class="mt-1 text-[11px] text-zinc-500">Accent + glitch intensity + privacy.</div>
-              </button>
-
-              <div class="card p-4">
-                <div class="text-[12px] accentSoft tracking-widest">DISCLAIMER</div>
-                <div class="mt-2 text-[11px] text-zinc-500 leading-relaxed">
-                  This is a UI demo. It <span class="text-zinc-400">won’t</span> identify real people, hack Bluetooth devices, eject strangers, or turn off TVs.
-                  It only uses browser APIs with your explicit permission.
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <!-- SCANNER -->
-          <section data-view="scanner" class="hidden">
-            <div class="flex items-center justify-between">
-              <div>
-                <div class="text-[12px] accentSoft tracking-widest">SCANNER</div>
-                <div class="text-[11px] text-zinc-500">Camera overlay + (optional) face detection.</div>
-              </div>
-              <div class="flex items-center gap-2">
-                <span id="camSupport" class="chip">CHECKING…</span>
-              </div>
-            </div>
-
-            <div class="mt-3 card overflow-hidden">
-              <div class="relative">
-                <video id="video" class="w-full aspect-video bg-black" playsinline muted></video>
-                <canvas id="overlay" class="absolute inset-0 w-full h-full"></canvas>
-                <div class="absolute top-3 left-3 flex items-center gap-2">
-                  <span id="camStatus" class="chip">CAM: OFF</span>
-                  <span id="scanStatus" class="chip">SCAN: IDLE</span>
-                </div>
-                <div class="absolute bottom-3 left-3 right-3 flex items-center justify-between gap-2">
-                  <div class="text-[11px] text-zinc-300/90"><span class="accentSoft">MODE</span>: <span id="scanMode">CODENAME</span></div>
-                  <div class="text-[11px] text-zinc-500"><span id="faceCount">0</span> target(s)</div>
-                </div>
-              </div>
-
-              <div class="p-3 grid grid-cols-2 gap-2">
-                <button id="btnCamStart" type="button" class="btn tap text-[12px]">Start Camera</button>
-                <button id="btnCamStop" type="button" class="btn tap text-[12px]">Stop</button>
-                <button id="btnCamSwitch" type="button" class="btn tap text-[12px]">Switch Lens</button>
-                <button id="btnSnapshot" type="button" class="btn tap text-[12px]">Snapshot</button>
-              </div>
-            </div>
-
-            <div class="mt-3 card p-3">
-              <div class="flex items-center justify-between">
-                <div class="text-[12px] accentSoft tracking-widest">TARGETS</div>
-                <div class="flex items-center gap-2">
-                  <button id="btnClearTags" type="button" class="btn tap text-[11px] px-3 py-2">Clear Tags</button>
-                </div>
-              </div>
-              <div id="facesList" class="mt-2 space-y-2"></div>
-
-              <div class="mt-3 text-[11px] text-zinc-500 leading-relaxed">
-                Notes: If your browser supports the <span class="text-zinc-400">FaceDetector</span> API, you’ll see face boxes.
-                The “names” shown are <span class="text-zinc-400">fake codenames</span> or aliases you set locally.
-              </div>
-            </div>
-          </section>
-
-          <!-- BLUETOOTH -->
-          <section data-view="bluetooth" class="hidden">
-            <div class="flex items-center justify-between">
-              <div>
-                <div class="text-[12px] accentSoft tracking-widest">BLUETOOTH</div>
-                <div class="text-[11px] text-zinc-500">Permission-based device console (Web Bluetooth).</div>
-              </div>
-              <span id="btSupport" class="chip">CHECKING…</span>
-            </div>
-
-            <div class="mt-3 card p-3">
-              <div class="text-[11px] text-zinc-500 leading-relaxed">
-                This console only connects to devices you <span class="text-zinc-400">explicitly select</span> in the browser prompt.
-                No scanning/hacking other people’s devices.
-              </div>
-              <div class="mt-3 grid grid-cols-2 gap-2">
-                <button id="btnBtFind" type="button" class="btn tap text-[12px]">Find Device</button>
-                <button id="btnBtDisconnectAll" type="button" class="btn tap text-[12px]">Disconnect All</button>
-              </div>
-            </div>
-
-            <div class="mt-3 grid grid-cols-1 gap-3">
-              <div class="card p-3">
-                <div class="flex items-center justify-between">
-                  <div class="text-[12px] accentSoft tracking-widest">DEVICES</div>
-                  <div class="text-[11px] text-zinc-500"><span id="btCount">0</span> known</div>
-                </div>
-                <div id="btList" class="mt-2 space-y-2"></div>
-              </div>
-
-              <div class="card p-3">
-                <div class="flex items-center justify-between">
-                  <div class="text-[12px] accentSoft tracking-widest">DETAILS</div>
-                  <span id="btSelected" class="chip">NONE</span>
-                </div>
-                <div id="btDetails" class="mt-2 text-[12px] text-zinc-200">
-                  <div class="text-[11px] text-zinc-500">Select a device to view details.</div>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <!-- TV -->
-          <section data-view="tv" class="hidden">
-            <div class="flex items-center justify-between">
-              <div>
-                <div class="text-[12px] accentSoft tracking-widest">REMOTE</div>
-                <div class="text-[11px] text-zinc-500">Simulation only (no real TV control from a web page).</div>
-              </div>
-              <span id="tvState" class="chip">POWER: OFF</span>
-            </div>
-
-            <div class="mt-3 card p-3">
-              <div class="flex items-center justify-between">
-                <div class="text-[12px] accentSoft tracking-widest">MEDIA NODE</div>
-                <div id="tvSignal" class="chip" style="opacity:.75">SIGNAL: IDLE</div>
-              </div>
-              <div class="mt-2 text-[11px] text-zinc-500 leading-relaxed">
-                Want real control? You’d need a <span class="text-zinc-400">legit</span> integration (e.g., your own smart-TV API / home automation) with authorization.
-                This view mimics the DedSec vibe without hacking.
-              </div>
-            </div>
-
-            <div class="mt-3 card p-3">
-              <div class="grid grid-cols-3 gap-2">
-                <button id="btnTvPower" type="button" class="btn tap">Power</button>
-                <button id="btnTvMute" type="button" class="btn tap">Mute</button>
-                <button id="btnTvInput" type="button" class="btn tap">Input</button>
-
-                <button id="btnTvChUp" type="button" class="btn tap">Ch +</button>
-                <button id="btnTvOk" type="button" class="btn tap">OK</button>
-                <button id="btnTvChDown" type="button" class="btn tap">Ch -</button>
-
-                <button id="btnTvVolUp" type="button" class="btn tap">Vol +</button>
-                <button id="btnTvMenu" type="button" class="btn tap">Menu</button>
-                <button id="btnTvVolDown" type="button" class="btn tap">Vol -</button>
-              </div>
-
-              <div class="mt-3">
-                <div class="flex items-center justify-between text-[11px] text-zinc-500">
-                  <div>CH: <span id="tvChannel" class="text-zinc-300 tabular-nums">1</span></div>
-                  <div>VOL: <span id="tvVolume" class="text-zinc-300 tabular-nums">30</span></div>
-                </div>
-                <input id="tvVolumeSlider" class="mt-2 w-full" type="range" min="0" max="100" value="30" />
-              </div>
-            </div>
-          </section>
-
-          <!-- LOGS -->
-          <section data-view="logs" class="hidden">
-            <div class="flex items-center justify-between">
-              <div>
-                <div class="text-[12px] accentSoft tracking-widest">LOGS</div>
-                <div class="text-[11px] text-zinc-500">Recent activity for this session.</div>
-              </div>
-              <button id="btnClearLogs" type="button" class="btn tap text-[11px] px-3 py-2">Clear</button>
-            </div>
-
-            <div class="mt-3 card p-3">
-              <div id="logsList" class="space-y-2"></div>
-              <div id="logsEmpty" class="text-[11px] text-zinc-500">No logs yet.</div>
-            </div>
-          </section>
-
-          <!-- SETTINGS -->
-          <section data-view="settings" class="hidden">
-            <div class="flex items-center justify-between">
-              <div>
-                <div class="text-[12px] accentSoft tracking-widest">SETTINGS</div>
-                <div class="text-[11px] text-zinc-500">UI + privacy toggles.</div>
-              </div>
-              <span class="chip">LOCAL</span>
-            </div>
-
-            <div class="mt-3 card p-3 space-y-4">
-              <div>
-                <div class="text-[12px] accentSoft tracking-widest">ACCENT</div>
-                <div class="mt-2 grid grid-cols-3 gap-2">
-                  <button class="btn tap" type="button" data-accent="emerald" title="Emerald">Emerald</button>
-                  <button class="btn tap" type="button" data-accent="cyan" title="Cyan">Cyan</button>
-                  <button class="btn tap" type="button" data-accent="purple" title="Purple">Purple</button>
-                </div>
-              </div>
-
-              <div>
-                <div class="flex items-center justify-between">
-                  <div class="text-[12px] accentSoft tracking-widest">GLITCH</div>
-                  <div class="chip"><span id="glitchVal">0.35</span></div>
-                </div>
-                <input id="glitchSlider" class="mt-2 w-full" type="range" min="0" max="1" step="0.01" value="0.35" />
-                <div class="mt-2 text-[11px] text-zinc-500">Changes the intensity of the title glitch effect.</div>
-              </div>
-
-              <div>
-                <div class="text-[12px] accentSoft tracking-widest">PRIVACY</div>
-                <div class="mt-2 space-y-2 text-[11px] text-zinc-500 leading-relaxed">
-                  <div class="flex items-start gap-2">
-                    <span class="chip">CAM</span>
-                    <div>Camera stream stays in your browser. No uploads.</div>
-                  </div>
-                  <div class="flex items-start gap-2">
-                    <span class="chip">BT</span>
-                    <div>Bluetooth only works if you pick a device in a browser permission prompt.</div>
-                  </div>
-                  <div class="flex items-start gap-2">
-                    <span class="chip">ID</span>
-                    <div>No real person identification is performed (only face boxes / fake codenames / your local aliases).</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-        </main>
-
-        <nav class="absolute bottom-0 left-0 right-0 px-5 pb-5">
-          <div class="card flex items-center justify-between px-4 py-3">
-            <button id="btnBack" type="button" class="btn tap text-[12px] px-3 py-2">Back</button>
-            <button id="btnHome" type="button" class="btn tap text-[12px] px-3 py-2">Home</button>
-            <button id="btnRecent" type="button" class="btn tap text-[12px] px-3 py-2">Recent</button>
-          </div>
-        </nav>
-
-        <div id="toast" class="toast"></div>
       </div>
-
-      <div class="mt-3 text-[11px] text-zinc-500 leading-relaxed">
-        Tip: For Bluetooth, use Chrome on Android/desktop. iOS Safari doesn’t support Web Bluetooth.
+      <div class="mt-4 text-xs text-white/60 leading-relaxed">
+        Note: This is a UI/UX simulator only. Web browsers can’t replicate real Sub‑GHz/NFC/RFID/IR hardware functionality.
+      </div>
+      <div class="mt-4 flex flex-wrap gap-2">
+        <button id="dismissRotate" class="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 text-sm">Preview anyway</button>
+        <button id="requestFullscreen" class="px-3 py-2 rounded-xl bg-orange-500/80 hover:bg-orange-500 border border-orange-200/20 text-sm text-black font-semibold">Go fullscreen</button>
       </div>
     </div>
   </div>
 
+  <main class="min-h-screen flex flex-col items-center justify-center p-4">
+    <div class="w-full max-w-5xl flex items-center justify-between mb-3 px-1">
+      <div class="flex items-center gap-2">
+        <div class="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-[0_0_18px_rgba(52,211,153,.6)]"></div>
+        <div class="text-sm font-semibold">Flipper Pocket</div>
+        <div class="text-xs text-white/55">(fan-made UI simulator)</div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button id="helpBtn" class="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 text-sm">Help</button>
+        <button id="resetBtn" class="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 text-sm">Reset</button>
+      </div>
+    </div>
+
+    <section id="device" class="flipper noselect" aria-label="Flipper-style device">
+      <div class="case-pattern"></div>
+
+      <div class="flipper-inner">
+        <!-- LEFT: screen -->
+        <div class="left-side">
+          <div class="brandbar">
+            <div class="brand">
+              <div class="mark" aria-hidden="true">
+                <svg viewBox="0 0 88 44">
+                  <defs>
+                    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0" stop-color="rgba(255,255,255,.22)" />
+                      <stop offset="1" stop-color="rgba(255,255,255,.06)" />
+                    </linearGradient>
+                  </defs>
+                  <rect x="1" y="2" width="86" height="40" rx="20" fill="url(#g)" stroke="rgba(255,255,255,.12)"/>
+                  <path d="M22 26c8-10 18-15 30-13 7 1 10 4 16 7-5 0-8 1-11 3 2 3 2 6-2 10-6 5-18 5-27 1-4-2-7-4-6-8z" fill="rgba(255,255,255,.16)"/>
+                  <circle cx="50" cy="21" r="2" fill="rgba(0,0,0,.35)"/>
+                </svg>
+              </div>
+              <div class="leading-tight">
+                <div class="text-sm font-extrabold">FLIPPER</div>
+                <div class="text-[11px] text-white/80 -mt-0.5">POCKET UI</div>
+              </div>
+            </div>
+
+            <div class="badge" title="Simulator mode">
+              <span class="inline-block w-2 h-2 rounded-full bg-black/60"></span>
+              <span class="font-semibold">SIM</span>
+            </div>
+          </div>
+
+          <div class="screen" role="application" aria-label="Device screen">
+            <div class="screen-inner" id="screen">
+              <div class="scanlines"></div>
+              <div class="screen-ui">
+                <div class="status">
+                  <div class="left" id="statusLeft">FLIPPER</div>
+                  <div class="right">
+                    <div id="statusTime">--:--</div>
+                    <div class="battery" aria-label="Battery">
+                      <div class="fill" id="batteryFill"></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="content" id="screenContent" aria-live="polite"></div>
+
+                <div class="footer">
+                  <div id="softLeft">BACK</div>
+                  <div id="softCenter">OK</div>
+                  <div id="softRight">MENU</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="text-xs text-white/70 px-1 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="inline-block w-2 h-2 rounded-full bg-white/40"></span>
+              <span id="hint">Use D‑pad or swipe on the screen.</span>
+            </div>
+            <div class="text-white/50">v1.0</div>
+          </div>
+        </div>
+
+        <!-- RIGHT: controls -->
+        <div class="right-side">
+          <div class="controls w-full">
+            <div class="ctrl-row">
+              <button class="btn" data-action="back" aria-label="Back">↩</button>
+              <button class="btn" data-action="home" aria-label="Menu">≡</button>
+            </div>
+
+            <div class="dpad" aria-label="Directional pad">
+              <div class="plate"></div>
+              <button class="arm up" data-action="up" aria-label="Up">▲</button>
+              <button class="arm down" data-action="down" aria-label="Down">▼</button>
+              <button class="arm left" data-action="left" aria-label="Left">◀</button>
+              <button class="arm right" data-action="right" aria-label="Right">▶</button>
+              <button class="ok" data-action="ok" aria-label="OK">OK</button>
+            </div>
+
+            <div class="ctrl-row">
+              <button class="btn" data-action="x" aria-label="Action">X</button>
+              <button class="btn" data-action="y" aria-label="Tool">TOOL</button>
+            </div>
+          </div>
+
+          <div class="w-full">
+            <div class="px-3 py-2 rounded-2xl bg-black/15 border border-white/10 text-xs text-white/70">
+              Tip: On desktop, use Arrow keys + Enter + Esc.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="max-w-5xl w-full mt-4 text-xs text-white/55 leading-relaxed px-1">
+      This is a visual/interactive clone of the <span class="text-white/70 font-semibold">menu experience</span> only. It does not transmit RF, read NFC/RFID, or emit IR.
+    </div>
+
+    <!-- Help modal -->
+    <dialog id="helpDialog" class="rounded-2xl p-0 w-[min(92vw,720px)] bg-[#0f1423] text-white border border-white/10">
+      <div class="p-5">
+        <div class="flex items-start justify-between gap-4">
+          <div>
+            <div class="text-lg font-semibold">How to use</div>
+            <div class="text-sm text-white/70 mt-1">This is a touch-first Flipper-style UI simulator.</div>
+          </div>
+          <button id="closeHelp" class="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 text-sm">Close</button>
+        </div>
+
+        <div class="mt-4 grid md:grid-cols-2 gap-3 text-sm">
+          <div class="rounded-xl bg-white/5 border border-white/10 p-3">
+            <div class="font-semibold">Navigation</div>
+            <ul class="mt-2 space-y-1 text-white/75 text-sm">
+              <li>• D‑pad: move selection</li>
+              <li>• OK: enter / run</li>
+              <li>• Back: go back</li>
+              <li>• Menu (≡): jump to main menu</li>
+              <li>• Swipe on screen works too</li>
+            </ul>
+          </div>
+          <div class="rounded-xl bg-white/5 border border-white/10 p-3">
+            <div class="font-semibold">About “real” features</div>
+            <div class="mt-2 text-white/75 text-sm leading-relaxed">
+              Phones/browsers can’t clone real Sub‑GHz/NFC/RFID hardware or legally emulate every capability.
+              This page focuses on the UI and provides safe simulations.
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-4 text-xs text-white/60">
+          Not affiliated with or endorsed by Flipper Devices Inc.
+        </div>
+      </div>
+    </dialog>
+
+  </main>
+
   <script>
-    (() => {
-      const qs = (s, el = document) => el.querySelector(s);
-      const qsa = (s, el = document) => Array.from(el.querySelectorAll(s));
+    // -----------------------------
+    // Small utilities
+    // -----------------------------
+    const $ = (sel, root=document) => root.querySelector(sel);
+    const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
 
-      const state = {
-        currentView: 'home',
-        history: ['home'],
-        logs: [],
-        toastTimer: null,
-        camera: {
-          stream: null,
-          running: false,
-          facing: 'environment',
-          detector: null,
-          raf: 0,
-          lastScanTs: 0,
-          lastFaces: [],
-          codenames: {},
-          aliases: {},
-          codenameMode: true
-        },
-        bt: {
-          supported: !!navigator.bluetooth,
-          devices: new Map(),
-          selectedId: null
-        },
-        tv: {
-          power: false,
-          muted: false,
-          volume: 30,
-          channel: 1
-        }
-      };
+    function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
+    function nowTime(){
+      const d = new Date();
+      const hh = String(d.getHours()).padStart(2,'0');
+      const mm = String(d.getMinutes()).padStart(2,'0');
+      return `${hh}:${mm}`;
+    }
 
-      // ---------- utilities ----------
-      const pad2 = (n) => String(n).padStart(2, '0');
-      const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
+    function randHex(n){
+      let s = '';
+      const chars = '0123456789ABCDEF';
+      for(let i=0;i<n;i++) s += chars[Math.floor(Math.random()*chars.length)];
+      return s;
+    }
 
-      function nowTime() {
-        const d = new Date();
-        return `${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}`;
+    function beep(freq=880, ms=45, vol=0.04){
+      try{
+        const ac = beep._ac || (beep._ac = new (window.AudioContext || window.webkitAudioContext)());
+        const o = ac.createOscillator();
+        const g = ac.createGain();
+        o.type = 'square';
+        o.frequency.value = freq;
+        g.gain.value = vol;
+        o.connect(g); g.connect(ac.destination);
+        o.start();
+        setTimeout(()=>{ o.stop(); }, ms);
+      } catch(e) {}
+    }
+
+    // -----------------------------
+    // App state
+    // -----------------------------
+    const settings = {
+      sound: true,
+      vibrate: true,
+      brightness: 1,
+    };
+
+    const sim = {
+      battery: 0.76,
+      dolphin: {
+        level: 3,
+        xp: 42,
+      },
+      lastEvent: 'Ready.',
+    };
+
+    const stack = []; // navigation stack
+
+    function haptic(ms=12){
+      if(!settings.vibrate) return;
+      if(navigator.vibrate) navigator.vibrate(ms);
+    }
+
+    function clickFX(){
+      haptic(10);
+      if(settings.sound) beep(740, 35, 0.04);
+    }
+
+    // -----------------------------
+    // Screen definitions
+    // -----------------------------
+    const Screens = {};
+
+    function pushScreen(id, data={}){
+      const def = Screens[id];
+      if(!def) throw new Error('Unknown screen: '+id);
+      stack.push({ id, data, state: def.init ? def.init(data) : { ...data } });
+      render();
+    }
+
+    function popScreen(){
+      if(stack.length <= 1) return; // keep root
+      stack.pop();
+      render();
+    }
+
+    function gotoMain(){
+      while(stack.length > 1) stack.pop();
+      render();
+    }
+
+    function current(){
+      return stack[stack.length-1];
+    }
+
+    function iconSVG(kind){
+      // Simple monochrome icons for the menu
+      const common = 'fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"';
+      switch(kind){
+        case 'apps':
+          return `<svg viewBox="0 0 24 24" ${common}><path d="M4 4h7v7H4z"/><path d="M13 4h7v7h-7z"/><path d="M4 13h7v7H4z"/><path d="M13 13h7v7h-7z"/></svg>`;
+        case 'subghz':
+          return `<svg viewBox="0 0 24 24" ${common}><path d="M12 3v18"/><path d="M7 8c-2 2-2 6 0 8"/><path d="M17 8c2 2 2 6 0 8"/><path d="M4.5 5.5c-4 4-4 9 0 13"/><path d="M19.5 5.5c4 4 4 9 0 13"/></svg>`;
+        case 'nfc':
+          return `<svg viewBox="0 0 24 24" ${common}><path d="M6 7c6 0 12 5 12 10"/><path d="M6 11c4 0 8 3 8 6"/><path d="M6 15c2 0 4 2 4 2"/><path d="M18 7v10"/></svg>`;
+        case 'rfid':
+          return `<svg viewBox="0 0 24 24" ${common}><path d="M7 7h10v10H7z"/><path d="M16 16l3 3"/><path d="M8 8v8"/></svg>`;
+        case 'ir':
+          return `<svg viewBox="0 0 24 24" ${common}><path d="M12 12v9"/><path d="M8 17c2 2 6 2 8 0"/><path d="M7 6l2 2"/><path d="M17 6l-2 2"/><path d="M12 3v3"/></svg>`;
+        case 'badusb':
+          return `<svg viewBox="0 0 24 24" ${common}><path d="M9 7h6"/><path d="M10 11h4"/><path d="M12 3v4"/><path d="M7 8v7a5 5 0 0 0 10 0V8"/><path d="M9 19v2"/><path d="M15 19v2"/></svg>`;
+        case 'gpio':
+          return `<svg viewBox="0 0 24 24" ${common}><path d="M5 7h14"/><path d="M5 12h14"/><path d="M5 17h14"/><path d="M7 5v4"/><path d="M12 10v4"/><path d="M17 15v4"/></svg>`;
+        case 'settings':
+          return `<svg viewBox="0 0 24 24" ${common}><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6"/><path d="M19.4 15a7.9 7.9 0 0 0 .1-6l2-1.6-2-3.4-2.4 1a8 8 0 0 0-5.2-2l-.4-2.5H9.5L9.1 3a8 8 0 0 0-5.2 2l-2.4-1-2 3.4L1.5 9a7.9 7.9 0 0 0 .1 6L-.5 16.6l2 3.4 2.4-1a8 8 0 0 0 5.2 2l.4 2.5h4.1l.4-2.5a8 8 0 0 0 5.2-2l2.4 1 2-3.4L19.4 15z"/></svg>`;
+        case 'files':
+          return `<svg viewBox="0 0 24 24" ${common}><path d="M4 20V4h6l2 2h8v14H4z"/></svg>`;
+        case 'info':
+          return `<svg viewBox="0 0 24 24" ${common}><path d="M12 17v-6"/><path d="M12 8h.01"/><path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/></svg>`;
+        default:
+          return `<svg viewBox="0 0 24 24" ${common}><path d="M12 3v18"/><path d="M3 12h18"/></svg>`;
       }
-
-      function escapeHtml(str) {
-        return String(str)
-          .replaceAll('&', '&amp;')
-          .replaceAll('<', '&lt;')
-          .replaceAll('>', '&gt;')
-          .replaceAll('"', '&quot;')
-          .replaceAll("'", '&#039;');
-      }
-
-      function toast(msg, tone = 'info') {
-        const el = qs('#toast');
-        if (!el) return;
-        el.textContent = msg;
-        el.style.borderColor = tone === 'danger' ? 'rgba(239,68,68,.45)' : 'rgba(var(--accent), .30)';
-        el.classList.add('show');
-        clearTimeout(state.toastTimer);
-        state.toastTimer = setTimeout(() => el.classList.remove('show'), 1700);
-      }
-
-      function addLog(message, level = 'INFO') {
-        state.logs.unshift({ t: nowTime(), level, message });
-        if (state.logs.length > 120) state.logs.length = 120;
-        renderLogs();
-      }
-
-      // ---------- routing ----------
-      const viewEls = qsa('[data-view]');
-      function setView(name, push = true) {
-        if (!name) return;
-        if (state.currentView === name) return;
-
-        viewEls.forEach(v => {
-          v.classList.toggle('hidden', v.getAttribute('data-view') !== name);
-        });
-
-        state.currentView = name;
-        if (push) {
-          state.history.push(name);
-          if (state.history.length > 30) state.history.shift();
-        }
-
-        addLog(`VIEW → ${name.toUpperCase()}`);
-      }
-
-      function goBack() {
-        if (state.history.length <= 1) {
-          setView('home', false);
-          state.history = ['home'];
-          return;
-        }
-        state.history.pop();
-        const prev = state.history[state.history.length - 1] || 'home';
-        viewEls.forEach(v => v.classList.toggle('hidden', v.getAttribute('data-view') !== prev));
-        state.currentView = prev;
-        addLog(`BACK → ${prev.toUpperCase()}`);
-      }
-
-      function goHome() {
-        setView('home', true);
-      }
-
-      function showRecent() {
-        const last = state.history[state.history.length - 1];
-        const prev = state.history[state.history.length - 2];
-        toast(prev ? `Recent: ${prev}` : `Recent: ${last}`);
-      }
-
-      // ---------- clock ----------
-      function updateClock() {
-        const el = qs('#clock');
-        if (!el) return;
-        const d = new Date();
-        el.textContent = `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
-      }
-
-      // ---------- camera scanner ----------
-      const video = qs('#video');
-      const overlay = qs('#overlay');
-      const ctx = overlay.getContext('2d', { alpha: true });
-
-      function supportsCamera() {
-        return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
-      }
-
-      function supportsFaceDetector() {
-        return 'FaceDetector' in window;
-      }
-
-      const CODEWORDS = [
-        'LYNX', 'GHOST', 'SPARROW', 'NOVA', 'VANTA', 'ORBIT', 'NULL', 'DRIFT', 'EMBER',
-        'KITE', 'CIPHER', 'WRAITH', 'MIRAGE', 'RAVEN', 'ECHO', 'HEX', 'SIGMA', 'VECTOR'
-      ];
-
-      function codenameForIndex(i) {
-        if (state.camera.codenames[i]) return state.camera.codenames[i];
-        const word = CODEWORDS[(Math.floor(Math.random() * CODEWORDS.length) + i) % CODEWORDS.length];
-        const num = String(Math.floor(Math.random() * 90) + 10);
-        const code = `${word}-${num}`;
-        state.camera.codenames[i] = code;
-        return code;
-      }
-
-      function labelForFaceIndex(i) {
-        const alias = state.camera.aliases[i];
-        if (alias && alias.trim()) return alias.trim();
-        return state.camera.codenameMode ? codenameForIndex(i) : 'UNKNOWN';
-      }
-
-      async function startCamera() {
-        if (!supportsCamera()) {
-          toast('Camera API not available in this browser.', 'danger');
-          addLog('Camera start failed: unsupported', 'WARN');
-          return;
-        }
-
-        try {
-          await stopCamera();
-
-          const constraints = {
-            video: {
-              facingMode: state.camera.facing,
-              width: { ideal: 1280 },
-              height: { ideal: 720 }
-            },
-            audio: false
-          };
-
-          const stream = await navigator.mediaDevices.getUserMedia(constraints);
-          state.camera.stream = stream;
-          video.srcObject = stream;
-          await video.play();
-
-          state.camera.running = true;
-
-          // FaceDetector
-          state.camera.detector = null;
-          if (supportsFaceDetector()) {
-            try {
-              state.camera.detector = new FaceDetector({ fastMode: true, maxDetectedFaces: 6 });
-            } catch (e) {
-              state.camera.detector = null;
-            }
-          }
-
-          qs('#camStatus').textContent = 'CAM: ON';
-          qs('#scanStatus').textContent = state.camera.detector ? 'SCAN: FACE' : 'SCAN: OVERLAY';
-
-          addLog(`Camera started (${state.camera.facing})`);
-          toast('Camera ON');
-
-          state.camera.lastScanTs = 0;
-          state.camera.raf = requestAnimationFrame(scanLoop);
-        } catch (err) {
-          addLog(`Camera start failed: ${err?.message || err}`, 'WARN');
-          toast('Camera permission denied or unavailable.', 'danger');
-          qs('#camStatus').textContent = 'CAM: OFF';
-          qs('#scanStatus').textContent = 'SCAN: IDLE';
-        }
-      }
-
-      async function stopCamera() {
-        state.camera.running = false;
-        if (state.camera.raf) cancelAnimationFrame(state.camera.raf);
-        state.camera.raf = 0;
-
-        if (state.camera.stream) {
-          for (const tr of state.camera.stream.getTracks()) {
-            try { tr.stop(); } catch {}
-          }
-          state.camera.stream = null;
-        }
-
-        if (video) {
-          try { video.pause(); } catch {}
-          video.srcObject = null;
-        }
-
-        // clear overlay
-        resizeOverlay();
-        ctx.clearRect(0, 0, overlay.width, overlay.height);
-
-        qs('#camStatus').textContent = 'CAM: OFF';
-        qs('#scanStatus').textContent = 'SCAN: IDLE';
-        qs('#faceCount').textContent = '0';
-        qs('#facesList').innerHTML = '';
-
-        return true;
-      }
-
-      function resizeOverlay() {
-        // Match canvas to the rendered video size
-        const rect = video.getBoundingClientRect();
-        const dpr = window.devicePixelRatio || 1;
-        const w = Math.max(1, Math.floor(rect.width * dpr));
-        const h = Math.max(1, Math.floor(rect.height * dpr));
-        if (overlay.width !== w || overlay.height !== h) {
-          overlay.width = w;
-          overlay.height = h;
-        }
-      }
-
-      function drawOverlayBase(ts) {
-        // overlay aesthetic: scanline + noise
-        const w = overlay.width;
-        const h = overlay.height;
-
-        ctx.clearRect(0, 0, w, h);
-
-        // subtle vignette
-        const g = ctx.createRadialGradient(w * 0.5, h * 0.35, Math.min(w, h) * 0.1, w * 0.5, h * 0.5, Math.max(w, h) * 0.75);
-        g.addColorStop(0, 'rgba(0,0,0,0.0)');
-        g.addColorStop(1, 'rgba(0,0,0,0.55)');
-        ctx.fillStyle = g;
-        ctx.fillRect(0, 0, w, h);
-
-        // scanline sweep
-        const y = (ts * 0.06) % (h + 120) - 120;
-        const grad = ctx.createLinearGradient(0, y, 0, y + 120);
-        grad.addColorStop(0.0, 'rgba(0,0,0,0)');
-        grad.addColorStop(0.45, `rgba(${getComputedStyle(document.documentElement).getPropertyValue('--accent')}, 0.0)`);
-        grad.addColorStop(0.5, `rgba(${getComputedStyle(document.documentElement).getPropertyValue('--accent')}, 0.12)`);
-        grad.addColorStop(0.55, `rgba(${getComputedStyle(document.documentElement).getPropertyValue('--accent')}, 0.0)`);
-        grad.addColorStop(1.0, 'rgba(0,0,0,0)');
-        ctx.fillStyle = grad;
-        ctx.fillRect(0, y, w, 120);
-
-        // noise flecks
-        const flecks = 90;
-        ctx.fillStyle = 'rgba(255,255,255,0.04)';
-        for (let i = 0; i < flecks; i++) {
-          const nx = Math.random() * w;
-          const ny = Math.random() * h;
-          const nw = Math.random() * 2.2;
-          const nh = Math.random() * 1.2;
-          if (Math.random() < 0.2) ctx.fillRect(nx, ny, nw * 4, nh);
-          else ctx.fillRect(nx, ny, nw, nh);
-        }
-
-        // UI corner ticks
-        ctx.strokeStyle = 'rgba(255,255,255,0.08)';
-        ctx.lineWidth = 1;
-        ctx.strokeRect(12, 12, w - 24, h - 24);
-      }
-
-      function drawFaceBox(box, label) {
-        const w = overlay.width;
-        const h = overlay.height;
-
-        // FaceDetector returns CSS pixels; our canvas is in device pixels sized to rect.
-        const rect = video.getBoundingClientRect();
-        const dpr = window.devicePixelRatio || 1;
-        const sx = (overlay.width / (rect.width * dpr)) || 1;
-        const sy = (overlay.height / (rect.height * dpr)) || 1;
-
-        // Convert from CSS px to canvas px
-        const x = box.x * dpr * sx;
-        const y = box.y * dpr * sy;
-        const bw = box.width * dpr * sx;
-        const bh = box.height * dpr * sy;
-
-        const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
-
-        ctx.save();
-        ctx.strokeStyle = `rgba(${accent}, 0.85)`;
-        ctx.lineWidth = 2;
-        ctx.shadowColor = `rgba(${accent}, 0.35)`;
-        ctx.shadowBlur = 14;
-
-        // corner-only box
-        const corner = Math.max(10, Math.min(bw, bh) * 0.18);
-        ctx.beginPath();
-        // TL
-        ctx.moveTo(x, y + corner);
-        ctx.lineTo(x, y);
-        ctx.lineTo(x + corner, y);
-        // TR
-        ctx.moveTo(x + bw - corner, y);
-        ctx.lineTo(x + bw, y);
-        ctx.lineTo(x + bw, y + corner);
-        // BR
-        ctx.moveTo(x + bw, y + bh - corner);
-        ctx.lineTo(x + bw, y + bh);
-        ctx.lineTo(x + bw - corner, y + bh);
-        // BL
-        ctx.moveTo(x + corner, y + bh);
-        ctx.lineTo(x, y + bh);
-        ctx.lineTo(x, y + bh - corner);
-        ctx.stroke();
-
-        // label
-        const fontSize = Math.max(11, Math.round((overlay.width / 390) * 12));
-        ctx.shadowBlur = 0;
-        ctx.font = `${fontSize}px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace`;
-        const text = `SUBJECT: ${label}`;
-        const pad = 6;
-        const tw = ctx.measureText(text).width;
-        ctx.fillStyle = 'rgba(0,0,0,0.55)';
-        ctx.fillRect(x, Math.max(0, y - (fontSize + pad * 2)), tw + pad * 2, fontSize + pad * 2);
-        ctx.fillStyle = `rgba(${accent}, 0.95)`;
-        ctx.fillText(text, x + pad, Math.max(fontSize + pad, y - pad));
-
-        // extra HUD text
-        const lines = [
-          `SIG: ${Math.floor(60 + Math.random()*40)}%`,
-          `ID: ${Math.floor(1000 + Math.random()*9000)}`
-        ];
-        ctx.fillStyle = 'rgba(244,244,245,0.70)';
-        ctx.font = `${Math.max(10, fontSize - 2)}px ui-monospace, monospace`;
-        let yy = y + bh + 14;
-        for (const ln of lines) {
-          if (yy > h - 10) break;
-          ctx.fillText(ln, x, yy);
-          yy += 14;
-        }
-
-        ctx.restore();
-      }
-
-      async function scanLoop(ts) {
-        if (!state.camera.running) return;
-        state.camera.raf = requestAnimationFrame(scanLoop);
-
-        // Throttle detection a bit to keep things smooth
-        if (ts - state.camera.lastScanTs < 125) {
-          resizeOverlay();
-          drawOverlayBase(ts);
-          // draw last faces for stability
-          for (let i = 0; i < state.camera.lastFaces.length; i++) {
-            const f = state.camera.lastFaces[i];
-            if (f?.boundingBox) drawFaceBox(f.boundingBox, labelForFaceIndex(i));
-          }
-          return;
-        }
-        state.camera.lastScanTs = ts;
-
-        resizeOverlay();
-        drawOverlayBase(ts);
-
-        let faces = [];
-        if (state.camera.detector && video.readyState >= 2) {
-          try {
-            faces = await state.camera.detector.detect(video);
-          } catch {
-            faces = [];
-          }
-        }
-
-        state.camera.lastFaces = faces;
-
-        // draw
-        for (let i = 0; i < faces.length; i++) {
-          const f = faces[i];
-          if (f?.boundingBox) {
-            drawFaceBox(f.boundingBox, labelForFaceIndex(i));
-          }
-        }
-
-        qs('#faceCount').textContent = String(faces.length);
-        renderFacesList(faces);
-      }
-
-      function renderFacesList(faces) {
-        const list = qs('#facesList');
-        if (!list) return;
-
-        if (!faces || faces.length === 0) {
-          list.innerHTML = `<div class="text-[11px] text-zinc-500">No targets detected.</div>`;
-          return;
-        }
-
-        const items = faces.map((_, i) => {
-          const label = labelForFaceIndex(i);
-          const alias = state.camera.aliases[i] || '';
-          const isCustom = !!alias;
-          return `
-            <div class="flex items-center justify-between gap-2 border border-emerald-500/15 rounded-2xl p-3" style="background: rgba(0,0,0,.35);">
-              <div class="min-w-0">
-                <div class="text-[12px] text-zinc-200">Face #${i + 1} <span class="chip" style="margin-left:8px;">${escapeHtml(label)}</span></div>
-                <div class="mt-1 text-[11px] text-zinc-500">Tag: ${isCustom ? `<span class="text-zinc-300">${escapeHtml(alias)}</span>` : `<span class="text-zinc-500">(not set)</span>`}</div>
-              </div>
-              <div class="flex items-center gap-2">
-                <button class="btn tap text-[11px] px-3 py-2" type="button" data-tag-face="${i}">Tag</button>
-                <button class="btn tap text-[11px] px-3 py-2" type="button" data-clear-face="${i}">Clear</button>
-              </div>
-            </div>
-          `;
-        }).join('');
-
-        list.innerHTML = items;
-      }
-
-      async function snapshot() {
-        if (!state.camera.running || !video.videoWidth || !video.videoHeight) {
-          toast('Camera not running.', 'danger');
-          return;
-        }
-
-        const c = document.createElement('canvas');
-        c.width = video.videoWidth;
-        c.height = video.videoHeight;
-        const cctx = c.getContext('2d');
-        cctx.drawImage(video, 0, 0);
-
-        // overlay a small HUD label
-        cctx.fillStyle = 'rgba(0,0,0,0.55)';
-        cctx.fillRect(16, 16, 220, 42);
-        cctx.fillStyle = 'rgba(34,197,94,0.95)';
-        cctx.font = '14px ui-monospace, monospace';
-        cctx.fillText('DEDSEC SCAN • DEMO', 28, 42);
-
-        c.toBlob((blob) => {
-          if (!blob) return;
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = `dedsec-snapshot-${Date.now()}.png`;
-          document.body.appendChild(a);
-          a.click();
-          a.remove();
-          setTimeout(() => URL.revokeObjectURL(url), 2000);
-          toast('Snapshot saved');
-          addLog('Snapshot captured');
-        }, 'image/png');
-      }
-
-      // ---------- bluetooth ----------
-      function btRecordToUiName(rec) {
-        const name = rec?.device?.name || 'Unnamed device';
-        const idShort = (rec?.device?.id || '').slice(0, 8);
-        return `${name}${idShort ? ` • ${idShort}` : ''}`;
-      }
-
-      function dataViewToU8(dv) {
-        return new Uint8Array(dv.buffer, dv.byteOffset, dv.byteLength);
-      }
-
-      function dataViewToHex(dv) {
-        const arr = dataViewToU8(dv);
-        return Array.from(arr).map(b => b.toString(16).padStart(2,'0')).join(' ');
-      }
-
-      function tryDecodeText(dv) {
-        const arr = dataViewToU8(dv);
-        const txt = new TextDecoder('utf-8', { fatal: false }).decode(arr).replace(/\0/g, '').trim();
-        if (!txt) return null;
-        // heuristic: mostly printable
-        const printable = txt.split('').filter(ch => ch >= ' ' && ch <= '~').length;
-        if (printable / txt.length < 0.7) return null;
-        return txt;
-      }
-
-      function normalizeUuid(u) {
-        return String(u).toLowerCase();
-      }
-
-      async function btFindDevice() {
-        if (!state.bt.supported) {
-          toast('Web Bluetooth not supported here.', 'danger');
-          addLog('Bluetooth unsupported', 'WARN');
-          return;
-        }
-
-        try {
-          const device = await navigator.bluetooth.requestDevice({
-            acceptAllDevices: true,
-            optionalServices: ['battery_service', 'device_information', 'generic_access']
-          });
-
-          const rec = {
-            device,
-            server: null,
-            connected: false,
-            lastError: null,
-            battery: null,
-            info: {},
-            services: []
-          };
-
-          state.bt.devices.set(device.id, rec);
-          state.bt.selectedId = device.id;
-
-          device.addEventListener('gattserverdisconnected', () => {
-            const r = state.bt.devices.get(device.id);
-            if (r) {
-              r.connected = false;
-              r.server = null;
-              addLog(`BT disconnected: ${device.name || device.id}`, 'INFO');
-              toast('Bluetooth disconnected');
-              renderBt();
-            }
-          });
-
-          addLog(`BT selected: ${device.name || device.id}`);
-          toast('Device added');
-          renderBt();
-        } catch (err) {
-          addLog(`BT find canceled/failed: ${err?.message || err}`, 'WARN');
-          toast('Bluetooth request canceled', 'danger');
-        }
-      }
-
-      async function btConnect(id) {
-        const rec = state.bt.devices.get(id);
-        if (!rec) return;
-        if (!rec.device.gatt) {
-          toast('GATT not available on this device.', 'danger');
-          return;
-        }
-
-        try {
-          toast('Connecting…');
-          rec.server = await rec.device.gatt.connect();
-          rec.connected = true;
-          rec.lastError = null;
-          addLog(`BT connected: ${rec.device.name || rec.device.id}`);
-          await btReadQuick(id);
-          renderBt();
-          toast('Connected');
-        } catch (err) {
-          rec.lastError = err?.message || String(err);
-          rec.connected = false;
-          rec.server = null;
-          addLog(`BT connect failed: ${rec.lastError}`, 'WARN');
-          toast('Connect failed', 'danger');
-          renderBt();
-        }
-      }
-
-      function btDisconnect(id) {
-        const rec = state.bt.devices.get(id);
-        if (!rec) return;
-        try {
-          rec.device.gatt?.disconnect();
-        } catch {}
-        rec.connected = false;
-        rec.server = null;
-        addLog(`BT disconnected (manual): ${rec.device.name || rec.device.id}`);
-        renderBt();
-        toast('Disconnected');
-      }
-
-       async function btDisconnectAll() {
-        for (const [id, rec] of state.bt.devices.entries()) {
-          try { rec.device.gatt?.disconnect(); } catch {}
-          rec.connected = false;
-          rec.server = null;
-        }
-        addLog('BT disconnect all');
-        renderBt();
-        toast('All disconnected');
-      }
-
-      async function btReadQuick(id) {
-        const rec = state.bt.devices.get(id);
-        if (!rec?.connected || !rec.server) return;
-
-        // Battery
-        try {
-          const bs = await rec.server.getPrimaryService('battery_service');
-          const bc = await bs.getCharacteristic('battery_level');
-          const dv = await bc.readValue();
-          rec.battery = dv.getUint8(0);
-        } catch {
-          rec.battery = null;
-        }
-
-        // Device Information
-        try {
-          const dis = await rec.server.getPrimaryService('device_information');
-          const charIds = [
-            ['manufacturer', 'manufacturer_name_string'],
-            ['model', 'model_number_string'],
-            ['serial', 'serial_number_string'],
-            ['hw', 'hardware_revision_string'],
-            ['fw', 'firmware_revision_string'],
-            ['sw', 'software_revision_string']
-          ];
-          for (const [key, uuid] of charIds) {
-            try {
-              const c = await dis.getCharacteristic(uuid);
-              const dv = await c.readValue();
-              rec.info[key] = tryDecodeText(dv) || dataViewToHex(dv);
-            } catch {}
-          }
-        } catch {
-          rec.info = rec.info || {};
-        }
-
-        // Services list (light)
-        try {
-          const services = await rec.server.getPrimaryServices();
-          rec.services = services.map(s => ({ uuid: s.uuid, _service: s, chars: null }));
-        } catch {
-          rec.services = [];
-        }
-      }
-
-      async function btExplore(id) {
-        const rec = state.bt.devices.get(id);
-        if (!rec?.connected || !rec.server) return;
-
-        toast('Loading services…');
-        addLog(`BT explore: ${rec.device.name || rec.device.id}`);
-
-        try {
-          const services = await rec.server.getPrimaryServices();
-          const out = [];
-          for (const s of services) {
-            const chars = await s.getCharacteristics();
-            out.push({
-              uuid: s.uuid,
-              _service: s,
-              chars: chars.map(c => ({
-                uuid: c.uuid,
-                properties: c.properties,
-                _char: c,
-                value: null
-              }))
-            });
-          }
-          rec.services = out;
-          renderBt();
-          toast('Services ready');
-        } catch (err) {
-          rec.lastError = err?.message || String(err);
-          addLog(`BT explore failed: ${rec.lastError}`, 'WARN');
-          toast('Explore failed', 'danger');
-          renderBt();
-        }
-      }
-
-      async function btReadChar(id, suuid, cuuid) {
-        const rec = state.bt.devices.get(id);
-        if (!rec?.connected) return;
-
-        const svc = rec.services?.find(s => normalizeUuid(s.uuid) === normalizeUuid(suuid));
-        const ch = svc?.chars?.find(c => normalizeUuid(c.uuid) === normalizeUuid(cuuid));
-        if (!svc || !ch || !ch._char) return;
-
-        if (!ch.properties?.read) {
-          toast('Characteristic not readable.', 'danger');
-          return;
-        }
-
-        try {
-          const dv = await ch._char.readValue();
-          const txt = tryDecodeText(dv);
-          ch.value = txt ? `${txt}` : dataViewToHex(dv);
-          addLog(`BT read: ${cuuid.slice(0, 8)}…`);
-          renderBt();
-          toast('Read OK');
-        } catch (err) {
-          addLog(`BT read failed: ${err?.message || err}`, 'WARN');
-          toast('Read failed', 'danger');
-        }
-      }
-
-      function renderBt() {
-        qs('#btSupport').textContent = state.bt.supported ? 'SUPPORTED' : 'UNSUPPORTED';
-        qs('#btSupport').style.borderColor = state.bt.supported ? 'rgba(var(--accent), .30)' : 'rgba(239,68,68,.35)';
-        qs('#btCount').textContent = String(state.bt.devices.size);
-
-        // list
-        const list = qs('#btList');
-        if (state.bt.devices.size === 0) {
-          list.innerHTML = `<div class="text-[11px] text-zinc-500">No devices added yet.</div>`;
-        } else {
-          list.innerHTML = Array.from(state.bt.devices.values()).map(rec => {
-            const sel = rec.device.id === state.bt.selectedId;
-            const connected = !!rec.connected;
-            const badge = connected ? `<span class="chip">CONNECTED</span>` : `<span class="chip" style="opacity:.7">OFFLINE</span>`;
-            const err = rec.lastError ? `<div class="mt-1 text-[11px]" style="color: rgba(239,68,68,.85)">ERR: ${escapeHtml(rec.lastError)}</div>` : '';
-
-            return `
-              <div class="border rounded-2xl p-3" style="border-color: ${sel ? 'rgba(var(--accent), .55)' : 'rgba(var(--accent), .18)'}; background: rgba(0,0,0,.25);">
-                <div class="flex items-center justify-between gap-2">
-                  <button class="tap text-left min-w-0" type="button" data-bt-select="${escapeHtml(rec.device.id)}">
-                    <div class="text-[12px] text-zinc-200 truncate">${escapeHtml(rec.device.name || 'Unnamed device')}</div>
-                    <div class="text-[11px] text-zinc-500 truncate">${escapeHtml(rec.device.id)}</div>
-                  </button>
-                  <div class="flex items-center gap-2">${badge}</div>
-                </div>
-                <div class="mt-2 grid grid-cols-2 gap-2">
-                  ${connected
-                    ? `<button class="btn tap text-[11px]" type="button" data-bt-disconnect="${escapeHtml(rec.device.id)}">Disconnect</button>`
-                    : `<button class="btn tap text-[11px]" type="button" data-bt-connect="${escapeHtml(rec.device.id)}">Connect</button>`
-                  }
-                  <button class="btn tap text-[11px]" type="button" data-bt-explore="${escapeHtml(rec.device.id)}">Explore</button>
-                </div>
-                ${err}
-              </div>
-            `;
-          }).join('');
-        }
-
-        // details
-        const selId = state.bt.selectedId;
-        const selRec = selId ? state.bt.devices.get(selId) : null;
-        qs('#btSelected').textContent = selRec ? (selRec.device.name || 'SELECTED') : 'NONE';
-
-        const details = qs('#btDetails');
-        if (!selRec) {
-          details.innerHTML = `<div class="text-[11px] text-zinc-500">Select a device to view details.</div>`;
-          return;
-        }
-
-        const rows = [];
-        rows.push(`<div class="text-[11px] text-zinc-500">Device</div><div class="text-[12px] text-zinc-200">${escapeHtml(btRecordToUiName(selRec))}</div>`);
-        rows.push(`<div class="text-[11px] text-zinc-500">Status</div><div class="text-[12px]">${selRec.connected ? `<span class="accentText">CONNECTED</span>` : `<span class="text-zinc-400">OFFLINE</span>`}</div>`);
-        rows.push(`<div class="text-[11px] text-zinc-500">Battery</div><div class="text-[12px] text-zinc-200">${selRec.battery == null ? 'N/A' : `${selRec.battery}%`}</div>`);
-
-        const info = selRec.info || {};
-        const infoGrid = Object.keys(info).length
-          ? Object.entries(info).map(([k,v]) => `
-              <div class="text-[11px] text-zinc-500">${escapeHtml(k.toUpperCase())}</div>
-              <div class="text-[12px] text-zinc-200 break-words">${escapeHtml(v)}</div>
-            `).join('')
-          : `<div class="text-[11px] text-zinc-500">No device info read yet. Connect first.</div>`;
-
-        const svcUi = (selRec.services && selRec.services.length)
-          ? selRec.services.map(s => {
-              const chars = s.chars;
-              const charsUi = Array.isArray(chars)
-                ? chars.map(c => {
-                    const props = [];
-                    if (c.properties?.read) props.push('R');
-                    if (c.properties?.write || c.properties?.writeWithoutResponse) props.push('W');
-                    if (c.properties?.notify || c.properties?.indicate) props.push('N');
-
-                    const canRead = !!c.properties?.read;
-                    const canWrite = !!(c.properties?.write || c.properties?.writeWithoutResponse);
-
-                    return `
-                      <div class="rounded-2xl border p-3" style="border-color: rgba(var(--accent), .18); background: rgba(0,0,0,.22);">
-                        <div class="flex items-start justify-between gap-2">
-                          <div class="min-w-0">
-                            <div class="text-[12px] text-zinc-200 truncate">CHAR: ${escapeHtml(c.uuid)}</div>
-                            <div class="mt-1 text-[11px] text-zinc-500">PROPS: <span class="text-zinc-300">${props.join(' ') || '—'}</span></div>
-                          </div>
-                          <div class="flex items-center gap-2">
-                            ${canRead ? `<button class="btn tap text-[11px] px-3 py-2" type="button" data-bt-read="${escapeHtml(selId)}" data-suuid="${escapeHtml(s.uuid)}" data-cuuid="${escapeHtml(c.uuid)}">Read</button>` : `<span class="chip" style="opacity:.7">NO READ</span>`}
-                          </div>
-                        </div>
-                        <div class="mt-2 text-[11px] text-zinc-500">
-                          ${c.value ? `<div class="break-words">VAL: <span class="text-zinc-300">${escapeHtml(c.value)}</span></div>` : `<div>VAL: —</div>`}
-                          ${canWrite ? `<div class="mt-1" style="color: rgba(244,244,245,.55)">Write disabled in this demo (safety).</div>` : ''}
-                        </div>
-                      </div>
-                    `;
-                  }).join('')
-                : `<div class="text-[11px] text-zinc-500">Click Explore to load characteristics.</div>`;
-
+    }
+
+    Screens.mainMenu = {
+      init(){
+        return {
+          sel: 0,
+          items: [
+            { label: 'Apps', icon: 'apps', to: 'appsMenu' },
+            { label: 'Files', icon: 'files', to: 'files' },
+            { label: 'Dolphin', icon: 'info', to: 'dolphin' },
+            { label: 'Settings', icon: 'settings', to: 'settings' },
+            { label: 'About', icon: 'info', to: 'about' },
+          ]
+        };
+      },
+      title: 'Main Menu',
+      soft: { left: 'BACK', center: 'OK', right: 'MENU' },
+      handle(action, ctx){
+        const s = ctx.state;
+        if(action === 'up') s.sel = (s.sel - 1 + s.items.length) % s.items.length;
+        if(action === 'down') s.sel = (s.sel + 1) % s.items.length;
+        if(action === 'ok') pushScreen(s.items[s.sel].to);
+        if(action === 'home') gotoMain();
+      },
+      render(ctx){
+        const s = ctx.state;
+        return `
+          <div class="space-y-1">
+            ${s.items.map((it, i)=>{
+              const cls = i===s.sel ? 'menu-item sel' : 'menu-item';
               return `
-                <div class="rounded-2xl border p-3" style="border-color: rgba(var(--accent), .22); background: rgba(0,0,0,.20);">
-                  <div class="text-[12px] text-zinc-200">SERVICE: ${escapeHtml(s.uuid)}</div>
-                  <div class="mt-2 space-y-2">${charsUi}</div>
-                </div>
-              `;
-            }).join('')
-          : `<div class="text-[11px] text-zinc-500">No services loaded yet. Connect + Explore.</div>`;
-
-        details.innerHTML = `
-          <div class="grid grid-cols-2 gap-x-3 gap-y-2">
-            ${rows.join('')}
-          </div>
-
-          <div class="mt-3">
-            <div class="text-[12px] accentSoft tracking-widest">DEVICE INFO</div>
-            <div class="mt-2 grid grid-cols-2 gap-x-3 gap-y-2">${infoGrid}</div>
-          </div>
-
-          <div class="mt-4">
-            <div class="flex items-center justify-between">
-              <div class="text-[12px] accentSoft tracking-widest">GATT</div>
-              <div class="flex items-center gap-2">
-                ${selRec.connected ? `<button class="btn tap text-[11px] px-3 py-2" type="button" data-bt-refresh="${escapeHtml(selId)}">Refresh</button>` : ''}
-              </div>
-            </div>
-            <div class="mt-2 space-y-3">${svcUi}</div>
+                <div class="${cls}">
+                  <span class="icon">${iconSVG(it.icon)}</span>
+                  <span>${it.label}</span>
+                </div>`;
+            }).join('')}
           </div>
         `;
       }
+    };
 
-      // ---------- TV simulation ----------
-      function tvUpdateUi() {
-        qs('#tvState').textContent = `POWER: ${state.tv.power ? 'ON' : 'OFF'}`;
-        qs('#tvChannel').textContent = String(state.tv.channel);
-        qs('#tvVolume').textContent = String(state.tv.volume);
-        qs('#tvVolumeSlider').value = String(state.tv.volume);
+    Screens.appsMenu = {
+      init(){
+        return {
+          sel: 0,
+          items: [
+            { label: 'Sub-GHz', icon: 'subghz', to: 'subghz' },
+            { label: 'NFC', icon: 'nfc', to: 'nfc' },
+            { label: 'RFID', icon: 'rfid', to: 'rfid' },
+            { label: 'Infrared', icon: 'ir', to: 'ir' },
+            { label: 'BadUSB', icon: 'badusb', to: 'badusb' },
+            { label: 'GPIO', icon: 'gpio', to: 'gpio' },
+          ]
+        };
+      },
+      title: 'Apps',
+      soft: { left: 'BACK', center: 'OK', right: 'MENU' },
+      handle(action, ctx){
+        const s = ctx.state;
+        if(action === 'back') popScreen();
+        if(action === 'up') s.sel = (s.sel - 1 + s.items.length) % s.items.length;
+        if(action === 'down') s.sel = (s.sel + 1) % s.items.length;
+        if(action === 'ok') pushScreen(s.items[s.sel].to);
+        if(action === 'home') gotoMain();
+      },
+      render(ctx){
+        const s = ctx.state;
+        return `
+          <div class="space-y-1">
+            ${s.items.map((it, i)=>{
+              const cls = i===s.sel ? 'menu-item sel' : 'menu-item';
+              return `
+                <div class="${cls}">
+                  <span class="icon">${iconSVG(it.icon)}</span>
+                  <span>${it.label}</span>
+                </div>`;
+            }).join('')}
+          </div>
+        `;
       }
+    };
 
-      function tvSignal(action) {
-        const el = qs('#tvSignal');
-        el.textContent = `SIGNAL: ${action}`;
-        el.style.borderColor = 'rgba(var(--accent2), .35)';
-        clearTimeout(el._t);
-        el._t = setTimeout(() => {
-          el.textContent = 'SIGNAL: IDLE';
-          el.style.borderColor = 'rgba(var(--accent), .26)';
-        }, 900);
+    Screens.files = {
+      init(){
+        return {
+          sel: 0,
+          files: [
+            'subghz/garage_433.sub',
+            'nfc/metro_card.nfc',
+            'ir/tv_remote.ir',
+            'badusb/hello_world.txt',
+            'gpio/pins.json',
+            'notes/readme.txt'
+          ]
+        };
+      },
+      title: 'Files',
+      soft: { left: 'BACK', center: 'OPEN', right: 'MENU' },
+      handle(action, ctx){
+        const s = ctx.state;
+        if(action === 'back') popScreen();
+        if(action === 'home') gotoMain();
+        if(action === 'up') s.sel = (s.sel - 1 + s.files.length) % s.files.length;
+        if(action === 'down') s.sel = (s.sel + 1) % s.files.length;
+        if(action === 'ok'){
+          sim.lastEvent = `Opened: ${s.files[s.sel]}`;
+        }
+      },
+      render(ctx){
+        const s = ctx.state;
+        return `
+          <div class="mono-box">
+            <div class="font-semibold" style="font-size:10px;">/</div>
+            <div class="mt-2 space-y-1">
+              ${s.files.map((f, i)=>{
+                const sel = i===s.sel ? 'menu-item sel' : 'menu-item';
+                return `<div class="${sel}"><span class="icon">${iconSVG('files')}</span><span>${f}</span></div>`;
+              }).join('')}
+            </div>
+          </div>
+        `;
       }
+    };
 
-      function tvAction(action) {
-        addLog(`TV: ${action}`);
-        toast(`TV: ${action}`);
-        tvSignal(action);
-        tvUpdateUi();
+    Screens.dolphin = {
+      init(){
+        return { anim: 0 };
+      },
+      title: 'Dolphin',
+      soft: { left: 'BACK', center: 'PLAY', right: 'MENU' },
+      handle(action, ctx){
+        if(action === 'back') popScreen();
+        if(action === 'home') gotoMain();
+        if(action === 'ok'){
+          // Level up simulation
+          sim.dolphin.xp += 7;
+          if(sim.dolphin.xp >= 100){
+            sim.dolphin.xp = 0;
+            sim.dolphin.level++;
+            sim.lastEvent = 'Dolphin leveled up!';
+          } else {
+            sim.lastEvent = 'Dolphin is happy.';
+          }
+        }
+      },
+      render(){
+        const lvl = sim.dolphin.level;
+        const xp = sim.dolphin.xp;
+        const bar = Math.round((xp/100)*14);
+        const barStr = '[' + '#'.repeat(bar) + '-'.repeat(14-bar) + ']';
+
+        return `
+          <div class="mono-box">
+            <div>LEVEL: ${lvl}</div>
+            <div>XP: ${xp}/100</div>
+            <div class="mt-2">${barStr}</div>
+            <div class="mt-3">(Press OK to play)</div>
+            <div class="mt-3">${renderDolphinAscii()}</div>
+          </div>
+        `;
       }
+    };
 
-      // ---------- logs UI ----------
-      function renderLogs() {
-        const list = qs('#logsList');
-        const empty = qs('#logsEmpty');
-        if (!list || !empty) return;
+    function renderDolphinAscii(){
+      // Original playful ASCII (not the official).
+      return `
+<pre style="font-family:var(--fontPixel); font-size:9px; line-height:1.15; margin:0;">
+   __
+ _(  )_   *
+(  o o )
+ \  ^  /  ~
+  ||||| 
+</pre>`.trim();
+    }
 
-        if (state.logs.length === 0) {
-          empty.classList.remove('hidden');
-          list.innerHTML = '';
+    Screens.about = {
+      title: 'About',
+      soft: { left: 'BACK', center: 'OK', right: 'MENU' },
+      handle(action){
+        if(action === 'back') popScreen();
+        if(action === 'home') gotoMain();
+        if(action === 'ok') sim.lastEvent = 'UI simulator mode.';
+      },
+      render(){
+        return `
+          <div class="mono-box">
+            <div>Flipper Pocket UI</div>
+            <div class="mt-2">A touch-first, fan-made
+            UI simulator inspired by
+            handheld tool menus.</div>
+
+            <div class="mt-3">Limitations:</div>
+            <div>- No real RF/NFC/RFID/IR</div>
+            <div>- Safe demo features only</div>
+
+            <div class="mt-3">Controls:</div>
+            <div>- D-PAD / swipes</div>
+            <div>- OK / BACK / MENU</div>
+          </div>
+        `;
+      }
+    };
+
+    // --- Sub-GHz (sim) ---
+    Screens.subghz = {
+      init(){
+        return {
+          sel: 0,
+          page: 'menu',
+          items: ['Read', 'Send', 'Analyze', 'Saved'],
+          last: null,
+          saved: ['Doorbell_433', 'Outlet_315', 'Garage_433']
+        };
+      },
+      title: 'Sub-GHz',
+      soft: { left: 'BACK', center: 'OK', right: 'MENU' },
+      handle(action, ctx){
+        const s = ctx.state;
+        if(action === 'back'){
+          if(s.page !== 'menu') s.page = 'menu';
+          else popScreen();
+          return;
+        }
+        if(action === 'home') gotoMain();
+
+        if(s.page === 'menu'){
+          if(action === 'up') s.sel = (s.sel - 1 + s.items.length) % s.items.length;
+          if(action === 'down') s.sel = (s.sel + 1) % s.items.length;
+          if(action === 'ok'){
+            const pick = s.items[s.sel];
+            if(pick === 'Read'){
+              s.page = 'read';
+              s.last = null;
+              sim.lastEvent = 'Listening...';
+              simulateAfter(700, ()=>{
+                s.last = {
+                  freq: (Math.random() < .5 ? '433.92' : '315.00'),
+                  mod: (Math.random() < .5 ? 'ASK' : 'FSK'),
+                  bits: 24 + Math.floor(Math.random()*16),
+                  key: randHex(6)
+                };
+                sim.lastEvent = 'Signal captured (sim).';
+                render();
+              });
+            }
+            if(pick === 'Send'){
+              s.page = 'send';
+              sim.lastEvent = 'Pick a saved signal.';
+            }
+            if(pick === 'Analyze'){
+              s.page = 'analyze';
+              sim.lastEvent = 'Analyzing...';
+              simulateAfter(500, ()=>{ sim.lastEvent = 'Looks like a fixed-code remote (sim).'; render(); });
+            }
+            if(pick === 'Saved'){
+              s.page = 'saved';
+            }
+          }
           return;
         }
 
-        empty.classList.add('hidden');
-        list.innerHTML = state.logs.slice(0, 60).map((l) => {
-          const levelColor = l.level === 'WARN' ? 'rgba(239,68,68,.85)' : 'rgba(var(--accent), .75)';
+        if(s.page === 'send' || s.page === 'saved'){
+          const list = s.saved;
+          if(action === 'up') s.sel = (s.sel - 1 + list.length) % list.length;
+          if(action === 'down') s.sel = (s.sel + 1) % list.length;
+          if(action === 'ok'){
+            sim.lastEvent = `Sent: ${list[s.sel]} (sim)`;
+          }
+        }
+
+        if(s.page === 'read'){
+          if(action === 'ok' && s.last){
+            s.saved.unshift(`Capture_${s.last.freq}_${s.last.key}`);
+            sim.lastEvent = 'Saved capture (sim).';
+          }
+        }
+      },
+      render(ctx){
+        const s = ctx.state;
+        if(s.page === 'menu'){
           return `
-            <div class="border rounded-2xl p-3" style="border-color: rgba(var(--accent), .16); background: rgba(0,0,0,.22);">
-              <div class="flex items-center justify-between">
-                <div class="text-[11px]" style="color: ${levelColor}">${escapeHtml(l.level)}</div>
-                <div class="text-[11px] text-zinc-500 tabular-nums">${escapeHtml(l.t)}</div>
-              </div>
-              <div class="mt-1 text-[12px] text-zinc-200 break-words">${escapeHtml(l.message)}</div>
+            <div class="space-y-1">
+              ${s.items.map((it, i)=>{
+                const cls = i===s.sel ? 'menu-item sel' : 'menu-item';
+                return `<div class="${cls}"><span class="icon">${iconSVG('subghz')}</span><span>${it}</span></div>`;
+              }).join('')}
             </div>
           `;
-        }).join('');
-      }
-
-      // ---------- PANIC ----------
-      async function panic() {
-        addLog('PANIC triggered', 'WARN');
-        toast('PANIC: shutdown', 'danger');
-
-        // stop cam
-        await stopCamera();
-
-        // disconnect BT
-        await btDisconnectAll();
-
-        // clear volatile target tags
-        state.camera.aliases = {};
-        state.camera.codenames = {};
-        state.camera.lastFaces = [];
-
-        // UI flash
-        const phone = qs('#phone');
-        const flash = document.createElement('div');
-        flash.className = 'absolute inset-0';
-        flash.style.background = 'rgba(239,68,68,.16)';
-        flash.style.pointerEvents = 'none';
-        phone.appendChild(flash);
-        setTimeout(() => flash.remove(), 240);
-      }
-
-      // ---------- settings ----------
-      function setAccent(which) {
-        const root = document.documentElement;
-        if (which === 'emerald') {
-          root.style.setProperty('--accent', '34 197 94');
-          root.style.setProperty('--accent2', '6 182 212');
-        } else if (which === 'cyan') {
-          root.style.setProperty('--accent', '6 182 212');
-          root.style.setProperty('--accent2', '34 197 94');
-        } else if (which === 'purple') {
-          root.style.setProperty('--accent', '168 85 247');
-          root.style.setProperty('--accent2', '6 182 212');
         }
-        addLog(`Accent set: ${which}`);
-        toast(`Accent: ${which}`);
-        renderBt();
+
+        if(s.page === 'read'){
+          return `
+            <div class="mono-box">
+              <div>READ (sim)</div>
+              <div class="mt-2">Status: ${s.last ? 'CAPTURED' : 'LISTENING'}</div>
+              ${s.last ? `
+                <div class="mt-2">Freq: ${s.last.freq} MHz</div>
+                <div>Mod: ${s.last.mod}</div>
+                <div>Bits: ${s.last.bits}</div>
+                <div>Key: ${s.last.key}</div>
+                <div class="mt-2">OK: Save capture</div>
+              ` : `<div class="mt-2">Move closer…</div>`}
+            </div>
+          `;
+        }
+
+        if(s.page === 'send'){
+          return `
+            <div class="mono-box">
+              <div>SEND (sim)</div>
+              <div class="mt-2">Select:</div>
+              <div class="mt-2 space-y-1">
+                ${s.saved.map((name, i)=>{
+                  const cls = i===s.sel ? 'menu-item sel' : 'menu-item';
+                  return `<div class="${cls}"><span class="icon">${iconSVG('subghz')}</span><span>${name}</span></div>`;
+                }).join('')}
+              </div>
+            </div>
+          `;
+        }
+
+        if(s.page === 'analyze'){
+          return `
+            <div class="mono-box">
+              <div>ANALYZE (sim)</div>
+              <div class="mt-2">No raw data available.</div>
+              <div class="mt-2">Tip: capture first.</div>
+            </div>
+          `;
+        }
+
+        if(s.page === 'saved'){
+          return `
+            <div class="mono-box">
+              <div>SAVED</div>
+              <div class="mt-2 space-y-1">
+                ${s.saved.map((name, i)=>{
+                  const cls = i===s.sel ? 'menu-item sel' : 'menu-item';
+                  return `<div class="${cls}"><span class="icon">${iconSVG('files')}</span><span>${name}</span></div>`;
+                }).join('')}
+              </div>
+              <div class="mt-2">OK: Send (sim)</div>
+            </div>
+          `;
+        }
+
+        return `<div class="mono-box">...</div>`;
+      }
+    };
+
+    // --- NFC (sim) ---
+    Screens.nfc = {
+      init(){
+        return { mode: 'idle', uid: null, tech: null };
+      },
+      title: 'NFC',
+      soft: { left: 'BACK', center: 'SCAN', right: 'MENU' },
+      handle(action, ctx){
+        const s = ctx.state;
+        if(action === 'back') popScreen();
+        if(action === 'home') gotoMain();
+        if(action === 'ok'){
+          s.mode = 'scanning';
+          s.uid = null;
+          sim.lastEvent = 'Hold tag near phone…';
+          simulateAfter(650, ()=>{
+            s.mode = 'found';
+            s.uid = randHex(8);
+            s.tech = Math.random() < .5 ? 'MIFARE Ultralight' : 'ISO14443-A';
+            sim.lastEvent = 'Tag read (sim).';
+            render();
+          });
+        }
+      },
+      render(ctx){
+        const s = ctx.state;
+        return `
+          <div class="mono-box">
+            <div>NFC (sim)</div>
+            <div class="mt-2">Mode: ${s.mode.toUpperCase()}</div>
+            ${s.uid ? `
+              <div class="mt-2">UID: ${s.uid}</div>
+              <div>Tech: ${s.tech}</div>
+              <div class="mt-2">(No real NFC access in web)</div>
+            ` : `
+              <div class="mt-2">OK: Scan</div>
+            `}
+          </div>
+        `;
+      }
+    };
+
+    // --- RFID (sim) ---
+    Screens.rfid = {
+      init(){
+        return { mode: 'idle', id: null, proto: null };
+      },
+      title: 'RFID',
+      soft: { left: 'BACK', center: 'READ', right: 'MENU' },
+      handle(action, ctx){
+        const s = ctx.state;
+        if(action === 'back') popScreen();
+        if(action === 'home') gotoMain();
+        if(action === 'ok'){
+          s.mode = 'reading';
+          s.id = null;
+          sim.lastEvent = 'Waiting for card…';
+          simulateAfter(700, ()=>{
+            s.mode = 'found';
+            s.proto = Math.random() < .5 ? 'EM4100' : 'HID Prox';
+            s.id = randHex(10);
+            sim.lastEvent = 'Card read (sim).';
+            render();
+          });
+        }
+      },
+      render(ctx){
+        const s = ctx.state;
+        return `
+          <div class="mono-box">
+            <div>RFID (sim)</div>
+            <div class="mt-2">Mode: ${s.mode.toUpperCase()}</div>
+            ${s.id ? `
+              <div class="mt-2">Proto: ${s.proto}</div>
+              <div>ID: ${s.id}</div>
+            ` : `<div class="mt-2">OK: Read</div>`}
+          </div>
+        `;
+      }
+    };
+
+    // --- Infrared (sim) ---
+    Screens.ir = {
+      init(){
+        return {
+          sel: 0,
+          keys: ['POWER','VOL+','VOL-','CH+','CH-','MUTE'],
+          brand: 'Generic TV'
+        };
+      },
+      title: 'Infrared',
+      soft: { left: 'BACK', center: 'SEND', right: 'MENU' },
+      handle(action, ctx){
+        const s = ctx.state;
+        if(action === 'back') popScreen();
+        if(action === 'home') gotoMain();
+        if(action === 'left') s.sel = (s.sel - 1 + s.keys.length) % s.keys.length;
+        if(action === 'right') s.sel = (s.sel + 1) % s.keys.length;
+        if(action === 'up') s.sel = (s.sel - 1 + s.keys.length) % s.keys.length;
+        if(action === 'down') s.sel = (s.sel + 1) % s.keys.length;
+        if(action === 'ok'){
+          sim.lastEvent = `IR: ${s.keys[s.sel]} (sim)`;
+        }
+      },
+      render(ctx){
+        const s = ctx.state;
+        return `
+          <div class="mono-box">
+            <div>IR REMOTE (sim)</div>
+            <div class="mt-2">Profile: ${s.brand}</div>
+            <div class="mt-2">Select: <span style="background:rgba(0,0,0,.75); color:#e9ffe9; padding:2px 6px; border-radius:6px;">${s.keys[s.sel]}</span></div>
+            <div class="mt-3 grid grid-cols-3 gap-2" style="font-family:var(--fontUI); font-size:11px;">
+              ${s.keys.map((k,i)=>{
+                const active = i===s.sel;
+                return `<div class="px-2 py-2 rounded-xl border ${active ? 'bg-black/75 text-[#e9ffe9] border-black' : 'bg-white/10 border-black/20'} text-center">${k}</div>`;
+              }).join('')}
+            </div>
+            <div class="mt-3">OK: send (sim)</div>
+          </div>
+        `;
+      }
+    };
+
+    // --- BadUSB (sim) ---
+    Screens.badusb = {
+      init(){
+        return {
+          sel: 0,
+          scripts: [
+            { name: 'hello_world', code: ['STRING Hello from BadUSB (sim)', 'ENTER'] },
+            { name: 'wifi_passwords (fake)', code: ['STRING Not available in browser', 'ENTER'] },
+            { name: 'open_browser', code: ['GUI r', 'STRING https://example.com', 'ENTER'] },
+          ],
+          running: false,
+          out: ''
+        };
+      },
+      title: 'BadUSB',
+      soft: { left: 'BACK', center: 'RUN', right: 'MENU' },
+      handle(action, ctx){
+        const s = ctx.state;
+        if(action === 'back'){
+          if(s.running){
+            s.running = false;
+            sim.lastEvent = 'Stopped.';
+          } else {
+            popScreen();
+          }
+          return;
+        }
+        if(action === 'home') gotoMain();
+        if(s.running) return;
+        if(action === 'up') s.sel = (s.sel - 1 + s.scripts.length) % s.scripts.length;
+        if(action === 'down') s.sel = (s.sel + 1) % s.scripts.length;
+        if(action === 'ok') runBadUSBSim(s);
+      },
+      render(ctx){
+        const s = ctx.state;
+        if(!s.running){
+          return `
+            <div class="mono-box">
+              <div>BADUSB (sim)</div>
+              <div class="mt-2">Select script:</div>
+              <div class="mt-2 space-y-1">
+                ${s.scripts.map((sc,i)=>{
+                  const cls = i===s.sel ? 'menu-item sel' : 'menu-item';
+                  return `<div class="${cls}"><span class="icon">${iconSVG('badusb')}</span><span>${sc.name}</span></div>`;
+                }).join('')}
+              </div>
+              <div class="mt-2">OK: run (virtual)</div>
+            </div>
+          `;
+        }
+
+        return `
+          <div class="mono-box">
+            <div>RUNNING...</div>
+            <div class="mt-2" style="font-family:var(--fontUI); font-size:11px;">
+              <div class="rounded-xl bg-black/70 text-[#e9ffe9] border border-black/70 p-2" style="min-height:120px; white-space:pre-wrap;">${escapeHTML(s.out)}</div>
+            </div>
+            <div class="mt-2">BACK: stop</div>
+          </div>
+        `;
+      }
+    };
+
+    function escapeHTML(str){
+      return String(str)
+        .replaceAll('&','&amp;')
+        .replaceAll('<','&lt;')
+        .replaceAll('>','&gt;')
+        .replaceAll('"','&quot;')
+        .replaceAll("'",'&#039;');
+    }
+
+    async function runBadUSBSim(s){
+      s.running = true;
+      s.out = '';
+      const script = s.scripts[s.sel];
+      sim.lastEvent = `Running: ${script.name} (virtual)`;
+      render();
+
+      const lines = [
+        `> ${script.name}`,
+        `> mode: VIRTUAL`,
+        `> start...`,
+        ''
+      ];
+
+      for(const line of lines){
+        if(!s.running) break;
+        await typeLine(s, line);
       }
 
-      function setGlitch(val) {
-        const v = clamp(Number(val), 0, 1);
-        document.documentElement.style.setProperty('--glitch', String(v));
-        qs('#glitchVal').textContent = v.toFixed(2);
+      for(const cmd of script.code){
+        if(!s.running) break;
+        await typeLine(s, `$ ${cmd}`);
+        await wait(180);
       }
 
-      // ---------- event wiring ----------
-      function init() {
-        // open view buttons
-        qsa('[data-open]').forEach(btn => {
-          btn.addEventListener('click', () => setView(btn.getAttribute('data-open'), true));
-        });
+      if(s.running){
+        await typeLine(s, 'DONE.');
+        sim.lastEvent = 'Finished.';
+      }
+      s.running = false;
+      render();
+    }
 
-        // bottom nav
-        qs('#btnBack').addEventListener('click', goBack);
-        qs('#btnHome').addEventListener('click', goHome);
-        qs('#btnRecent').addEventListener('click', showRecent);
+    function wait(ms){ return new Promise(r=>setTimeout(r, ms)); }
 
-        // panic
-        qs('#btnPanic').addEventListener('click', panic);
+    async function typeLine(s, line){
+      for(const ch of line){
+        if(!s.running) return;
+        s.out += ch;
+        if(settings.sound) beep(520, 10, 0.025);
+        renderThrottled();
+        await wait(12 + Math.random()*6);
+      }
+      s.out += '\n';
+      renderThrottled();
+      await wait(80);
+    }
 
-        // camera support badge
-        const camSupport = qs('#camSupport');
-        const camOk = supportsCamera();
-        const faceOk = supportsFaceDetector();
-        camSupport.textContent = camOk ? (faceOk ? 'FACE OK' : 'NO FACE') : 'NO CAM';
-        camSupport.style.borderColor = camOk ? 'rgba(var(--accent), .30)' : 'rgba(239,68,68,.35)';
+    // --- GPIO (sim) ---
+    Screens.gpio = {
+      init(){
+        return {
+          sel: 0,
+          pins: [
+            { name: '5V', type: 'PWR', val: 1 },
+            { name: 'GND', type: 'GND', val: 0 },
+            { name: 'PA7', type: 'IO', val: 0 },
+            { name: 'PA6', type: 'IO', val: 0 },
+            { name: 'PB3', type: 'IO', val: 0 },
+            { name: 'PB2', type: 'IO', val: 0 },
+          ]
+        };
+      },
+      title: 'GPIO',
+      soft: { left: 'BACK', center: 'TOGGLE', right: 'MENU' },
+      handle(action, ctx){
+        const s = ctx.state;
+        if(action === 'back') popScreen();
+        if(action === 'home') gotoMain();
+        if(action === 'up') s.sel = (s.sel - 1 + s.pins.length) % s.pins.length;
+        if(action === 'down') s.sel = (s.sel + 1) % s.pins.length;
+        if(action === 'ok'){
+          const p = s.pins[s.sel];
+          if(p.type !== 'IO'){
+            sim.lastEvent = `${p.name}: locked`;
+          } else {
+            p.val = p.val ? 0 : 1;
+            sim.lastEvent = `${p.name} = ${p.val}`;
+          }
+        }
+      },
+      render(ctx){
+        const s = ctx.state;
+        return `
+          <div class="mono-box">
+            <div>GPIO (sim)</div>
+            <div class="mt-2">Pins:</div>
+            <div class="mt-2 space-y-1">
+              ${s.pins.map((p,i)=>{
+                const cls = i===s.sel ? 'menu-item sel' : 'menu-item';
+                const v = p.type === 'IO' ? (p.val ? 'HIGH' : 'LOW') : (p.type);
+                return `
+                  <div class="${cls}">
+                    <span class="icon">${iconSVG('gpio')}</span>
+                    <span>${p.name}  ${v}</span>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+            <div class="mt-2">OK: toggle IO</div>
+          </div>
+        `;
+      }
+    };
 
-        // camera controls
-        qs('#btnCamStart').addEventListener('click', startCamera);
-        qs('#btnCamStop').addEventListener('click', async () => {
-          await stopCamera();
-          addLog('Camera stopped');
-          toast('Camera OFF');
-        });
-        qs('#btnCamSwitch').addEventListener('click', async () => {
-          state.camera.facing = state.camera.facing === 'environment' ? 'user' : 'environment';
-          addLog(`Camera lens: ${state.camera.facing}`);
-          toast(`Lens: ${state.camera.facing}`);
-          if (state.camera.running) await startCamera();
-        });
-        qs('#btnSnapshot').addEventListener('click', snapshot);
+    // --- Settings ---
+    Screens.settings = {
+      init(){
+        return { sel: 0, items: ['Sound', 'Vibration', 'Brightness', 'Demo battery drain'] };
+      },
+      title: 'Settings',
+      soft: { left: 'BACK', center: 'CHANGE', right: 'MENU' },
+      handle(action, ctx){
+        const s = ctx.state;
 
-        // tag/clear per face
-        qs('#facesList').addEventListener('click', (e) => {
-          const tagBtn = e.target.closest('[data-tag-face]');
-          if (tagBtn) {
-            const idx = Number(tagBtn.getAttribute('data-tag-face'));
-            const current = state.camera.aliases[idx] || '';
-            const input = prompt(`Set alias for Face #${idx + 1} (local only):`, current);
-            if (input == null) return;
-            const safe = input.trim().slice(0, 30);
-            if (!safe) {
-              delete state.camera.aliases[idx];
-              toast('Alias cleared');
-              addLog(`Face #${idx + 1} alias cleared`);
+        if(action === 'back') popScreen();
+        if(action === 'home') gotoMain();
+        if(action === 'up') s.sel = (s.sel - 1 + s.items.length) % s.items.length;
+        if(action === 'down') s.sel = (s.sel + 1) % s.items.length;
+
+        if(action === 'left' || action === 'right' || action === 'ok'){
+          const item = s.items[s.sel];
+          if(item === 'Sound'){
+            settings.sound = !settings.sound;
+            sim.lastEvent = `Sound: ${settings.sound ? 'ON' : 'OFF'}`;
+          }
+          if(item === 'Vibration'){
+            settings.vibrate = !settings.vibrate;
+            sim.lastEvent = `Vibration: ${settings.vibrate ? 'ON' : 'OFF'}`;
+          }
+          if(item === 'Brightness'){
+            const dir = (action === 'left') ? -1 : 1;
+            if(action === 'ok'){
+              settings.brightness = 1;
             } else {
-              state.camera.aliases[idx] = safe;
-              toast('Alias set');
-              addLog(`Face #${idx + 1} tagged: ${safe}`);
+              settings.brightness = clamp(settings.brightness + dir*0.1, 0.6, 1.2);
             }
-            renderFacesList(state.camera.lastFaces);
-            return;
+            document.documentElement.style.setProperty('--brightness', String(settings.brightness));
+            sim.lastEvent = `Brightness: ${Math.round(settings.brightness*100)}%`;
           }
-
-          const clearBtn = e.target.closest('[data-clear-face]');
-          if (clearBtn) {
-            const idx = Number(clearBtn.getAttribute('data-clear-face'));
-            delete state.camera.aliases[idx];
-            delete state.camera.codenames[idx];
-            toast('Entry cleared');
-            addLog(`Face #${idx + 1} cleared`);
-            renderFacesList(state.camera.lastFaces);
+          if(item === 'Demo battery drain'){
+            sim.battery = clamp(sim.battery - 0.05, 0, 1);
+            sim.lastEvent = 'Battery drained (demo).';
           }
-        });
+        }
+      },
+      render(ctx){
+        const s = ctx.state;
+        const rows = [
+          { k: 'Sound', v: settings.sound ? 'ON' : 'OFF' },
+          { k: 'Vibration', v: settings.vibrate ? 'ON' : 'OFF' },
+          { k: 'Brightness', v: `${Math.round(settings.brightness*100)}%` },
+          { k: 'Demo battery drain', v: 'OK' },
+        ];
 
-        qs('#btnClearTags').addEventListener('click', () => {
-          state.camera.aliases = {};
-          state.camera.codenames = {};
-          toast('Tags cleared');
-          addLog('Scanner tags cleared');
-          renderFacesList(state.camera.lastFaces);
-        });
+        return `
+          <div class="mono-box">
+            <div>SETTINGS</div>
+            <div class="mt-2 space-y-1">
+              ${rows.map((row, i)=>{
+                const cls = i===s.sel ? 'menu-item sel' : 'menu-item';
+                return `<div class="${cls}"><span class="icon">${iconSVG('settings')}</span><span>${row.k}: ${row.v}</span></div>`;
+              }).join('')}
+            </div>
+            <div class="mt-2">Left/Right/OK: change</div>
+          </div>
+        `;
+      }
+    };
 
-        // bluetooth
-        renderBt();
-        qs('#btnBtFind').addEventListener('click', btFindDevice);
-        qs('#btnBtDisconnectAll').addEventListener('click', btDisconnectAll);
+    // -----------------------------
+    // Render loop
+    // -----------------------------
+    const screenContent = $('#screenContent');
+    const statusLeft = $('#statusLeft');
+    const statusTime = $('#statusTime');
+    const batteryFill = $('#batteryFill');
+    const softLeft = $('#softLeft');
+    const softCenter = $('#softCenter');
+    const softRight = $('#softRight');
 
-        qs('#btList').addEventListener('click', (e) => {
-          const sel = e.target.closest('[data-bt-select]');
-          if (sel) {
-            state.bt.selectedId = sel.getAttribute('data-bt-select');
-            addLog(`BT selected: ${state.bt.selectedId}`);
-            renderBt();
-            return;
-          }
-          const c = e.target.closest('[data-bt-connect]');
-          if (c) return btConnect(c.getAttribute('data-bt-connect'));
-          const d = e.target.closest('[data-bt-disconnect]');
-          if (d) return btDisconnect(d.getAttribute('data-bt-disconnect'));
-          const x = e.target.closest('[data-bt-explore]');
-          if (x) {
-            const id = x.getAttribute('data-bt-explore');
-            state.bt.selectedId = id;
-            renderBt();
-            return btExplore(id);
-          }
-        });
+    function updateStatusBar(){
+      statusTime.textContent = nowTime();
+      const percent = clamp(sim.battery, 0, 1);
+      batteryFill.style.width = `${Math.round(percent*100)}%`;
+      statusLeft.textContent = currentTitle().toUpperCase();
+    }
 
-        qs('#btDetails').addEventListener('click', (e) => {
-          const read = e.target.closest('[data-bt-read]');
-          if (read) {
-            const id = read.getAttribute('data-bt-read');
-            const suuid = read.getAttribute('data-suuid');
-            const cuuid = read.getAttribute('data-cuuid');
-            return btReadChar(id, suuid, cuuid);
-          }
-          const refresh = e.target.closest('[data-bt-refresh]');
-          if (refresh) {
-            const id = refresh.getAttribute('data-bt-refresh');
-            return btExplore(id);
-          }
-        });
+    function currentTitle(){
+      const cur = current();
+      return Screens[cur.id].title || cur.id;
+    }
 
-        // tv
-        tvUpdateUi();
-        qs('#tvVolumeSlider').addEventListener('input', (e) => {
-          state.tv.volume = clamp(Number(e.target.value), 0, 100);
-          tvAction(`VOL SET ${state.tv.volume}`);
-        });
-        qs('#btnTvPower').addEventListener('click', () => {
-          state.tv.power = !state.tv.power;
-          tvAction(state.tv.power ? 'POWER ON' : 'POWER OFF');
-        });
-        qs('#btnTvMute').addEventListener('click', () => {
-          state.tv.muted = !state.tv.muted;
-          tvAction(state.tv.muted ? 'MUTE ON' : 'MUTE OFF');
-        });
-        qs('#btnTvInput').addEventListener('click', () => tvAction('INPUT')); 
-        qs('#btnTvMenu').addEventListener('click', () => tvAction('MENU')); 
-        qs('#btnTvOk').addEventListener('click', () => tvAction('OK')); 
-        qs('#btnTvChUp').addEventListener('click', () => {
-          state.tv.channel = clamp(state.tv.channel + 1, 1, 999);
-          tvAction(`CH ${state.tv.channel}`);
-        });
-        qs('#btnTvChDown').addEventListener('click', () => {
-          state.tv.channel = clamp(state.tv.channel - 1, 1, 999);
-          tvAction(`CH ${state.tv.channel}`);
-        });
-        qs('#btnTvVolUp').addEventListener('click', () => {
-          state.tv.volume = clamp(state.tv.volume + 5, 0, 100);
-          tvAction(`VOL ${state.tv.volume}`);
-        });
-        qs('#btnTvVolDown').addEventListener('click', () => {
-          state.tv.volume = clamp(state.tv.volume - 5, 0, 100);
-          tvAction(`VOL ${state.tv.volume}`);
-        });
+    function render(){
+      const cur = current();
+      const def = Screens[cur.id];
+      updateStatusBar();
 
-        // logs
-        qs('#btnClearLogs').addEventListener('click', () => {
-          state.logs = [];
-          renderLogs();
-          toast('Logs cleared');
-        });
+      // Soft keys
+      const soft = def.soft || { left: 'BACK', center: 'OK', right: 'MENU' };
+      softLeft.textContent = soft.left;
+      softCenter.textContent = soft.center;
+      softRight.textContent = soft.right;
 
-        // settings
-        qsa('[data-accent]').forEach(b => {
-          b.addEventListener('click', () => setAccent(b.getAttribute('data-accent')));
-        });
-        const glitchSlider = qs('#glitchSlider');
-        glitchSlider.addEventListener('input', (e) => setGlitch(e.target.value));
-        setGlitch(glitchSlider.value);
+      // Content
+      screenContent.innerHTML = def.render({ ...cur, settings, sim });
+    }
 
-        // general
-        updateClock();
-        setInterval(updateClock, 1000);
+    let _rt = 0;
+    function renderThrottled(){
+      const t = performance.now();
+      if(t - _rt < 50) return;
+      _rt = t;
+      render();
+    }
 
-        // initial logs
-        addLog('Boot sequence complete');
-        addLog(`Camera API: ${supportsCamera() ? 'OK' : 'NO'}`);
-        addLog(`FaceDetector: ${supportsFaceDetector() ? 'OK' : 'NO'}`);
-        addLog(`Web Bluetooth: ${state.bt.supported ? 'OK' : 'NO'}`);
+    function handleAction(action){
+      const cur = current();
+      const def = Screens[cur.id];
 
-        // stop camera on view change away from scanner? keep running for vibe.
-        // But we’ll auto-stop if leaving scanner to be polite.
-        const origSetView = setView;
-        window.addEventListener('click', (e) => {
-          const btn = e.target.closest('[data-open]');
-          if (!btn) return;
-          const dest = btn.getAttribute('data-open');
-          if (state.currentView === 'scanner' && dest !== 'scanner') {
-            stopCamera();
-          }
-        });
+      // A little "device" effect
+      clickFX();
+      sim.battery = clamp(sim.battery - 0.0008, 0, 1);
 
-        window.addEventListener('visibilitychange', () => {
-          if (document.hidden) {
-            stopCamera();
-          }
-        });
+      def.handle?.(action, { ...cur, settings, sim });
+      render();
+    }
 
-        window.addEventListener('resize', () => {
-          if (state.camera.running) resizeOverlay();
-        });
+    // -----------------------------
+    // Input handlers: buttons, keyboard, swipe
+    // -----------------------------
+    function pressVisual(el, on){
+      if(!el) return;
+      if(on) el.classList.add('pressed');
+      else el.classList.remove('pressed');
+    }
+
+    $$('#device button[data-action]').forEach(btn => {
+      const action = btn.dataset.action;
+      btn.addEventListener('pointerdown', (e)=>{
+        e.preventDefault();
+        btn.setPointerCapture?.(e.pointerId);
+        pressVisual(btn, true);
+        handleAction(action);
+      });
+      btn.addEventListener('pointerup', ()=> pressVisual(btn, false));
+      btn.addEventListener('pointercancel', ()=> pressVisual(btn, false));
+      btn.addEventListener('pointerleave', ()=> pressVisual(btn, false));
+    });
+
+    // Keyboard controls for desktop
+    window.addEventListener('keydown', (e)=>{
+      const k = e.key;
+      if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Enter','Escape','Backspace',' '].includes(k)) e.preventDefault();
+      if(k === 'ArrowUp') return flashAnd('up');
+      if(k === 'ArrowDown') return flashAnd('down');
+      if(k === 'ArrowLeft') return flashAnd('left');
+      if(k === 'ArrowRight') return flashAnd('right');
+      if(k === 'Enter') return flashAnd('ok');
+      if(k === 'Escape' || k === 'Backspace') return flashAnd('back');
+      if(k === ' ') return flashAnd('home');
+    }, { passive:false });
+
+    function flashAnd(action){
+      const el = $(`#device button[data-action="${action}"]`);
+      if(el){
+        pressVisual(el, true);
+        setTimeout(()=>pressVisual(el,false), 120);
+      }
+      handleAction(action);
+    }
+
+    // Swipe on screen area
+    const screenEl = $('#screen');
+    let swipe = null;
+
+    screenEl.addEventListener('pointerdown', (e)=>{
+      swipe = { x: e.clientX, y: e.clientY, t: performance.now() };
+    });
+    screenEl.addEventListener('pointerup', (e)=>{
+      if(!swipe) return;
+      const dx = e.clientX - swipe.x;
+      const dy = e.clientY - swipe.y;
+      const dt = performance.now() - swipe.t;
+      swipe = null;
+
+      const ax = Math.abs(dx), ay = Math.abs(dy);
+      if(dt < 30) return;
+      if(ax < 26 && ay < 26){
+        // tap = OK
+        handleAction('ok');
+        return;
       }
 
-      init();
-    })();
+      if(ax > ay){
+        handleAction(dx > 0 ? 'right' : 'left');
+      } else {
+        handleAction(dy > 0 ? 'down' : 'up');
+      }
+    });
+
+    // Extra buttons X/Y -> map to common actions
+    function mapExtra(action){
+      if(action === 'x'){
+        // quick "details"
+        sim.lastEvent = `Event: ${sim.lastEvent}`;
+        return;
+      }
+      if(action === 'y'){
+        // quick "screenshot" simulation
+        fakeScreenshot();
+        return;
+      }
+    }
+
+    function fakeScreenshot(){
+      const text = `[SCREENSHOT]\n${currentTitle()}\n${nowTime()}\n(but real capture not implemented)`;
+      try{
+        navigator.clipboard?.writeText(text);
+        sim.lastEvent = 'Screenshot copied (sim).';
+      } catch(e){
+        sim.lastEvent = 'Screenshot (sim).';
+      }
+    }
+
+    // Intercept x/y actions before dispatching screen handlers
+    function handleAction(action){
+      const cur = current();
+      const def = Screens[cur.id];
+
+      clickFX();
+      sim.battery = clamp(sim.battery - 0.0008, 0, 1);
+
+      if(action === 'x' || action === 'y'){
+        mapExtra(action);
+        render();
+        return;
+      }
+
+      def.handle?.(action, { ...cur, settings, sim });
+      render();
+    }
+
+    // -----------------------------
+    // Orientation + fullscreen
+    // -----------------------------
+    const rotateOverlay = $('#rotateOverlay');
+    const dismissRotate = $('#dismissRotate');
+    const requestFullscreenBtn = $('#requestFullscreen');
+    let forcePreview = false;
+
+    function isLandscape(){
+      return window.matchMedia('(orientation: landscape)').matches;
+    }
+
+    function updateRotateOverlay(){
+      if(forcePreview) {
+        rotateOverlay.classList.remove('show');
+        return;
+      }
+      if(isLandscape()) rotateOverlay.classList.remove('show');
+      else rotateOverlay.classList.add('show');
+    }
+
+    window.addEventListener('resize', updateRotateOverlay);
+    window.addEventListener('orientationchange', updateRotateOverlay);
+
+    dismissRotate.addEventListener('click', ()=>{
+      forcePreview = true;
+      updateRotateOverlay();
+    });
+
+    requestFullscreenBtn.addEventListener('click', async ()=>{
+      try{
+        await document.documentElement.requestFullscreen?.();
+      } catch(e) {}
+    });
+
+    // -----------------------------
+    // Help + reset
+    // -----------------------------
+    const helpDialog = $('#helpDialog');
+    $('#helpBtn').addEventListener('click', ()=> helpDialog.showModal());
+    $('#closeHelp').addEventListener('click', ()=> helpDialog.close());
+
+    $('#resetBtn').addEventListener('click', ()=>{
+      sim.battery = 0.76;
+      sim.dolphin = { level: 3, xp: 42 };
+      sim.lastEvent = 'Reset.';
+      settings.sound = true;
+      settings.vibrate = true;
+      settings.brightness = 1;
+      document.documentElement.style.setProperty('--brightness', String(settings.brightness));
+      stack.length = 0;
+      pushScreen('mainMenu');
+    });
+
+    // -----------------------------
+    // Timing + simulated events
+    // -----------------------------
+    function simulateAfter(ms, fn){
+      setTimeout(fn, ms);
+    }
+
+    // Idle tick: update time + tiny battery drain
+    setInterval(()=>{
+      sim.battery = clamp(sim.battery - 0.00035, 0, 1);
+      renderThrottled();
+    }, 1000);
+
+    // -----------------------------
+    // Boot
+    // -----------------------------
+    pushScreen('mainMenu');
+    updateRotateOverlay();
+    document.documentElement.style.setProperty('--brightness', String(settings.brightness));
   </script>
 </body>
 </html>
