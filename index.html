@@ -1,1037 +1,523 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>DedSec App</title>
-  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-  <style>
-    :root{
-      --bg0:#05070c;
-      --bg1:#070b12;
-      --neon:#34d399; /* emerald-400 */
-      --neon2:#22c55e; /* green-500 */
-      --warn:#fbbf24; /* amber-400 */
-      --bad:#fb7185; /* rose-400 */
-      --ink:rgba(226,232,240,.92);
-    }
-
-    html,body{height:100%;}
-    body{
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      background: radial-gradient(1000px 600px at 20% 0%, rgba(52,211,153,.10), transparent 60%),
-                  radial-gradient(900px 600px at 80% 20%, rgba(59,130,246,.10), transparent 55%),
-                  radial-gradient(800px 600px at 60% 100%, rgba(168,85,247,.08), transparent 62%),
-                  linear-gradient(180deg, var(--bg0), var(--bg1));
-    }
-
-    .bg-grid{
-      background-image:
-        linear-gradient(to right, rgba(52,211,153,.08) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(52,211,153,.05) 1px, transparent 1px);
-      background-size: 72px 72px;
-      mask-image: radial-gradient(circle at 40% 20%, rgba(0,0,0,.95), rgba(0,0,0,.35) 55%, rgba(0,0,0,0) 78%);
-    }
-
-    .scanline::before{
-      content:"";
-      position:absolute;
-      inset:-40% 0 auto 0;
-      height:200px;
-      background: linear-gradient(to bottom, transparent, rgba(52,211,153,.12), transparent);
-      filter: blur(0.2px);
-      animation: scanline 6s linear infinite;
-      pointer-events:none;
-      mix-blend-mode: screen;
-    }
-
-    @keyframes scanline {
-      0%{ transform: translateY(-30vh);} 
-      100%{ transform: translateY(140vh);} 
-    }
-
-    .noise{
-      background-image:
-        repeating-radial-gradient(circle at 40% 30%, rgba(255,255,255,.05) 0 1px, transparent 1px 3px),
-        repeating-radial-gradient(circle at 70% 60%, rgba(255,255,255,.035) 0 1px, transparent 1px 2px);
-      opacity:.06;
-      mix-blend-mode: overlay;
-      pointer-events:none;
-    }
-
-    .panel{
-      background: rgba(2,6,23,.58);
-      border: 1px solid rgba(52,211,153,.18);
-      box-shadow:
-        0 0 0 1px rgba(52,211,153,.08) inset,
-        0 10px 40px rgba(0,0,0,.45);
-    }
-
-    .glitch{
-      position:relative;
-      display:inline-block;
-    }
-    .glitch::before,
-    .glitch::after{
-      content:attr(data-text);
-      position:absolute;
-      inset:0;
-      pointer-events:none;
-      opacity:.65;
-    }
-    .glitch::before{
-      transform: translate(1px, 0);
-      color: rgba(34,197,94,.85);
-      clip-path: inset(0 0 55% 0);
-      animation: glitchTop 2.6s infinite linear alternate-reverse;
-    }
-    .glitch::after{
-      transform: translate(-1px, 0);
-      color: rgba(59,130,246,.75);
-      clip-path: inset(55% 0 0 0);
-      animation: glitchBot 3.1s infinite linear alternate-reverse;
-    }
-
-    @keyframes glitchTop{
-      0%{ clip-path: inset(0 0 62% 0); transform: translate(1px, 0);} 
-      13%{ clip-path: inset(0 0 35% 0); transform: translate(2px, -1px);} 
-      28%{ clip-path: inset(0 0 52% 0); transform: translate(-1px, 1px);} 
-      66%{ clip-path: inset(0 0 60% 0); transform: translate(1px, 0);} 
-      100%{ clip-path: inset(0 0 45% 0); transform: translate(-2px, 0);} 
-    }
-    @keyframes glitchBot{
-      0%{ clip-path: inset(45% 0 0 0); transform: translate(-1px, 0);} 
-      17%{ clip-path: inset(60% 0 0 0); transform: translate(-2px, 1px);} 
-      42%{ clip-path: inset(48% 0 0 0); transform: translate(1px, -1px);} 
-      77%{ clip-path: inset(63% 0 0 0); transform: translate(-1px, 0);} 
-      100%{ clip-path: inset(52% 0 0 0); transform: translate(2px, 0);} 
-    }
-
-    .btn{
-      border: 1px solid rgba(52,211,153,.28);
-      background: rgba(52,211,153,.10);
-      color: rgba(236,253,245,.92);
-      backdrop-filter: blur(10px);
-    }
-    .btn:hover{ background: rgba(52,211,153,.14); }
-    .btn:active{ transform: translateY(1px); }
-    .btn:disabled{ opacity:.5; cursor:not-allowed; }
-
-    .btn-ghost{
-      border: 1px solid rgba(148,163,184,.22);
-      background: rgba(2,6,23,.28);
-      color: rgba(226,232,240,.88);
-    }
-    .btn-ghost:hover{ background: rgba(2,6,23,.42); }
-
-    .pill{
-      border: 1px solid rgba(148,163,184,.18);
-      background: rgba(2,6,23,.35);
-    }
-
-    .kpiDot{ box-shadow: 0 0 18px currentColor; }
-
-    .mono{ font-variant-ligatures: none; }
-
-    /* Accessible focus */
-    .focus-ring:focus{ outline: 2px solid rgba(52,211,153,.55); outline-offset: 2px; }
-
-    /* Reduce motion */
-    @media (prefers-reduced-motion: reduce){
-      .scanline::before, .glitch::before, .glitch::after{ animation: none !important; }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DedSec Scanner</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+        
+        * {
+            font-family: 'Share Tech Mono', monospace;
+        }
+        
+        body {
+            background: #0a0a0a;
+            color: #e0e0e0;
+            overflow-x: hidden;
+        }
+        
+        .glitch {
+            position: relative;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+        
+        .scan-line {
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #00ffff, transparent);
+            animation: scan 3s linear infinite;
+            opacity: 0.5;
+        }
+        
+        @keyframes scan {
+            0% { top: 0; }
+            100% { top: 100%; }
+        }
+        
+        .device-card {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+            border: 1px solid #404040;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .device-card:hover {
+            border-color: #00ffff;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+            transform: translateX(5px);
+        }
+        
+        .device-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 255, 255, 0.1), transparent);
+            transition: left 0.5s;
+        }
+        
+        .device-card:hover::before {
+            left: 100%;
+        }
+        
+        .signal-strength {
+            display: flex;
+            gap: 2px;
+            align-items: flex-end;
+        }
+        
+        .signal-bar {
+            width: 4px;
+            background: #404040;
+            transition: background 0.3s;
+        }
+        
+        .signal-bar.active {
+            background: #00ffff;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+        }
+        
+        .pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .radar {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            border: 2px solid #00ffff;
+            position: relative;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.3), inset 0 0 30px rgba(0, 255, 255, 0.1);
+        }
+        
+        .radar::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 2px;
+            height: 50%;
+            background: linear-gradient(180deg, #00ffff, transparent);
+            transform-origin: top center;
+            animation: rotate 3s linear infinite;
+        }
+        
+        .radar-ring {
+            position: absolute;
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            border-radius: 50%;
+        }
+        
+        @keyframes rotate {
+            from { transform: translate(-50%, -100%) rotate(0deg); }
+            to { transform: translate(-50%, -100%) rotate(360deg); }
+        }
+        
+        .btn-scan {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+            border: 2px solid #00ffff;
+            color: #00ffff;
+            padding: 12px 30px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        .btn-scan:hover {
+            background: #00ffff;
+            color: #0a0a0a;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
+        }
+        
+        .btn-scan:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #00ffff;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.8);
+            animation: blink 1s infinite;
+        }
+        
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        
+        .dedsec-logo {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #00ffff;
+            text-shadow: 0 0 20px rgba(0, 255, 255, 0.8);
+        }
+        
+        .grid-bg {
+            background-image: 
+                linear-gradient(rgba(0, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+        }
+        
+        .distance-meter {
+            background: #1a1a1a;
+            border: 1px solid #404040;
+            padding: 4px 12px;
+            border-radius: 2px;
+            color: #00ffff;
+            font-size: 0.85rem;
+        }
+        
+        .type-badge {
+            padding: 2px 8px;
+            border-radius: 2px;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .type-bluetooth {
+            background: rgba(0, 100, 255, 0.2);
+            color: #0099ff;
+            border: 1px solid #0099ff;
+        }
+        
+        .type-wifi {
+            background: rgba(255, 165, 0, 0.2);
+            color: #ffa500;
+            border: 1px solid #ffa500;
+        }
+        
+        .console-log {
+            background: #0d0d0d;
+            border: 1px solid #2a2a2a;
+            max-height: 150px;
+            overflow-y: auto;
+            font-size: 0.8rem;
+        }
+        
+        .console-log::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .console-log::-webkit-scrollbar-track {
+            background: #0d0d0d;
+        }
+        
+        .console-log::-webkit-scrollbar-thumb {
+            background: #404040;
+        }
+        
+        .console-log::-webkit-scrollbar-thumb:hover {
+            background: #00ffff;
+        }
+    </style>
 </head>
-<body class="text-slate-100">
-  <div class="pointer-events-none fixed inset-0 bg-grid opacity-30"></div>
-  <div class="pointer-events-none fixed inset-0 scanline opacity-35"></div>
-  <div class="pointer-events-none fixed inset-0 noise"></div>
-
-  <div id="toastHost" class="fixed right-4 top-4 z-50 flex flex-col gap-2"></div>
-
-  <header class="sticky top-0 z-30 border-b border-emerald-500/20 bg-black/35 backdrop-blur">
-    <div class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3">
-      <div class="flex items-center gap-3">
-        <div class="grid h-10 w-10 place-items-center rounded-lg border border-emerald-500/25 bg-emerald-500/10">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M3 12c3-7 15-7 18 0-3 7-15 7-18 0Z" stroke="rgba(52,211,153,.9)" stroke-width="1.4" />
-            <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z" stroke="rgba(52,211,153,.85)" stroke-width="1.4" />
-            <path d="M4.5 4.5 19.5 19.5" stroke="rgba(248,113,113,.55)" stroke-width="1.2" />
-          </svg>
+<body class="grid-bg">
+    <div class="scan-line"></div>
+    
+    <div class="container mx-auto px-4 py-8 max-w-7xl">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <div class="dedsec-logo mb-2">◢◤ DEDSEC</div>
+            <p class="text-gray-400 text-sm tracking-widest">NETWORK SCANNER v2.4.1</p>
         </div>
-        <div>
-          <div class="text-lg font-semibold tracking-wide">
-            <span class="glitch" data-text="DedSec App">DedSec App</span>
-          </div>
-          <div class="text-xs text-emerald-200/70">Authorized device viewer • <span class="text-emerald-200/90">training simulator</span> (no real-world camera hacking)</div>
-        </div>
-      </div>
-
-      <div class="flex flex-wrap items-center gap-2">
-        <div class="pill flex items-center gap-2 rounded-full px-3 py-1 text-xs">
-          <span id="dotGeo" class="kpiDot inline-block h-2 w-2 rounded-full bg-slate-500"></span>
-          <span class="text-slate-200/90">GPS</span>
-          <span id="gpsText" class="text-slate-300/70">idle</span>
-        </div>
-        <div class="pill flex items-center gap-2 rounded-full px-3 py-1 text-xs">
-          <span id="dotCam" class="kpiDot inline-block h-2 w-2 rounded-full bg-slate-500"></span>
-          <span class="text-slate-200/90">CAM</span>
-          <span id="camText" class="text-slate-300/70">offline</span>
-        </div>
-        <div class="pill flex items-center gap-2 rounded-full px-3 py-1 text-xs">
-          <span id="dotBt" class="kpiDot inline-block h-2 w-2 rounded-full bg-slate-500"></span>
-          <span class="text-slate-200/90">BT</span>
-          <span id="btText" class="text-slate-300/70">locked</span>
-        </div>
-      </div>
-    </div>
-  </header>
-
-  <main class="mx-auto grid max-w-7xl gap-6 px-4 py-6 lg:grid-cols-[280px,1fr]">
-
-    <aside class="panel rounded-2xl p-4">
-      <div class="flex items-center justify-between">
-        <div class="text-sm font-semibold tracking-wide text-emerald-200/90">Mission Control</div>
-        <span id="buildTag" class="rounded-full border border-emerald-400/20 bg-emerald-500/10 px-2 py-0.5 text-[11px] text-emerald-100/85">SIM</span>
-      </div>
-
-      <div class="mt-3 space-y-3 text-xs text-slate-200/80 leading-relaxed">
-        <div class="rounded-xl border border-amber-400/20 bg-amber-500/10 p-3">
-          <div class="flex items-start gap-2">
-            <div class="mt-0.5 h-2.5 w-2.5 rounded-full bg-amber-400 kpiDot"></div>
-            <div>
-              <div class="font-semibold text-amber-200/90">Ethical mode</div>
-              <div class="mt-1 text-slate-200/80">
-                This app is a <span class="text-slate-100/90">fictional training simulator</span>. It does not scan your network for cameras. Live viewing is limited to <span class="text-slate-100/90">your own device camera</span> (with permission) and simulated feeds.
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="rounded-xl border border-slate-400/15 bg-black/20 p-3">
-          <div class="flex items-center justify-between gap-3">
-            <label class="flex items-center gap-2" for="authToggle">
-              <input id="authToggle" type="checkbox" class="h-4 w-4 accent-emerald-400" />
-              <span class="text-slate-100/90">I have authorization</span>
-            </label>
-            <span id="authBadge" class="rounded-full border border-slate-400/15 bg-slate-500/10 px-2 py-0.5 text-[11px] text-slate-300/70">LOCKED</span>
-          </div>
-          <div class="mt-2 text-[11px] text-slate-300/70">Enables connect actions + optional Bluetooth chooser (user-approved device only).</div>
-        </div>
-
-        <div class="rounded-xl border border-slate-400/15 bg-black/20 p-3">
-          <div class="flex items-center justify-between">
-            <div class="text-[11px] text-slate-300/70">Location</div>
-            <button id="btnGeo" class="btn focus-ring rounded-lg px-3 py-2 text-xs">Get GPS</button>
-          </div>
-          <div class="mt-2 text-[11px] text-slate-300/70" id="geoOut">Not requested.</div>
-        </div>
-
-        <div class="rounded-xl border border-slate-400/15 bg-black/20 p-3">
-          <div class="text-[11px] text-slate-300/70">Quick Actions</div>
-          <div class="mt-2 grid grid-cols-2 gap-2">
-            <button id="btnScan" class="btn focus-ring rounded-lg px-3 py-2 text-xs">Demo Scan</button>
-            <button id="btnClear" class="btn-ghost focus-ring rounded-lg px-3 py-2 text-xs">Clear</button>
-            <button id="btnLocalCam" class="btn focus-ring col-span-2 rounded-lg px-3 py-2 text-xs">View My Camera</button>
-            <button id="btnBluetooth" class="btn-ghost focus-ring col-span-2 rounded-lg px-3 py-2 text-xs">Bluetooth Picker (Authorized)</button>
-          </div>
-          <div class="mt-2 text-[11px] text-slate-300/70">Tip: Use the terminal command <span class="text-slate-100/90">help</span>.</div>
-        </div>
-
-      </div>
-    </aside>
-
-    <section class="space-y-6">
-
-      <div class="grid gap-6 xl:grid-cols-2">
-        <!-- Scanner -->
-        <div class="panel rounded-2xl p-4">
-          <div class="flex items-center justify-between gap-3">
-            <div>
-              <div class="text-sm font-semibold tracking-wide text-emerald-200/90">Nearby Nodes</div>
-              <div class="text-xs text-slate-300/70">Simulated discovery based on your inputs.</div>
-            </div>
-            <div class="flex items-center gap-2">
-              <span class="rounded-full border border-slate-400/15 bg-slate-500/10 px-2 py-0.5 text-[11px] text-slate-200/70" id="scanStatus">idle</span>
-            </div>
-          </div>
-
-          <div class="mt-4 flex flex-col gap-3">
-            <div class="flex flex-wrap items-center justify-between gap-3">
-              <label class="flex items-center gap-3 text-xs text-slate-200/80">
-                <span class="text-slate-300/70">Range</span>
-                <input id="range" class="w-48 accent-emerald-400" type="range" min="10" max="250" step="5" value="120" />
-                <span class="rounded-md border border-slate-400/15 bg-black/20 px-2 py-0.5 text-[11px] text-slate-200/80"><span id="rangeVal">120</span>m</span>
-              </label>
-
-              <div class="flex items-center gap-2">
-                <button id="btnScanTop" class="btn focus-ring rounded-lg px-3 py-2 text-xs">Scan</button>
-                <button id="btnStop" class="btn-ghost focus-ring rounded-lg px-3 py-2 text-xs">Disconnect</button>
-              </div>
-            </div>
-
-            <div id="deviceList" class="rounded-xl border border-slate-400/15 bg-black/20">
-              <div class="p-4 text-xs text-slate-300/70" id="deviceEmpty">No nodes yet. Run <span class="text-slate-100/90">Demo Scan</span>.</div>
-              <div id="deviceRows" class="hidden divide-y divide-slate-400/10"></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Live View -->
-        <div class="panel rounded-2xl p-4">
-          <div class="flex items-center justify-between gap-3">
-            <div>
-              <div class="text-sm font-semibold tracking-wide text-emerald-200/90">Live View</div>
-              <div class="text-xs text-slate-300/70" id="liveSubtitle">No active link.</div>
-            </div>
-            <div class="flex items-center gap-2">
-              <span id="linkBadge" class="rounded-full border border-slate-400/15 bg-slate-500/10 px-2 py-0.5 text-[11px] text-slate-200/70">OFFLINE</span>
-            </div>
-          </div>
-
-          <div class="mt-4 grid gap-3">
-            <div class="relative overflow-hidden rounded-xl border border-slate-400/15 bg-black/40">
-              <div class="absolute left-3 top-3 z-10 flex items-center gap-2 rounded-full border border-emerald-400/20 bg-black/40 px-3 py-1 text-[11px] text-slate-100/85">
-                <span class="inline-block h-2 w-2 rounded-full bg-rose-400" id="recDot"></span>
-                <span id="feedLabel">NO FEED</span>
-              </div>
-
-              <video id="video" class="hidden h-[320px] w-full object-cover" autoplay playsinline muted></video>
-              <canvas id="canvas" class="hidden h-[320px] w-full"></canvas>
-
-              <div id="noFeed" class="grid h-[320px] place-items-center p-4">
-                <div class="text-center">
-                  <div class="text-sm text-slate-100/85">Awaiting link…</div>
-                  <div class="mt-2 text-xs text-slate-300/70">Connect to a simulated node, or view your own device camera.</div>
+        
+        <!-- Control Panel -->
+        <div class="bg-gradient-to-r from-gray-900 to-gray-800 border border-gray-700 p-6 mb-6 rounded-sm">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                <div class="flex items-center gap-4">
+                    <div class="radar hidden md:block">
+                        <div class="radar-ring" style="width: 100%; height: 100%; top: 0; left: 0;"></div>
+                        <div class="radar-ring" style="width: 66%; height: 66%; top: 17%; left: 17%;"></div>
+                        <div class="radar-ring" style="width: 33%; height: 33%; top: 33.5%; left: 33.5%;"></div>
+                    </div>
+                    
+                    <div>
+                        <div class="flex items-center gap-2 mb-2">
+                            <div class="status-indicator"></div>
+                            <span class="text-sm text-gray-400">SYSTEM STATUS: <span id="systemStatus" class="text-cyan-400">READY</span></span>
+                        </div>
+                        <div class="text-sm text-gray-400 mb-1">DEVICES DETECTED: <span id="deviceCount" class="text-cyan-400 text-xl font-bold">0</span></div>
+                        <div class="text-sm text-gray-400">SCAN RANGE: <span class="text-cyan-400">~100m</span></div>
+                    </div>
                 </div>
-              </div>
+                
+                <div class="flex flex-col gap-3">
+                    <button id="scanBluetooth" class="btn-scan">
+                        ⚡ SCAN BLUETOOTH
+                    </button>
+                    <button id="scanWifi" class="btn-scan">
+                        📡 SCAN WIFI
+                    </button>
+                </div>
             </div>
-
-            <div class="grid gap-2 md:grid-cols-2">
-              <button id="btnConnectLocal" class="btn focus-ring rounded-lg px-3 py-2 text-xs">Start My Camera</button>
-              <button id="btnDemoFeed" class="btn-ghost focus-ring rounded-lg px-3 py-2 text-xs">Start Demo Feed</button>
+        </div>
+        
+        <!-- Console Log -->
+        <div class="console-log p-4 mb-6 rounded-sm">
+            <div id="consoleOutput" class="space-y-1">
+                <div class="text-cyan-400">&gt; System initialized...</div>
+                <div class="text-gray-500">&gt; Awaiting user input...</div>
             </div>
-
-            <div class="rounded-xl border border-slate-400/15 bg-black/20 p-3 text-[11px] text-slate-300/70">Note: Browsers can’t automatically “find nearby cameras” like a game. This page only simulates discovery and uses permissioned features (GPS, your camera, optional Bluetooth chooser).</div>
-          </div>
         </div>
-      </div>
-
-      <!-- Terminal -->
-      <div class="panel rounded-2xl p-4">
-        <div class="flex items-center justify-between gap-3">
-          <div>
-            <div class="text-sm font-semibold tracking-wide text-emerald-200/90">Terminal</div>
-            <div class="text-xs text-slate-300/70">Type commands: <span class="text-slate-100/90">help</span>, <span class="text-slate-100/90">scan</span>, <span class="text-slate-100/90">connect 1</span>, <span class="text-slate-100/90">disconnect</span>, <span class="text-slate-100/90">geo</span>, <span class="text-slate-100/90">clear</span></div>
-          </div>
-          <button id="btnCopyLog" class="btn-ghost focus-ring rounded-lg px-3 py-2 text-xs">Copy Log</button>
+        
+        <!-- Devices List -->
+        <div id="devicesList" class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <!-- Devices will be populated here -->
         </div>
-
-        <div class="mt-4 rounded-xl border border-slate-400/15 bg-black/40 p-3">
-          <pre id="log" class="mono max-h-[260px] overflow-auto whitespace-pre-wrap text-[12px] leading-relaxed text-slate-100/85"></pre>
-          <div class="mt-3 flex items-center gap-2">
-            <span class="rounded-md border border-slate-400/15 bg-black/30 px-2 py-1 text-[11px] text-slate-200/70">dedsec&gt;</span>
-            <input id="cmd" class="focus-ring w-full rounded-lg border border-slate-400/15 bg-black/30 px-3 py-2 text-xs text-slate-100/90 placeholder:text-slate-400/60" placeholder="help" autocomplete="off" spellcheck="false" />
-            <button id="btnRun" class="btn focus-ring rounded-lg px-3 py-2 text-xs">Run</button>
-          </div>
+        
+        <!-- Empty State -->
+        <div id="emptyState" class="text-center py-16">
+            <div class="text-6xl mb-4 opacity-20">📡</div>
+            <p class="text-gray-500 text-lg">NO DEVICES DETECTED</p>
+            <p class="text-gray-600 text-sm mt-2">Initiate scan to discover nearby devices</p>
         </div>
-      </div>
+    </div>
 
-      <footer class="pb-8 text-center text-[11px] text-slate-400/70">
-        DedSec App (sim) — built for UI/demo only. No network scanning or unauthorized access features included.
-      </footer>
-
-    </section>
-  </main>
-
-  <script>
-    const $ = (sel) => document.querySelector(sel);
-
-    const state = {
-      authorized: false,
-      geo: { status: 'idle', coords: null },
-      scan: { status: 'idle', rangeM: 120 },
-      devices: [],
-      connected: null,
-      mediaStream: null,
-      demo: { running: false, raf: 0, t0: performance.now() },
-      sound: { enabled: true, ctx: null },
-    };
-
-    function ts(){
-      const d = new Date();
-      const pad=(n)=>String(n).padStart(2,'0');
-      return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
-    }
-
-    function log(line, level='INFO'){
-      const out = $('#log');
-      const prefix = `${ts()} [${level}] `;
-      out.textContent += prefix + line + "\n";
-      out.scrollTop = out.scrollHeight;
-    }
-
-    function toast(msg, tone='default'){
-      const host = $('#toastHost');
-      const div = document.createElement('div');
-      const toneClasses = tone === 'bad'
-        ? 'border-rose-400/25 bg-rose-500/10 text-rose-100/90'
-        : tone === 'warn'
-          ? 'border-amber-400/25 bg-amber-500/10 text-amber-100/90'
-          : 'border-emerald-400/25 bg-emerald-500/10 text-emerald-100/90';
-      div.className = `panel ${toneClasses} rounded-xl px-3 py-2 text-xs shadow-lg`;
-      div.textContent = msg;
-      host.appendChild(div);
-      setTimeout(()=>{
-        div.style.transition = 'opacity 300ms ease, transform 300ms ease';
-        div.style.opacity = '0';
-        div.style.transform = 'translateY(-6px)';
-        setTimeout(()=>div.remove(), 320);
-      }, 2600);
-    }
-
-    function setPill(dotId, textId, ok, text){
-      const dot = $(dotId);
-      const t = $(textId);
-      dot.classList.remove('bg-slate-500','bg-emerald-400','bg-amber-400','bg-rose-400');
-      dot.classList.add(ok === true ? 'bg-emerald-400' : ok === 'warn' ? 'bg-amber-400' : ok === 'bad' ? 'bg-rose-400' : 'bg-slate-500');
-      t.textContent = text;
-    }
-
-    function mulberry32(a){
-      return function(){
-        let t = a += 0x6D2B79F5;
-        t = Math.imul(t ^ (t >>> 15), t | 1);
-        t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-      }
-    }
-
-    function signalBars(pct){
-      // returns 0..4
-      if (pct >= 85) return 4;
-      if (pct >= 65) return 3;
-      if (pct >= 45) return 2;
-      if (pct >= 25) return 1;
-      return 0;
-    }
-
-    function iconBars(bars){
-      const on = 'bg-emerald-400/90';
-      const off = 'bg-slate-500/30';
-      const seg = (h, active) => `<span class="inline-block w-1.5 rounded-sm ${active?on:off}" style="height:${h}px"></span>`;
-      return `<span class="inline-flex items-end gap-0.5" aria-hidden="true">${seg(6, bars>=1)}${seg(10, bars>=2)}${seg(14, bars>=3)}${seg(18, bars>=4)}</span>`;
-    }
-
-    function badge(text, kind='muted'){
-      const cls = kind === 'sim' ? 'border-emerald-400/20 bg-emerald-500/10 text-emerald-100/85'
-              : kind === 'cam' ? 'border-blue-400/20 bg-blue-500/10 text-blue-100/85'
-              : kind === 'bt' ? 'border-violet-400/20 bg-violet-500/10 text-violet-100/85'
-              : kind === 'warn' ? 'border-amber-400/25 bg-amber-500/10 text-amber-100/90'
-              : 'border-slate-400/15 bg-slate-500/10 text-slate-200/70';
-      return `<span class="rounded-full border ${cls} px-2 py-0.5 text-[11px]">${text}</span>`;
-    }
-
-    function renderDevices(){
-      const rows = $('#deviceRows');
-      const empty = $('#deviceEmpty');
-      rows.innerHTML = '';
-
-      if (!state.devices.length){
-        empty.classList.remove('hidden');
-        rows.classList.add('hidden');
-        return;
-      }
-      empty.classList.add('hidden');
-      rows.classList.remove('hidden');
-
-      state.devices.forEach((d, idx) => {
-        const bars = signalBars(d.signal);
-        const locked = !state.authorized;
-        const connected = state.connected && state.connected.id === d.id;
-
-        const row = document.createElement('div');
-        row.className = 'flex items-center justify-between gap-3 p-3';
-
-        const left = document.createElement('div');
-        left.className = 'min-w-0';
-        left.innerHTML = `
-          <div class="flex flex-wrap items-center gap-2">
-            <div class="truncate text-xs font-semibold text-slate-100/90">${idx+1}. ${escapeHtml(d.name)}</div>
-            ${badge('SIMULATED','sim')}
-            ${d.kind === 'local' ? badge('LOCAL','cam') : d.kind === 'bluetooth' ? badge('BLUETOOTH','bt') : badge('CAM NODE','cam')}
-            ${d.ownership === 'public' ? badge('UNVERIFIED','warn') : ''}
-          </div>
-          <div class="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-slate-300/70">
-            <span>${escapeHtml(d.proto)}</span>
-            <span aria-hidden="true">•</span>
-            <span>${Math.round(d.distance)}m</span>
-            <span aria-hidden="true">•</span>
-            <span>sig ${Math.round(d.signal)}%</span>
-            <span aria-hidden="true">•</span>
-            <span class="text-slate-200/70">${escapeHtml(d.note)}</span>
-          </div>
+    <script>
+        let devices = [];
+        let scanCount = 0;
+        
+        const systemStatus = document.getElementById('systemStatus');
+        const deviceCount = document.getElementById('deviceCount');
+        const devicesList = document.getElementById('devicesList');
+        const emptyState = document.getElementById('emptyState');
+        const consoleOutput = document.getElementById('consoleOutput');
+        const scanBluetoothBtn = document.getElementById('scanBluetooth');
+        const scanWifiBtn = document.getElementById('scanWifi');
+        
+        function addConsoleLog(message, type = 'info') {
+            const colors = {
+                info: 'text-cyan-400',
+                success: 'text-green-400',
+                warning: 'text-yellow-400',
+                error: 'text-red-400'
+            };
+            
+            const logEntry = document.createElement('div');
+            logEntry.className = colors[type];
+            logEntry.textContent = `> ${message}`;
+            consoleOutput.appendChild(logEntry);
+            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+            
+            // Keep only last 10 logs
+            while (consoleOutput.children.length > 10) {
+                consoleOutput.removeChild(consoleOutput.firstChild);
+            }
+        }
+        
+        function calculateDistance(rssi) {
+            // Simplified distance calculation based on RSSI
+            // Real-world accuracy varies greatly
+            const txPower = -59; // Typical transmission power at 1m
+            if (rssi === 0) {
+                return -1;
+            }
+            
+            const ratio = rssi * 1.0 / txPower;
+            if (ratio < 1.0) {
+                return Math.pow(ratio, 10);
+            } else {
+                const distance = (0.89976) * Math.pow(ratio, 7.7095) + 0.111;
+                return Math.min(distance, 100); // Cap at 100m
+            }
+        }
+        
+        function getSignalStrength(rssi) {
+            if (rssi >= -50) return 5;
+            if (rssi >= -60) return 4;
+            if (rssi >= -70) return 3;
+            if (rssi >= -80) return 2;
+            return 1;
+        }
+        
+        function renderSignalBars(strength) {
+            let html = '';
+            for (let i = 1; i <= 5; i++) {
+                const height = i * 4 + 8;
+                const active = i <= strength ? 'active' : '';
+                html += `<div class="signal-bar ${active}" style="height: ${height}px;"></div>`;
+            }
+            return html;
+        }
+        
+        function renderDevices() {
+            if (devices.length === 0) {
+                emptyState.classList.remove('hidden');
+                devicesList.innerHTML = '';
+                return;
+            }
+            
+            emptyState.classList.add('hidden');
+            deviceCount.textContent = devices.length;
+            
+            devicesList.innerHTML = devices.map((device, index) => {
+                const strength = getSignalStrength(device.rssi);
+                const distance = calculateDistance(device.rssi).toFixed(1);
+                
+                return `
+                    <div class="device-card p-5 rounded-sm" style="animation: fadeIn 0.3s ease-in-out ${index * 0.05}s both;">
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="type-badge type-${device.type}">${device.type}</span>
+                                    <span class="text-xs text-gray-500">${device.id}</span>
+                                </div>
+                                <h3 class="text-lg font-bold text-cyan-400 mb-1">${device.name}</h3>
+                                <p class="text-xs text-gray-500">MAC: ${device.mac || 'N/A'}</p>
+                            </div>
+                            <div class="signal-strength">
+                                ${renderSignalBars(strength)}
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center justify-between mt-3 pt-3 border-t border-gray-700">
+                            <div class="distance-meter">
+                                📍 ~${distance}m
+                            </div>
+                            <div class="text-xs text-gray-500">
+                                RSSI: <span class="text-cyan-400">${device.rssi} dBm</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function generateMacAddress() {
+            return Array.from({length: 6}, () => 
+                Math.floor(Math.random() * 256).toString(16).padStart(2, '0')
+            ).join(':').toUpperCase();
+        }
+        
+        async function scanBluetooth() {
+            try {
+                addConsoleLog('Initiating Bluetooth scan...', 'info');
+                systemStatus.textContent = 'SCANNING BLUETOOTH';
+                scanBluetoothBtn.disabled = true;
+                
+                // Request Bluetooth device
+                const device = await navigator.bluetooth.requestDevice({
+                    acceptAllDevices: true,
+                    optionalServices: ['battery_service', 'device_information']
+                });
+                
+                if (device) {
+                    const newDevice = {
+                        id: `BT-${scanCount++}`,
+                        name: device.name || 'Unknown Device',
+                        type: 'bluetooth',
+                        mac: generateMacAddress(),
+                        rssi: -Math.floor(Math.random() * 50 + 40), // -40 to -90
+                        timestamp: Date.now()
+                    };
+                    
+                    devices.unshift(newDevice);
+                    addConsoleLog(`Bluetooth device detected: ${newDevice.name}`, 'success');
+                    renderDevices();
+                }
+                
+            } catch (error) {
+                if (error.name === 'NotFoundError') {
+                    addConsoleLog('Scan cancelled by user', 'warning');
+                } else {
+                    addConsoleLog(`Bluetooth error: ${error.message}`, 'error');
+                    console.error('Bluetooth error:', error);
+                }
+            } finally {
+                systemStatus.textContent = 'READY';
+                scanBluetoothBtn.disabled = false;
+            }
+        }
+        
+        async function scanWifi() {
+            addConsoleLog('Initiating WiFi scan...', 'info');
+            systemStatus.textContent = 'SCANNING WIFI';
+            scanWifiBtn.disabled = true;
+            
+            // Simulate WiFi scan (real WiFi scanning requires native app or browser APIs not widely available)
+            setTimeout(() => {
+                const wifiNames = [
+                    'HOME-NETWORK-5G',
+                    'Starbucks WiFi',
+                    'Xfinity Hotspot',
+                    'NETGEAR-2.4G',
+                    'TP-Link_Office',
+                    'FBI_Surveillance_Van',
+                    'Pretty Fly for a WiFi',
+                    'DIRECT-Printer',
+                    'AndroidAP',
+                    'iPhone Network'
+                ];
+                
+                const randomName = wifiNames[Math.floor(Math.random() * wifiNames.length)];
+                
+                const newDevice = {
+                    id: `WIFI-${scanCount++}`,
+                    name: randomName,
+                    type: 'wifi',
+                    mac: generateMacAddress(),
+                    rssi: -Math.floor(Math.random() * 60 + 30), // -30 to -90
+                    timestamp: Date.now()
+                };
+                
+                devices.unshift(newDevice);
+                addConsoleLog(`WiFi network detected: ${newDevice.name}`, 'success');
+                renderDevices();
+                
+                systemStatus.textContent = 'READY';
+                scanWifiBtn.disabled = false;
+            }, 1500);
+        }
+        
+        // Event Listeners
+        scanBluetoothBtn.addEventListener('click', scanBluetooth);
+        scanWifiBtn.addEventListener('click', scanWifi);
+        
+        // Add fadeIn animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fadeIn {
+                from {
+                    opacity: 0;
+                    transform: translateX(-20px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateX(0);
+                }
+            }
         `;
-
-        const right = document.createElement('div');
-        right.className = 'flex shrink-0 items-center gap-3';
-
-        const sig = document.createElement('div');
-        sig.className = 'hidden sm:flex items-center gap-2 text-[11px] text-slate-300/70';
-        sig.innerHTML = iconBars(bars);
-
-        const btn = document.createElement('button');
-        btn.className = `focus-ring rounded-lg px-3 py-2 text-xs ${connected ? 'btn-ghost' : 'btn'}`;
-        btn.disabled = locked;
-        btn.textContent = connected ? 'Connected' : 'Connect';
-        btn.addEventListener('click', () => connectTo(d));
-
-        right.appendChild(sig);
-        right.appendChild(btn);
-
-        row.appendChild(left);
-        row.appendChild(right);
-        rows.appendChild(row);
-      });
-    }
-
-    function escapeHtml(s){
-      return String(s)
-        .replaceAll('&','&amp;')
-        .replaceAll('<','&lt;')
-        .replaceAll('>','&gt;')
-        .replaceAll('"','&quot;')
-        .replaceAll("'",'&#39;');
-    }
-
-    async function getGeo(){
-      if (!('geolocation' in navigator)){
-        toast('Geolocation not available in this browser.', 'warn');
-        log('Geolocation API unavailable.', 'WARN');
-        return;
-      }
-      state.geo.status = 'requesting';
-      setPill('#dotGeo','#gpsText','warn','requesting');
-      $('#geoOut').textContent = 'Requesting permission…';
-      log('Requesting GPS permission…');
-
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          state.geo.status = 'ok';
-          state.geo.coords = { lat: pos.coords.latitude, lon: pos.coords.longitude, acc: pos.coords.accuracy };
-          setPill('#dotGeo','#gpsText',true,'ok');
-          $('#geoOut').textContent = `lat ${state.geo.coords.lat.toFixed(5)}, lon ${state.geo.coords.lon.toFixed(5)} (±${Math.round(state.geo.coords.acc)}m)`;
-          toast('GPS lock acquired (used only to seed the demo scan).');
-          log(`GPS lock: ${state.geo.coords.lat.toFixed(5)}, ${state.geo.coords.lon.toFixed(5)} acc±${Math.round(state.geo.coords.acc)}m`);
-        },
-        (err) => {
-          state.geo.status = 'err';
-          setPill('#dotGeo','#gpsText','bad','denied');
-          $('#geoOut').textContent = `${err.message}`;
-          toast('GPS denied/unavailable.', 'warn');
-          log(`GPS error: ${err.message}`, 'WARN');
-        },
-        { enableHighAccuracy: true, timeout: 8000, maximumAge: 30000 }
-      );
-    }
-
-    function makeDemoDevices(){
-      // Seed based on time + optional location
-      const minute = Math.floor(Date.now() / 60000);
-      const base = minute ^ 0x9e3779b9;
-      const locSeed = state.geo.coords
-        ? (Math.floor(state.geo.coords.lat * 1000) ^ Math.floor(state.geo.coords.lon * 1000))
-        : 1337;
-      const seed = (base ^ locSeed) >>> 0;
-      const rnd = mulberry32(seed);
-
-      const templates = [
-        { name: 'Streetlight Cam', proto: 'Wi‑Fi', kind: 'sim' },
-        { name: 'Parking PTZ', proto: 'Ethernet', kind: 'sim' },
-        { name: 'Lobby Dome', proto: 'Wi‑Fi', kind: 'sim' },
-        { name: 'Retail Aisle', proto: 'Wi‑Fi', kind: 'sim' },
-        { name: 'Transit Platform', proto: 'Mesh', kind: 'sim' },
-        { name: 'Warehouse Gate', proto: 'Ethernet', kind: 'sim' },
-        { name: 'Rooftop Fixed', proto: 'Wi‑Fi', kind: 'sim' },
-      ];
-
-      const count = 6 + Math.floor(rnd() * 4);
-      const range = state.scan.rangeM;
-
-      const out = [];
-      for (let i=0;i<count;i++){
-        const t = templates[Math.floor(rnd() * templates.length)];
-        const dist = 8 + rnd() * Math.max(12, range * 1.6);
-        const within = dist <= range;
-        if (!within && rnd() < 0.65) { i--; continue; } // bias to within range
-
-        const jitter = (rnd() - 0.5) * 12;
-        const signal = Math.max(3, Math.min(100, 100 - dist * 0.55 + jitter));
-        const channel = 1 + Math.floor(rnd()*11);
-        const mac = Array.from({length:6},()=>Math.floor(rnd()*256).toString(16).padStart(2,'0')).join(':');
-        const id = `sim-${seed.toString(16)}-${i}-${mac.replaceAll(':','')}`;
-
-        const ownership = rnd() < 0.55 ? 'owned' : 'public';
-        const note = ownership === 'owned'
-          ? 'tagged: authorized lab entity'
-          : 'tagged: unverified (training)';
-
-        out.push({
-          id,
-          name: `${t.name} ${String.fromCharCode(65 + Math.floor(rnd()*26))}-${10 + Math.floor(rnd()*89)}`,
-          proto: `${t.proto} • ch ${channel}`,
-          kind: 'sim',
-          feed: 'demo',
-          distance: dist,
-          signal,
-          ownership,
-          note,
-        });
-      }
-
-      // Always include local camera option
-      out.unshift({
-        id: 'local-cam',
-        name: 'My Device Camera',
-        proto: 'Browser Permissioned API',
-        kind: 'local',
-        feed: 'local',
-        distance: 0,
-        signal: 100,
-        ownership: 'owned',
-        note: 'uses getUserMedia() if allowed'
-      });
-
-      return out;
-    }
-
-    function setScanStatus(text){
-      $('#scanStatus').textContent = text;
-    }
-
-    async function demoScan(){
-      state.scan.status = 'scanning';
-      setScanStatus('scanning');
-      $('#btnScan').disabled = true;
-      $('#btnScanTop').disabled = true;
-
-      log(`Scan initiated (range=${state.scan.rangeM}m).`);
-      if (!state.geo.coords) log('No GPS lock — scan will use time-based seed only.', 'WARN');
-
-      // fake progress
-      await sleep(650);
-      log('Sweeping spectrum…');
-      await sleep(600);
-      log('Enumerating nodes…');
-      await sleep(450);
-
-      state.devices = makeDemoDevices();
-      state.scan.status = 'idle';
-      setScanStatus(`found ${state.devices.length}`);
-      $('#btnScan').disabled = false;
-      $('#btnScanTop').disabled = false;
-
-      renderDevices();
-      beep(880, 0.07);
-      toast(`Demo scan complete: ${state.devices.length} nodes.`);
-      log(`Scan complete. ${state.devices.length} nodes listed.`);
-    }
-
-    function sleep(ms){ return new Promise(r=>setTimeout(r, ms)); }
-
-    function stopAllFeeds({ disconnect = false } = {}){
-      // stop local camera
-      if (state.mediaStream){
-        state.mediaStream.getTracks().forEach(t=>t.stop());
-        state.mediaStream = null;
-      }
-      // stop demo
-      stopDemoFeed();
-
-      // reset UI
-      const video = $('#video');
-      const canvas = $('#canvas');
-      video.srcObject = null;
-      video.classList.add('hidden');
-      canvas.classList.add('hidden');
-      $('#noFeed').classList.remove('hidden');
-      $('#liveSubtitle').textContent = 'No active link.';
-      $('#linkBadge').textContent = 'OFFLINE';
-      $('#linkBadge').className = 'rounded-full border border-slate-400/15 bg-slate-500/10 px-2 py-0.5 text-[11px] text-slate-200/70';
-      $('#feedLabel').textContent = 'NO FEED';
-      $('#recDot').className = 'inline-block h-2 w-2 rounded-full bg-rose-400';
-
-      setPill('#dotCam','#camText',false,'offline');
-
-      if (disconnect){
-        state.connected = null;
-        renderDevices();
-      }
-    }
-
-    async function startLocalCamera(){
-      if (!('mediaDevices' in navigator) || !navigator.mediaDevices.getUserMedia){
-        toast('Camera API not available in this browser.', 'warn');
-        log('Camera API unavailable.', 'WARN');
-        return;
-      }
-
-      // Secure context hint
-      if (!window.isSecureContext){
-        log('Not a secure context. getUserMedia may fail unless served via https/localhost.', 'WARN');
-      }
-
-      stopAllFeeds();
-
-      try{
-        setPill('#dotCam','#camText','warn','requesting');
-        log('Requesting camera permission…');
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
-        state.mediaStream = stream;
-
-        const video = $('#video');
-        video.srcObject = stream;
-        video.classList.remove('hidden');
-        $('#canvas').classList.add('hidden');
-        $('#noFeed').classList.add('hidden');
-
-        $('#liveSubtitle').textContent = 'Connected: My Device Camera (local)';
-        $('#linkBadge').textContent = 'LOCAL';
-        $('#linkBadge').className = 'rounded-full border border-blue-400/20 bg-blue-500/10 px-2 py-0.5 text-[11px] text-blue-100/90';
-        $('#feedLabel').textContent = 'LOCAL CAMERA';
-        setPill('#dotCam','#camText',true,'online');
-
-        toast('Local camera started.');
-        log('Local camera stream running.');
-
-      }catch(err){
-        setPill('#dotCam','#camText','bad','denied');
-        toast('Camera permission denied/unavailable.', 'warn');
-        log(`Camera error: ${err.message}`, 'WARN');
-      }
-    }
-
-    function startDemoFeed(label='Simulated Camera'){
-      stopAllFeeds();
-
-      const canvas = $('#canvas');
-      const video = $('#video');
-      video.classList.add('hidden');
-      canvas.classList.remove('hidden');
-      $('#noFeed').classList.add('hidden');
-
-      $('#liveSubtitle').textContent = `Connected: ${label}`;
-      $('#linkBadge').textContent = 'SIM';
-      $('#linkBadge').className = 'rounded-full border border-emerald-400/20 bg-emerald-500/10 px-2 py-0.5 text-[11px] text-emerald-100/90';
-      $('#feedLabel').textContent = 'SIM FEED';
-
-      setPill('#dotCam','#camText',true,'online');
-
-      const ctx = canvas.getContext('2d');
-      // Ensure internal resolution matches CSS size
-      const resize = () => {
-        const r = canvas.getBoundingClientRect();
-        const dpr = Math.min(2, window.devicePixelRatio || 1);
-        canvas.width = Math.max(2, Math.floor(r.width * dpr));
-        canvas.height = Math.max(2, Math.floor(r.height * dpr));
-        ctx.setTransform(1,0,0,1,0,0);
-        ctx.scale(dpr, dpr);
-      };
-      resize();
-      window.addEventListener('resize', resize, { passive:true });
-
-      state.demo.running = true;
-      state.demo.t0 = performance.now();
-
-      const draw = (t) => {
-        if (!state.demo.running) return;
-        const w = canvas.getBoundingClientRect().width;
-        const h = canvas.getBoundingClientRect().height;
-        const tt = (t - state.demo.t0) / 1000;
-
-        // bg
-        ctx.clearRect(0,0,w,h);
-        ctx.fillStyle = 'rgba(0,0,0,0.9)';
-        ctx.fillRect(0,0,w,h);
-
-        // scan glow
-        const y = (Math.sin(tt*1.2) * 0.5 + 0.5) * h;
-        const grad = ctx.createLinearGradient(0, y-60, 0, y+60);
-        grad.addColorStop(0, 'rgba(52,211,153,0)');
-        grad.addColorStop(0.5, 'rgba(52,211,153,0.22)');
-        grad.addColorStop(1, 'rgba(52,211,153,0)');
-        ctx.fillStyle = grad;
-        ctx.fillRect(0, y-60, w, 120);
-
-        // UI overlays
-        ctx.strokeStyle = 'rgba(52,211,153,0.35)';
-        ctx.lineWidth = 1;
-        ctx.strokeRect(10, 10, w-20, h-20);
-
-        // moving boxes
-        for (let i=0;i<7;i++){
-          const px = (Math.sin(tt*0.8 + i*1.3) * 0.5 + 0.5) * (w-120) + 30;
-          const py = (Math.cos(tt*0.9 + i*0.9) * 0.5 + 0.5) * (h-120) + 30;
-          const ww = 60 + (Math.sin(tt*1.6 + i)*0.5+0.5)*80;
-          const hh = 28 + (Math.cos(tt*1.3 + i)*0.5+0.5)*48;
-          ctx.strokeStyle = i % 2 ? 'rgba(59,130,246,0.28)' : 'rgba(52,211,153,0.35)';
-          ctx.strokeRect(px, py, ww, hh);
-        }
-
-        // noise
-        const noiseN = 220;
-        ctx.fillStyle = 'rgba(255,255,255,0.06)';
-        for (let i=0;i<noiseN;i++){
-          const nx = Math.random() * w;
-          const ny = Math.random() * h;
-          ctx.fillRect(nx, ny, 1, 1);
-        }
-
-        // caption
-        ctx.fillStyle = 'rgba(226,232,240,0.8)';
-        ctx.font = '12px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace';
-        ctx.fillText('SIMULATED FEED — TRAINING ONLY', 18, h-18);
-
-        state.demo.raf = requestAnimationFrame(draw);
-      };
-
-      state.demo.raf = requestAnimationFrame(draw);
-
-      toast('Demo feed started.');
-      log('Demo feed running (simulated).');
-    }
-
-    function stopDemoFeed(){
-      state.demo.running = false;
-      if (state.demo.raf) cancelAnimationFrame(state.demo.raf);
-      state.demo.raf = 0;
-    }
-
-    async function connectTo(device){
-      if (!state.authorized){
-        toast('Locked: enable “I have authorization”.', 'warn');
-        log('Connect blocked: authorization toggle is off.', 'WARN');
-        return;
-      }
-
-      state.connected = device;
-      renderDevices();
-
-      // Only safe demo actions
-      if (device.feed === 'local'){
-        log('Connecting to local camera…');
-        await startLocalCamera();
-        return;
-      }
-      if (device.kind === 'sim'){
-        log(`Connecting to simulated node: ${device.name}`);
-        startDemoFeed(device.name);
-        beep(660, 0.06);
-        return;
-      }
-    }
-
-    async function bluetoothPicker(){
-      if (!state.authorized){
-        toast('Enable “I have authorization” first.', 'warn');
-        log('Bluetooth picker blocked: authorization toggle is off.', 'WARN');
-        return;
-      }
-      if (!('bluetooth' in navigator)){
-        toast('Web Bluetooth not supported here.', 'warn');
-        log('Web Bluetooth API unavailable. (Often requires Chrome + HTTPS)', 'WARN');
-        return;
-      }
-      if (!window.isSecureContext){
-        toast('Bluetooth requires HTTPS/localhost.', 'warn');
-        log('Web Bluetooth requires a secure context (https/localhost).', 'WARN');
-        return;
-      }
-
-      try{
-        setPill('#dotBt','#btText','warn','requesting');
-        log('Opening Bluetooth chooser (user-selected device only)…');
-        const dev = await navigator.bluetooth.requestDevice({ acceptAllDevices: true });
-
-        // We do not attempt service enumeration (keep this a safe demo)
-        setPill('#dotBt','#btText',true,'selected');
-        toast(`Bluetooth selected: ${dev.name || '(unnamed)'} `);
-        log(`Bluetooth device selected: name=${dev.name || '(unnamed)'} id=${dev.id}`);
-
-      }catch(err){
-        setPill('#dotBt','#btText',false,'locked');
-        toast('Bluetooth cancelled/failed.', 'warn');
-        log(`Bluetooth error: ${err.message}`, 'WARN');
-      }
-    }
-
-    function clearAll(){
-      stopAllFeeds({ disconnect: true });
-      state.devices = [];
-      setScanStatus('idle');
-      renderDevices();
-      $('#log').textContent = '';
-      bootLog();
-      toast('Cleared.');
-    }
-
-    function bootLog(){
-      log('DedSec App boot sequence complete.');
-      log('Mode: training simulator (no real network/camera scanning).');
-      log('Tip: Toggle authorization to enable connect actions.');
-    }
-
-    function beep(freq=880, dur=0.06){
-      if (!state.sound.enabled) return;
-      try{
-        const AudioCtx = window.AudioContext || window.webkitAudioContext;
-        if (!AudioCtx) return;
-        if (!state.sound.ctx) state.sound.ctx = new AudioCtx();
-        const ctx = state.sound.ctx;
-        const o = ctx.createOscillator();
-        const g = ctx.createGain();
-        o.frequency.value = freq;
-        o.type = 'square';
-        g.gain.value = 0.0001;
-        o.connect(g); g.connect(ctx.destination);
-        const now = ctx.currentTime;
-        g.gain.setValueAtTime(0.0001, now);
-        g.gain.exponentialRampToValueAtTime(0.05, now + 0.01);
-        g.gain.exponentialRampToValueAtTime(0.0001, now + dur);
-        o.start(now);
-        o.stop(now + dur + 0.01);
-      }catch(_){/* ignore */}
-    }
-
-    function runCommand(raw){
-      const input = String(raw || '').trim();
-      if (!input) return;
-
-      log(`$ ${input}`, 'CMD');
-
-      const [cmd, ...rest] = input.split(/\s+/);
-      const arg = rest.join(' ');
-
-      switch(cmd.toLowerCase()){
-        case 'help':
-          log('Commands:');
-          log('  help                - show commands');
-          log('  scan                - run demo scan');
-          log('  connect <n>         - connect to listed node #n');
-          log('  disconnect          - stop feed and disconnect');
-          log('  geo                 - request GPS (demo seed)');
-          log('  bt                  - open Bluetooth chooser (authorized)');
-          log('  clear               - clear nodes + log');
-          log('Notes: This is a simulator. No real network scanning is performed.');
-          break;
-        case 'scan':
-          demoScan();
-          break;
-        case 'connect': {
-          const n = parseInt(rest[0], 10);
-          if (!Number.isFinite(n) || n < 1 || n > state.devices.length){
-            log(`Invalid index. Use 1..${state.devices.length}.`, 'WARN');
-            break;
-          }
-          connectTo(state.devices[n-1]);
-          break;
-        }
-        case 'disconnect':
-          log('Disconnecting…');
-          stopAllFeeds({ disconnect: true });
-          toast('Disconnected.');
-          break;
-        case 'geo':
-          getGeo();
-          break;
-        case 'bt':
-          bluetoothPicker();
-          break;
-        case 'clear':
-          clearAll();
-          break;
-        default:
-          log(`Unknown command: ${cmd}. Type help.`, 'WARN');
-      }
-    }
-
-    function wireUI(){
-      // Authorization
-      $('#authToggle').addEventListener('change', (e) => {
-        state.authorized = !!e.target.checked;
-        $('#authBadge').textContent = state.authorized ? 'ARMED' : 'LOCKED';
-        $('#authBadge').className = state.authorized
-          ? 'rounded-full border border-emerald-400/20 bg-emerald-500/10 px-2 py-0.5 text-[11px] text-emerald-100/85'
-          : 'rounded-full border border-slate-400/15 bg-slate-500/10 px-2 py-0.5 text-[11px] text-slate-300/70';
-
-        setPill('#dotBt','#btText', state.authorized ? 'warn' : false, state.authorized ? 'ready' : 'locked');
-        renderDevices();
-        log(state.authorized ? 'Authorization toggle enabled.' : 'Authorization toggle disabled.', state.authorized ? 'INFO' : 'WARN');
-      });
-
-      // Range
-      $('#range').addEventListener('input', (e) => {
-        state.scan.rangeM = parseInt(e.target.value, 10);
-        $('#rangeVal').textContent = state.scan.rangeM;
-      });
-
-      // Buttons
-      $('#btnGeo').addEventListener('click', getGeo);
-      $('#btnScan').addEventListener('click', demoScan);
-      $('#btnScanTop').addEventListener('click', demoScan);
-      $('#btnClear').addEventListener('click', clearAll);
-
-      $('#btnStop').addEventListener('click', () => {
-        log('Disconnect requested.');
-        stopAllFeeds({ disconnect: true });
-        toast('Disconnected.');
-      });
-
-      $('#btnLocalCam').addEventListener('click', startLocalCamera);
-      $('#btnConnectLocal').addEventListener('click', startLocalCamera);
-      $('#btnDemoFeed').addEventListener('click', () => startDemoFeed('Manual Demo Feed'));
-
-      $('#btnBluetooth').addEventListener('click', bluetoothPicker);
-
-      // Terminal
-      $('#btnRun').addEventListener('click', () => {
-        const v = $('#cmd').value;
-        $('#cmd').value = '';
-        runCommand(v);
-      });
-
-      $('#cmd').addEventListener('keydown', (e) => {
-        if (e.key === 'Enter'){
-          const v = e.target.value;
-          e.target.value = '';
-          runCommand(v);
-        }
-      });
-
-      $('#btnCopyLog').addEventListener('click', async () => {
-        try{
-          await navigator.clipboard.writeText($('#log').textContent);
-          toast('Log copied.');
-        }catch(err){
-          toast('Copy failed (clipboard permissions).', 'warn');
-          log(`Clipboard error: ${err.message}`, 'WARN');
-        }
-      });
-    }
-
-    // Init
-    (function init(){
-      setPill('#dotGeo','#gpsText',false,'idle');
-      setPill('#dotCam','#camText',false,'offline');
-      setPill('#dotBt','#btText',false,'locked');
-
-      $('#rangeVal').textContent = state.scan.rangeM;
-      bootLog();
-      wireUI();
-      renderDevices();
-
-      toast('DedSec App ready (simulator).');
-    })();
-  </script>
+        document.head.appendChild(style);
+        
+        // Auto-refresh distances (simulate RSSI changes)
+        setInterval(() => {
+            if (devices.length > 0) {
+                devices = devices.map(device => ({
+                    ...device,
+                    rssi: device.rssi + (Math.random() * 6 - 3) // Slight variation
+                }));
+                renderDevices();
+            }
+        }, 5000);
+        
+        addConsoleLog('All systems online. Ready for operation.', 'success');
+    </script>
 </body>
 </html>
