@@ -1,1742 +1,469 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="theme-color" content="#ff6a00" />
-  <title>Flipper Pocket (UI Simulator)</title>
-
-  <!-- Tailwind CSS (required) -->
-  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
-
-  <style>
-    :root{
-      --case:#ff6a00;
-      --case2:#ff7d1f;
-      --caseShadow: rgba(0,0,0,.25);
-      --screenBg: #cfe6cf;
-      --screenInk: #0b1a12;
-      --screenBorder: rgba(0,0,0,.35);
-      --btn: #111;
-      --btn2: #222;
-      --btnHalo: rgba(255,255,255,.22);
-      --emboss: rgba(255,255,255,.20);
-      --deboss: rgba(0,0,0,.18);
-      --bezel: rgba(255,255,255,.25);
-      --gloss: rgba(255,255,255,.35);
-      --gloss2: rgba(255,255,255,.08);
-      --fontPixel: "Press Start 2P", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      --fontUI: Inter, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
-      --brightness: 1;
-    }
-
-    html, body {
-      height: 100%;
-      overscroll-behavior: none;
-      touch-action: manipulation;
-      font-family: var(--fontUI);
-      background: radial-gradient(1200px 900px at 30% 20%, #1d2430 0%, #0b1020 45%, #070a12 100%);
-      color: #e8eefc;
-    }
-
-    /* Prevent text selection while pressing buttons */
-    .noselect{ user-select:none; -webkit-user-select:none; }
-
-    /* Device shell */
-    .flipper {
-      width: min(92vw, 860px);
-      aspect-ratio: 2.05 / 1; /* landscape device */
-      border-radius: 34px;
-      background:
-        radial-gradient(120% 120% at 20% 10%, rgba(255,255,255,.35) 0%, rgba(255,255,255,0) 35%),
-        linear-gradient(180deg, var(--case2), var(--case) 55%, #f85f00);
-      box-shadow:
-        0 22px 60px var(--caseShadow),
-        inset 0 2px 0 rgba(255,255,255,.35),
-        inset 0 -10px 18px rgba(0,0,0,.22);
-      position: relative;
-      overflow: hidden;
-    }
-
-    .flipper::before {
-      content:"";
-      position:absolute;
-      inset: 10px;
-      border-radius: 26px;
-      box-shadow: inset 0 0 0 2px rgba(255,255,255,.12);
-      pointer-events:none;
-    }
-
-    /* Subtle embossed icons across the case (not exact trademarks) */
-    .case-pattern {
-      position:absolute;
-      inset: 0;
-      opacity: .22;
-      pointer-events:none;
-      mix-blend-mode: soft-light;
-      filter: saturate(.9);
-      background:
-        radial-gradient(circle at 20% 78%, rgba(255,255,255,.35) 0 2px, transparent 3px),
-        radial-gradient(circle at 24% 80%, rgba(255,255,255,.25) 0 2px, transparent 3px),
-        radial-gradient(circle at 28% 78%, rgba(255,255,255,.28) 0 2px, transparent 3px),
-        radial-gradient(circle at 68% 18%, rgba(0,0,0,.18) 0 2px, transparent 3px),
-        radial-gradient(circle at 72% 16%, rgba(0,0,0,.12) 0 2px, transparent 3px),
-        radial-gradient(circle at 76% 18%, rgba(0,0,0,.15) 0 2px, transparent 3px),
-        linear-gradient(135deg, rgba(255,255,255,.20), rgba(255,255,255,0) 50%),
-        repeating-linear-gradient(45deg, rgba(255,255,255,.10) 0 1px, rgba(0,0,0,0) 1px 9px);
-    }
-
-    /* Layout inside device */
-    .flipper-inner {
-      position:absolute;
-      inset: 18px;
-      display:grid;
-      grid-template-columns: 1.25fr 0.85fr;
-      gap: 18px;
-    }
-
-    .left-side {
-      display:flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .brandbar {
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap: 10px;
-      padding: 2px 4px;
-    }
-
-    .brand {
-      display:flex;
-      align-items:center;
-      gap: 10px;
-      font-weight: 800;
-      letter-spacing: .02em;
-    }
-
-    .brand .mark {
-      width: 44px;
-      height: 22px;
-      border-radius: 999px;
-      background: linear-gradient(180deg, rgba(255,255,255,.35), rgba(255,255,255,.08));
-      box-shadow: inset 0 0 0 2px rgba(255,255,255,.18);
-      position: relative;
-      overflow: hidden;
-    }
-
-    /* Simple dolphin-ish blob (original, not exact logo) */
-    .brand .mark svg{ position:absolute; inset:0; }
-
-    .badge {
-      display:flex;
-      align-items:center;
-      gap: 8px;
-      font-size: 12px;
-      color: rgba(255,255,255,.9);
-      padding: 6px 10px;
-      border-radius: 999px;
-      background: rgba(0,0,0,.18);
-      box-shadow: inset 0 0 0 1px rgba(255,255,255,.14);
-    }
-
-    .screen {
-      flex: 1;
-      border-radius: 18px;
-      background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(0,0,0,.08));
-      padding: 12px;
-      box-shadow:
-        inset 0 0 0 2px rgba(255,255,255,.18),
-        inset 0 -10px 20px rgba(0,0,0,.18);
-    }
-
-    .screen-inner {
-      height: 100%;
-      border-radius: 12px;
-      background:
-        radial-gradient(120% 100% at 30% 25%, rgba(255,255,255,.35), rgba(255,255,255,0) 55%),
-        linear-gradient(180deg, #e6f7e6, var(--screenBg));
-      box-shadow:
-        inset 0 0 0 2px var(--screenBorder),
-        inset 0 -8px 18px rgba(0,0,0,.12);
-      color: var(--screenInk);
-      font-family: var(--fontPixel);
-      letter-spacing: .01em;
-      transform: translateZ(0);
-      filter: saturate(.9) contrast(1.02) brightness(var(--brightness));
-      position: relative;
-      overflow: hidden;
-    }
-
-    .scanlines {
-      position:absolute;
-      inset:0;
-      background: repeating-linear-gradient(
-        to bottom,
-        rgba(0,0,0,.05) 0,
-        rgba(0,0,0,.05) 1px,
-        rgba(0,0,0,0) 2px,
-        rgba(0,0,0,0) 4px
-      );
-      opacity: .40;
-      pointer-events:none;
-      mix-blend-mode: multiply;
-    }
-
-    .screen-ui {
-      position:absolute;
-      inset: 10px;
-      display:flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .status {
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      font-size: 10px;
-      opacity: .9;
-    }
-
-    .status .right {
-      display:flex;
-      gap: 10px;
-      align-items:center;
-    }
-
-    .battery {
-      width: 30px;
-      height: 12px;
-      border-radius: 3px;
-      border: 2px solid rgba(0,0,0,.70);
-      position: relative;
-      box-sizing: border-box;
-    }
-    .battery:after{
-      content:"";
-      position:absolute;
-      right: -5px;
-      top: 3px;
-      width: 3px;
-      height: 6px;
-      border-radius: 1px;
-      background: rgba(0,0,0,.7);
-    }
-    .battery .fill{
-      position:absolute;
-      left: 2px;
-      top: 2px;
-      bottom: 2px;
-      width: 70%;
-      border-radius: 2px;
-      background: rgba(0,0,0,.75);
-    }
-
-    .content {
-      flex: 1;
-      border-radius: 10px;
-      padding: 6px;
-      box-shadow: inset 0 0 0 2px rgba(0,0,0,.22);
-      background: rgba(255,255,255,.14);
-      overflow: hidden;
-    }
-
-    .footer {
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      font-size: 9px;
-      opacity: .95;
-      padding-top: 2px;
-    }
-
-    .menu-item {
-      display:flex;
-      align-items:center;
-      gap: 8px;
-      padding: 6px 6px;
-      border-radius: 8px;
-      font-size: 10px;
-      line-height: 1.15;
-    }
-    .menu-item .icon{ width: 14px; height: 14px; display:inline-flex; }
-    .menu-item.sel{
-      background: rgba(0,0,0,.78);
-      color: #e9ffe9;
-      box-shadow: inset 0 0 0 2px rgba(0,0,0,.9);
-    }
-
-    .mono-box {
-      border-radius: 10px;
-      box-shadow: inset 0 0 0 2px rgba(0,0,0,.22);
-      background: rgba(255,255,255,.14);
-      padding: 8px;
-      font-size: 10px;
-      line-height: 1.45;
-    }
-
-    .right-side {
-      display:flex;
-      flex-direction: column;
-      gap: 14px;
-      align-items: center;
-    }
-
-    /* D-pad and buttons */
-    .controls {
-      width: 100%;
-      flex: 1;
-      display:flex;
-      flex-direction: column;
-      justify-content: center;
-      gap: 16px;
-      padding: 6px;
-    }
-
-    .ctrl-row {
-      width: 100%;
-      display:flex;
-      justify-content: space-between;
-      align-items:center;
-      gap: 14px;
-    }
-
-    .btn {
-      -webkit-tap-highlight-color: transparent;
-      touch-action: manipulation;
-      width: 70px;
-      height: 46px;
-      border-radius: 16px;
-      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(0,0,0,.25)),
-                  radial-gradient(140% 140% at 35% 15%, rgba(255,255,255,.20), rgba(255,255,255,0) 55%),
-                  linear-gradient(180deg, var(--btn2), var(--btn));
-      box-shadow:
-        0 14px 22px rgba(0,0,0,.28),
-        inset 0 2px 0 rgba(255,255,255,.10),
-        inset 0 -10px 14px rgba(0,0,0,.35);
-      position: relative;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      color: rgba(255,255,255,.92);
-      font-weight: 700;
-      font-size: 14px;
-      letter-spacing: .02em;
-    }
-
-    .btn:before{
-      content:"";
-      position:absolute;
-      inset: 7px;
-      border-radius: 12px;
-      box-shadow: inset 0 0 0 1px rgba(255,255,255,.10);
-      pointer-events:none;
-    }
-
-    .btn:active, .btn.pressed{
-      transform: translateY(2px);
-      box-shadow:
-        0 10px 18px rgba(0,0,0,.22),
-        inset 0 2px 0 rgba(255,255,255,.08),
-        inset 0 -12px 16px rgba(0,0,0,.40);
-    }
-
-    .dpad {
-      width: 190px;
-      height: 190px;
-      position: relative;
-      display:grid;
-      place-items:center;
-    }
-
-    .dpad .plate{
-      position:absolute;
-      inset: 0;
-      border-radius: 34px;
-      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(0,0,0,.18)),
-                  radial-gradient(140% 140% at 35% 15%, rgba(255,255,255,.20), rgba(255,255,255,0) 55%),
-                  linear-gradient(180deg, #262626, #0e0e0e);
-      box-shadow:
-        0 18px 26px rgba(0,0,0,.28),
-        inset 0 2px 0 rgba(255,255,255,.10),
-        inset 0 -14px 18px rgba(0,0,0,.42);
-    }
-
-    .dpad .arm {
-      width: 62px;
-      height: 62px;
-      border-radius: 18px;
-      position:absolute;
-      display:grid;
-      place-items:center;
-      color: rgba(255,255,255,.92);
-      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(0,0,0,.25)),
-                  linear-gradient(180deg, #1f1f1f, #0a0a0a);
-      box-shadow:
-        inset 0 1px 0 rgba(255,255,255,.10),
-        inset 0 -10px 14px rgba(0,0,0,.45);
-      -webkit-tap-highlight-color: transparent;
-      touch-action: manipulation;
-    }
-
-    .dpad .arm:active, .dpad .arm.pressed{
-      transform: translateY(2px);
-    }
-
-    .dpad .up{ top: 12px; left: 50%; transform: translateX(-50%); }
-    .dpad .down{ bottom: 12px; left: 50%; transform: translateX(-50%); }
-    .dpad .left{ left: 12px; top: 50%; transform: translateY(-50%); }
-    .dpad .right{ right: 12px; top: 50%; transform: translateY(-50%); }
-
-    .dpad .ok {
-      width: 76px;
-      height: 76px;
-      border-radius: 26px;
-      position: relative;
-      z-index: 2;
-      display:grid;
-      place-items:center;
-      background:
-        radial-gradient(120% 120% at 35% 20%, rgba(255,255,255,.25), rgba(255,255,255,0) 58%),
-        linear-gradient(180deg, #2a2a2a, #0b0b0b);
-      box-shadow:
-        0 12px 16px rgba(0,0,0,.26),
-        inset 0 2px 0 rgba(255,255,255,.12),
-        inset 0 -14px 18px rgba(0,0,0,.46);
-      -webkit-tap-highlight-color: transparent;
-      touch-action: manipulation;
-      color: rgba(255,255,255,.92);
-      font-weight: 900;
-      letter-spacing: .04em;
-      font-size: 12px;
-    }
-
-    .dpad .ok:active, .dpad .ok.pressed{
-      transform: translateY(2px);
-    }
-
-    /* Portrait overlay */
-    .rotate-overlay {
-      position: fixed;
-      inset: 0;
-      z-index: 50;
-      display: none;
-      background: rgba(0,0,0,.72);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-    }
-
-    .rotate-overlay.show{ display: grid; place-items: center; }
-
-    .rotate-card {
-      width: min(92vw, 560px);
-      border-radius: 22px;
-      background: rgba(15,20,35,.92);
-      box-shadow: 0 20px 60px rgba(0,0,0,.45);
-      padding: 18px;
-      border: 1px solid rgba(255,255,255,.12);
-    }
-
-    .rotate-icon {
-      width: 86px;
-      height: 86px;
-      border-radius: 20px;
-      display:grid;
-      place-items:center;
-      background: rgba(255,255,255,.06);
-      border: 1px solid rgba(255,255,255,.12);
-      margin-bottom: 12px;
-    }
-
-    /* Prevent iOS callout on long press */
-    * { -webkit-touch-callout: none; }
-
-    /* Small mobile tweaks */
-    @media (max-height: 420px) {
-      .flipper-inner{ inset: 14px; }
-    }
-
-    @media (max-width: 520px) {
-      .btn{ width: 62px; }
-      .dpad{ width: 168px; height: 168px; }
-      .dpad .arm{ width: 56px; height: 56px; }
-      .dpad .ok{ width: 70px; height: 70px; }
-    }
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>DedSec Phone — Web Toy</title>
+<style>
+  :root{
+    --bg:#050505;
+    --accent:#ff2bd3;
+    --neon:#00ffd5;
+    --glass: rgba(255,255,255,0.03);
+    --mono: 'Courier New', monospace;
+  }
+  html,body{height:100%;margin:0;background:var(--bg);color:#ddd;font-family:var(--mono);}
+  .phone { max-width:420px; margin:10px auto; border-radius:18px; overflow:hidden; background:
+    linear-gradient(180deg,#070707 0%, #0b0b0b 100%); box-shadow: 0 10px 40px rgba(0,0,0,.8); }
+  .screen { padding:14px; min-height:760px; box-sizing:border-box; background-image:
+    radial-gradient(circle at 10% 10%, rgba(255,255,255,0.01), transparent 10%),
+    repeating-linear-gradient(45deg, rgba(255,255,255,0.01) 0 2px, transparent 2px 6px);
+  }
+  header { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+  .bar { height:18px; background:linear-gradient(90deg,var(--accent),#8a00ff);
+    border-radius:6px; padding:2px 8px; font-size:12px; display:flex; align-items:center; gap:8px;}
+  .home-grid{ display:grid; grid-template-columns: repeat(4,1fr); gap:10px; margin-top:10px; }
+  .app { background:var(--glass); border-radius:12px; padding:10px; text-align:center; font-size:12px; cursor:pointer;
+    border:1px solid rgba(255,255,255,0.03); box-shadow: 0 6px 14px rgba(0,0,0,0.6); }
+  .app .icon{ width:48px;height:48px;margin:0 auto 6px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:20px;}
+  .app:hover{ transform:translateY(-4px); transition:transform .12s ease; }
+  .modal { position:fixed; inset:0; display:none; align-items:center; justify-content:center; z-index:40;}
+  .modal.open{ display:flex; }
+  .card { width:92%; max-width:420px; height:86vh; background:linear-gradient(180deg, rgba(0,0,0,0.85), rgba(0,0,0,0.95));
+    border-radius:14px; border:1px solid rgba(255,255,255,0.04); padding:12px; box-sizing:border-box; overflow:hidden; color:#ddd;}
+  .card header{display:flex; justify-content:space-between; align-items:center; gap:8px;}
+  .close{ background:transparent; border:1px solid rgba(255,255,255,0.06); padding:6px 10px; border-radius:8px; cursor:pointer;}
+  canvas,video{ width:100%; height:auto; border-radius:10px; background:#000; display:block; }
+  .fake-btn{ background:var(--accent); padding:8px 12px; border-radius:8px; color:#fff; cursor:pointer; display:inline-block; margin-right:6px; font-weight:700; font-size:13px;}
+  .log{ font-size:13px; line-height:1.3; margin-top:8px; max-height:28vh; overflow:auto; background:rgba(0,0,0,0.2); padding:8px; border-radius:8px;}
+  .status { font-size:12px; color: #aaa; }
+  .glitch { color:var(--accent); text-shadow: 1px 0 var(--neon), -1px 0 #7b00b3; letter-spacing:1px; font-weight:900;}
+  .fake-card { background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); padding:10px; border-radius:10px; margin-top:8px; }
+  .anim { height:6px; background:linear-gradient(90deg,#111,#222); border-radius:6px; overflow:hidden; margin-top:8px; }
+  .bar-inner { height:6px; width:0%; background:linear-gradient(90deg,var(--accent),var(--neon)); transition:width .6s ease; }
+  footer{ text-align:center; color:#777; font-size:12px; margin-top:6px; }
+  /* tiny retro pixel skull in background */
+  body::after{ content:""; position:fixed; inset:0; pointer-events:none;
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><text x="0" y="16" font-family="monospace" font-size="14" fill="%23222">☠︎ ☠︎ ☠︎</text></svg>');
+    mix-blend-mode:overlay; opacity:0.07; z-index:0;}
+</style>
 </head>
+<body>
+<div class="phone">
+  <div class="screen">
+    <header>
+      <div class="bar glitch">DEDSEC — <span style="font-weight:600">#BURN</span></div>
+      <div style="margin-left:auto" class="status">online • 4G</div>
+    </header>
 
-<body class="noselect">
-  <div id="rotateOverlay" class="rotate-overlay">
-    <div class="rotate-card">
-      <div class="flex items-center gap-3">
-        <div class="rotate-icon">
-          <svg viewBox="0 0 24 24" fill="none" class="w-10 h-10" aria-hidden="true">
-            <path d="M8 3h8a2 2 0 0 1 2 2v11" stroke="rgba(255,255,255,.85)" stroke-width="2" stroke-linecap="round"/>
-            <path d="M16 21H8a2 2 0 0 1-2-2V8" stroke="rgba(255,255,255,.85)" stroke-width="2" stroke-linecap="round"/>
-            <path d="M7 5H5v2" stroke="rgba(255,255,255,.85)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M17 19h2v-2" stroke="rgba(255,255,255,.85)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M5 7c1.7-2 4.2-3.2 7-3.2 4.2 0 7.7 2.6 9 6.2" stroke="rgba(255,255,255,.55)" stroke-width="2" stroke-linecap="round"/>
-            <path d="M19 17c-1.7 2-4.2 3.2-7 3.2-4.2 0-7.7-2.6-9-6.2" stroke="rgba(255,255,255,.55)" stroke-width="2" stroke-linecap="round"/>
-          </svg>
-        </div>
-        <div>
-          <div class="text-lg font-semibold">Rotate to Landscape</div>
-          <div class="text-sm text-white/70">This is a Flipper-style UI simulator. For the full device layout, rotate your phone.</div>
-        </div>
+    <div class="home-grid" id="home">
+      <div class="app" data-app="dedsec">
+        <div class="icon" style="background:linear-gradient(90deg,#111,#222)">☠</div>DedSec
       </div>
-      <div class="mt-4 text-xs text-white/60 leading-relaxed">
-        Note: This is a UI/UX simulator only. Web browsers can’t replicate real Sub‑GHz/NFC/RFID/IR hardware functionality.
+      <div class="app" data-app="profiler">
+        <div class="icon" style="background:linear-gradient(90deg,#440044,#220022)">P</div>Profiler
       </div>
-      <div class="mt-4 flex flex-wrap gap-2">
-        <button id="dismissRotate" class="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 text-sm">Preview anyway</button>
-        <button id="requestFullscreen" class="px-3 py-2 rounded-xl bg-orange-500/80 hover:bg-orange-500 border border-orange-200/20 text-sm text-black font-semibold">Go fullscreen</button>
+      <div class="app" data-app="car">
+        <div class="icon" style="background:linear-gradient(90deg,#223,#112)">C</div>Car Ctrl
+      </div>
+      <div class="app" data-app="traffic">
+        <div class="icon" style="background:linear-gradient(90deg,#114,#221)">T</div>Traffic
+      </div>
+
+      <div class="app" data-app="research">
+        <div class="icon" style="background:linear-gradient(90deg,#440022,#110011)">R</div>Research
+      </div>
+      <div class="app" data-app="media">
+        <div class="icon" style="background:linear-gradient(90deg,#002244,#001122)">M</div>Media
+      </div>
+      <div class="app" data-app="knowit">
+        <div class="icon" style="background:linear-gradient(90deg,#222200,#111100)">?</div>Know-It-All
+      </div>
+      <div class="app" data-app="shop">
+        <div class="icon" style="background:linear-gradient(90deg,#552200,#331100)">$</div>App Shop
       </div>
     </div>
+
+    <footer>Fake hacking toy • purely fictional • no real recognition</footer>
   </div>
+</div>
 
-  <main class="min-h-screen flex flex-col items-center justify-center p-4">
-    <div class="w-full max-w-5xl flex items-center justify-between mb-3 px-1">
-      <div class="flex items-center gap-2">
-        <div class="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-[0_0_18px_rgba(52,211,153,.6)]"></div>
-        <div class="text-sm font-semibold">Flipper Pocket</div>
-        <div class="text-xs text-white/55">(fan-made UI simulator)</div>
+<!-- Modal / app container -->
+<div class="modal" id="modal">
+  <div class="card" role="dialog" aria-modal="true">
+    <header>
+      <div class="glitch" id="appTitle">App</div>
+      <div>
+        <button class="close" id="btnClose">Close</button>
       </div>
-      <div class="flex items-center gap-2">
-        <button id="helpBtn" class="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 text-sm">Help</button>
-        <button id="resetBtn" class="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 text-sm">Reset</button>
-      </div>
-    </div>
+    </header>
 
-    <section id="device" class="flipper noselect" aria-label="Flipper-style device">
-      <div class="case-pattern"></div>
+    <div id="appBody" style="margin-top:10px"></div>
+  </div>
+</div>
 
-      <div class="flipper-inner">
-        <!-- LEFT: screen -->
-        <div class="left-side">
-          <div class="brandbar">
-            <div class="brand">
-              <div class="mark" aria-hidden="true">
-                <svg viewBox="0 0 88 44">
-                  <defs>
-                    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-                      <stop offset="0" stop-color="rgba(255,255,255,.22)" />
-                      <stop offset="1" stop-color="rgba(255,255,255,.06)" />
-                    </linearGradient>
-                  </defs>
-                  <rect x="1" y="2" width="86" height="40" rx="20" fill="url(#g)" stroke="rgba(255,255,255,.12)"/>
-                  <path d="M22 26c8-10 18-15 30-13 7 1 10 4 16 7-5 0-8 1-11 3 2 3 2 6-2 10-6 5-18 5-27 1-4-2-7-4-6-8z" fill="rgba(255,255,255,.16)"/>
-                  <circle cx="50" cy="21" r="2" fill="rgba(0,0,0,.35)"/>
-                </svg>
-              </div>
-              <div class="leading-tight">
-                <div class="text-sm font-extrabold">FLIPPER</div>
-                <div class="text-[11px] text-white/80 -mt-0.5">POCKET UI</div>
-              </div>
-            </div>
+<script>
+/* Utility: random generators (fake data) */
+const rand = (arr)=> arr[Math.floor(Math.random()*arr.length)];
+const randInt = (n)=> Math.floor(Math.random()*n);
+function fakeProfile(){
+  const first = ["Alex","Sam","Taylor","Jordan","Riley","Morgan","Casey","Kai","Devon","Sky"];
+  const last = ["Hart","Mills","Rey","Nguyen","Ortiz","Vega","Blake","Stone","Rowe","Khan"];
+  const jobs = ["Barista","Coder","Delivery Rider","Artist","Paramedic","Student","Teacher","Bartender","Mechanic","DJ"];
+  const traits = ["Cautious","Outgoing","Methodical","Chaotic","Charismatic","Secretive"];
+  const crimes = ["None","Petty theft (2016)","Trespassing (2019)","Public disturbance (2020)","Fraud allegation (2017)"];
+  return {
+    name: rand(first)+" "+rand(last),
+    id: "ID-"+Math.random().toString(36).slice(2,10).toUpperCase(),
+    job: rand(jobs),
+    traits: rand(traits),
+    crimes: rand(crimes),
+    hobbies: rand(["Skating","Photography","Gaming","Gardening","Cooking","Skateboarding","Livestreaming"]),
+    income: "$"+(Math.floor(15000 + Math.random()*90000)).toLocaleString()
+  };
+}
 
-            <div class="badge" title="Simulator mode">
-              <span class="inline-block w-2 h-2 rounded-full bg-black/60"></span>
-              <span class="font-semibold">SIM</span>
-            </div>
-          </div>
+/* Modal app system */
+const modal = document.getElementById('modal');
+const appBody = document.getElementById('appBody');
+const appTitle = document.getElementById('appTitle');
+const btnClose = document.getElementById('btnClose');
 
-          <div class="screen" role="application" aria-label="Device screen">
-            <div class="screen-inner" id="screen">
-              <div class="scanlines"></div>
-              <div class="screen-ui">
-                <div class="status">
-                  <div class="left" id="statusLeft">FLIPPER</div>
-                  <div class="right">
-                    <div id="statusTime">--:--</div>
-                    <div class="battery" aria-label="Battery">
-                      <div class="fill" id="batteryFill"></div>
-                    </div>
-                  </div>
-                </div>
+document.getElementById('home').addEventListener('click', e=>{
+  const app = e.target.closest('.app');
+  if(!app) return;
+  openApp(app.dataset.app);
+});
 
-                <div class="content" id="screenContent" aria-live="polite"></div>
+btnClose.onclick = ()=> closeApp();
 
-                <div class="footer">
-                  <div id="softLeft">BACK</div>
-                  <div id="softCenter">OK</div>
-                  <div id="softRight">MENU</div>
-                </div>
-              </div>
-            </div>
-          </div>
+function openApp(name){
+  modal.classList.add('open');
+  appTitle.textContent = name.toUpperCase();
+  appBody.innerHTML = '';
+  if(name==='dedsec') loadDedsec();
+  if(name==='profiler') loadProfiler();
+  if(name==='car') loadCarCtrl();
+  if(name==='traffic') loadTraffic();
+  if(name==='research') loadResearch();
+  if(name==='media') loadMedia();
+  if(name==='knowit') loadKnowIt();
+  if(name==='shop') loadShop();
+}
+function closeApp(){
+  stopStreams();
+  modal.classList.remove('open');
+}
 
-          <div class="text-xs text-white/70 px-1 flex items-center justify-between">
-            <div class="flex items-center gap-2">
-              <span class="inline-block w-2 h-2 rounded-full bg-white/40"></span>
-              <span id="hint">Use D‑pad or swipe on the screen.</span>
-            </div>
-            <div class="text-white/50">v1.0</div>
-          </div>
-        </div>
-
-        <!-- RIGHT: controls -->
-        <div class="right-side">
-          <div class="controls w-full">
-            <div class="ctrl-row">
-              <button class="btn" data-action="back" aria-label="Back">↩</button>
-              <button class="btn" data-action="home" aria-label="Menu">≡</button>
-            </div>
-
-            <div class="dpad" aria-label="Directional pad">
-              <div class="plate"></div>
-              <button class="arm up" data-action="up" aria-label="Up">▲</button>
-              <button class="arm down" data-action="down" aria-label="Down">▼</button>
-              <button class="arm left" data-action="left" aria-label="Left">◀</button>
-              <button class="arm right" data-action="right" aria-label="Right">▶</button>
-              <button class="ok" data-action="ok" aria-label="OK">OK</button>
-            </div>
-
-            <div class="ctrl-row">
-              <button class="btn" data-action="x" aria-label="Action">X</button>
-              <button class="btn" data-action="y" aria-label="Tool">TOOL</button>
-            </div>
-          </div>
-
-          <div class="w-full">
-            <div class="px-3 py-2 rounded-2xl bg-black/15 border border-white/10 text-xs text-white/70">
-              Tip: On desktop, use Arrow keys + Enter + Esc.
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <div class="max-w-5xl w-full mt-4 text-xs text-white/55 leading-relaxed px-1">
-      This is a visual/interactive clone of the <span class="text-white/70 font-semibold">menu experience</span> only. It does not transmit RF, read NFC/RFID, or emit IR.
-    </div>
-
-    <!-- Help modal -->
-    <dialog id="helpDialog" class="rounded-2xl p-0 w-[min(92vw,720px)] bg-[#0f1423] text-white border border-white/10">
-      <div class="p-5">
-        <div class="flex items-start justify-between gap-4">
-          <div>
-            <div class="text-lg font-semibold">How to use</div>
-            <div class="text-sm text-white/70 mt-1">This is a touch-first Flipper-style UI simulator.</div>
-          </div>
-          <button id="closeHelp" class="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 text-sm">Close</button>
-        </div>
-
-        <div class="mt-4 grid md:grid-cols-2 gap-3 text-sm">
-          <div class="rounded-xl bg-white/5 border border-white/10 p-3">
-            <div class="font-semibold">Navigation</div>
-            <ul class="mt-2 space-y-1 text-white/75 text-sm">
-              <li>• D‑pad: move selection</li>
-              <li>• OK: enter / run</li>
-              <li>• Back: go back</li>
-              <li>• Menu (≡): jump to main menu</li>
-              <li>• Swipe on screen works too</li>
-            </ul>
-          </div>
-          <div class="rounded-xl bg-white/5 border border-white/10 p-3">
-            <div class="font-semibold">About “real” features</div>
-            <div class="mt-2 text-white/75 text-sm leading-relaxed">
-              Phones/browsers can’t clone real Sub‑GHz/NFC/RFID hardware or legally emulate every capability.
-              This page focuses on the UI and provides safe simulations.
-            </div>
-          </div>
-        </div>
-
-        <div class="mt-4 text-xs text-white/60">
-          Not affiliated with or endorsed by Flipper Devices Inc.
-        </div>
-      </div>
-    </dialog>
-
-  </main>
-
-  <script>
-    // -----------------------------
-    // Small utilities
-    // -----------------------------
-    const $ = (sel, root=document) => root.querySelector(sel);
-    const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
-
-    function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
-    function nowTime(){
-      const d = new Date();
-      const hh = String(d.getHours()).padStart(2,'0');
-      const mm = String(d.getMinutes()).padStart(2,'0');
-      return `${hh}:${mm}`;
-    }
-
-    function randHex(n){
-      let s = '';
-      const chars = '0123456789ABCDEF';
-      for(let i=0;i<n;i++) s += chars[Math.floor(Math.random()*chars.length)];
+/* Camera helpers */
+let stream = null;
+let video = null;
+let vcanvas = null;
+let vctx = null;
+function startCamera(constraints={ video:{ facingMode:"environment", width:640, height:480 }, audio:false }) {
+  return navigator.mediaDevices.getUserMedia(constraints)
+    .then(s=>{
+      stream = s;
       return s;
-    }
-
-    function beep(freq=880, ms=45, vol=0.04){
-      try{
-        const ac = beep._ac || (beep._ac = new (window.AudioContext || window.webkitAudioContext)());
-        const o = ac.createOscillator();
-        const g = ac.createGain();
-        o.type = 'square';
-        o.frequency.value = freq;
-        g.gain.value = vol;
-        o.connect(g); g.connect(ac.destination);
-        o.start();
-        setTimeout(()=>{ o.stop(); }, ms);
-      } catch(e) {}
-    }
-
-    // -----------------------------
-    // App state
-    // -----------------------------
-    const settings = {
-      sound: true,
-      vibrate: true,
-      brightness: 1,
-    };
-
-    const sim = {
-      battery: 0.76,
-      dolphin: {
-        level: 3,
-        xp: 42,
-      },
-      lastEvent: 'Ready.',
-    };
-
-    const stack = []; // navigation stack
-
-    function haptic(ms=12){
-      if(!settings.vibrate) return;
-      if(navigator.vibrate) navigator.vibrate(ms);
-    }
-
-    function clickFX(){
-      haptic(10);
-      if(settings.sound) beep(740, 35, 0.04);
-    }
-
-    // -----------------------------
-    // Screen definitions
-    // -----------------------------
-    const Screens = {};
-
-    function pushScreen(id, data={}){
-      const def = Screens[id];
-      if(!def) throw new Error('Unknown screen: '+id);
-      stack.push({ id, data, state: def.init ? def.init(data) : { ...data } });
-      render();
-    }
-
-    function popScreen(){
-      if(stack.length <= 1) return; // keep root
-      stack.pop();
-      render();
-    }
-
-    function gotoMain(){
-      while(stack.length > 1) stack.pop();
-      render();
-    }
-
-    function current(){
-      return stack[stack.length-1];
-    }
-
-    function iconSVG(kind){
-      // Simple monochrome icons for the menu
-      const common = 'fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"';
-      switch(kind){
-        case 'apps':
-          return `<svg viewBox="0 0 24 24" ${common}><path d="M4 4h7v7H4z"/><path d="M13 4h7v7h-7z"/><path d="M4 13h7v7H4z"/><path d="M13 13h7v7h-7z"/></svg>`;
-        case 'subghz':
-          return `<svg viewBox="0 0 24 24" ${common}><path d="M12 3v18"/><path d="M7 8c-2 2-2 6 0 8"/><path d="M17 8c2 2 2 6 0 8"/><path d="M4.5 5.5c-4 4-4 9 0 13"/><path d="M19.5 5.5c4 4 4 9 0 13"/></svg>`;
-        case 'nfc':
-          return `<svg viewBox="0 0 24 24" ${common}><path d="M6 7c6 0 12 5 12 10"/><path d="M6 11c4 0 8 3 8 6"/><path d="M6 15c2 0 4 2 4 2"/><path d="M18 7v10"/></svg>`;
-        case 'rfid':
-          return `<svg viewBox="0 0 24 24" ${common}><path d="M7 7h10v10H7z"/><path d="M16 16l3 3"/><path d="M8 8v8"/></svg>`;
-        case 'ir':
-          return `<svg viewBox="0 0 24 24" ${common}><path d="M12 12v9"/><path d="M8 17c2 2 6 2 8 0"/><path d="M7 6l2 2"/><path d="M17 6l-2 2"/><path d="M12 3v3"/></svg>`;
-        case 'badusb':
-          return `<svg viewBox="0 0 24 24" ${common}><path d="M9 7h6"/><path d="M10 11h4"/><path d="M12 3v4"/><path d="M7 8v7a5 5 0 0 0 10 0V8"/><path d="M9 19v2"/><path d="M15 19v2"/></svg>`;
-        case 'gpio':
-          return `<svg viewBox="0 0 24 24" ${common}><path d="M5 7h14"/><path d="M5 12h14"/><path d="M5 17h14"/><path d="M7 5v4"/><path d="M12 10v4"/><path d="M17 15v4"/></svg>`;
-        case 'settings':
-          return `<svg viewBox="0 0 24 24" ${common}><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6"/><path d="M19.4 15a7.9 7.9 0 0 0 .1-6l2-1.6-2-3.4-2.4 1a8 8 0 0 0-5.2-2l-.4-2.5H9.5L9.1 3a8 8 0 0 0-5.2 2l-2.4-1-2 3.4L1.5 9a7.9 7.9 0 0 0 .1 6L-.5 16.6l2 3.4 2.4-1a8 8 0 0 0 5.2 2l.4 2.5h4.1l.4-2.5a8 8 0 0 0 5.2-2l2.4 1 2-3.4L19.4 15z"/></svg>`;
-        case 'files':
-          return `<svg viewBox="0 0 24 24" ${common}><path d="M4 20V4h6l2 2h8v14H4z"/></svg>`;
-        case 'info':
-          return `<svg viewBox="0 0 24 24" ${common}><path d="M12 17v-6"/><path d="M12 8h.01"/><path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/></svg>`;
-        default:
-          return `<svg viewBox="0 0 24 24" ${common}><path d="M12 3v18"/><path d="M3 12h18"/></svg>`;
-      }
-    }
-
-    Screens.mainMenu = {
-      init(){
-        return {
-          sel: 0,
-          items: [
-            { label: 'Apps', icon: 'apps', to: 'appsMenu' },
-            { label: 'Files', icon: 'files', to: 'files' },
-            { label: 'Dolphin', icon: 'info', to: 'dolphin' },
-            { label: 'Settings', icon: 'settings', to: 'settings' },
-            { label: 'About', icon: 'info', to: 'about' },
-          ]
-        };
-      },
-      title: 'Main Menu',
-      soft: { left: 'BACK', center: 'OK', right: 'MENU' },
-      handle(action, ctx){
-        const s = ctx.state;
-        if(action === 'up') s.sel = (s.sel - 1 + s.items.length) % s.items.length;
-        if(action === 'down') s.sel = (s.sel + 1) % s.items.length;
-        if(action === 'ok') pushScreen(s.items[s.sel].to);
-        if(action === 'home') gotoMain();
-      },
-      render(ctx){
-        const s = ctx.state;
-        return `
-          <div class="space-y-1">
-            ${s.items.map((it, i)=>{
-              const cls = i===s.sel ? 'menu-item sel' : 'menu-item';
-              return `
-                <div class="${cls}">
-                  <span class="icon">${iconSVG(it.icon)}</span>
-                  <span>${it.label}</span>
-                </div>`;
-            }).join('')}
-          </div>
-        `;
-      }
-    };
-
-    Screens.appsMenu = {
-      init(){
-        return {
-          sel: 0,
-          items: [
-            { label: 'Sub-GHz', icon: 'subghz', to: 'subghz' },
-            { label: 'NFC', icon: 'nfc', to: 'nfc' },
-            { label: 'RFID', icon: 'rfid', to: 'rfid' },
-            { label: 'Infrared', icon: 'ir', to: 'ir' },
-            { label: 'BadUSB', icon: 'badusb', to: 'badusb' },
-            { label: 'GPIO', icon: 'gpio', to: 'gpio' },
-          ]
-        };
-      },
-      title: 'Apps',
-      soft: { left: 'BACK', center: 'OK', right: 'MENU' },
-      handle(action, ctx){
-        const s = ctx.state;
-        if(action === 'back') popScreen();
-        if(action === 'up') s.sel = (s.sel - 1 + s.items.length) % s.items.length;
-        if(action === 'down') s.sel = (s.sel + 1) % s.items.length;
-        if(action === 'ok') pushScreen(s.items[s.sel].to);
-        if(action === 'home') gotoMain();
-      },
-      render(ctx){
-        const s = ctx.state;
-        return `
-          <div class="space-y-1">
-            ${s.items.map((it, i)=>{
-              const cls = i===s.sel ? 'menu-item sel' : 'menu-item';
-              return `
-                <div class="${cls}">
-                  <span class="icon">${iconSVG(it.icon)}</span>
-                  <span>${it.label}</span>
-                </div>`;
-            }).join('')}
-          </div>
-        `;
-      }
-    };
-
-    Screens.files = {
-      init(){
-        return {
-          sel: 0,
-          files: [
-            'subghz/garage_433.sub',
-            'nfc/metro_card.nfc',
-            'ir/tv_remote.ir',
-            'badusb/hello_world.txt',
-            'gpio/pins.json',
-            'notes/readme.txt'
-          ]
-        };
-      },
-      title: 'Files',
-      soft: { left: 'BACK', center: 'OPEN', right: 'MENU' },
-      handle(action, ctx){
-        const s = ctx.state;
-        if(action === 'back') popScreen();
-        if(action === 'home') gotoMain();
-        if(action === 'up') s.sel = (s.sel - 1 + s.files.length) % s.files.length;
-        if(action === 'down') s.sel = (s.sel + 1) % s.files.length;
-        if(action === 'ok'){
-          sim.lastEvent = `Opened: ${s.files[s.sel]}`;
-        }
-      },
-      render(ctx){
-        const s = ctx.state;
-        return `
-          <div class="mono-box">
-            <div class="font-semibold" style="font-size:10px;">/</div>
-            <div class="mt-2 space-y-1">
-              ${s.files.map((f, i)=>{
-                const sel = i===s.sel ? 'menu-item sel' : 'menu-item';
-                return `<div class="${sel}"><span class="icon">${iconSVG('files')}</span><span>${f}</span></div>`;
-              }).join('')}
-            </div>
-          </div>
-        `;
-      }
-    };
-
-    Screens.dolphin = {
-      init(){
-        return { anim: 0 };
-      },
-      title: 'Dolphin',
-      soft: { left: 'BACK', center: 'PLAY', right: 'MENU' },
-      handle(action, ctx){
-        if(action === 'back') popScreen();
-        if(action === 'home') gotoMain();
-        if(action === 'ok'){
-          // Level up simulation
-          sim.dolphin.xp += 7;
-          if(sim.dolphin.xp >= 100){
-            sim.dolphin.xp = 0;
-            sim.dolphin.level++;
-            sim.lastEvent = 'Dolphin leveled up!';
-          } else {
-            sim.lastEvent = 'Dolphin is happy.';
-          }
-        }
-      },
-      render(){
-        const lvl = sim.dolphin.level;
-        const xp = sim.dolphin.xp;
-        const bar = Math.round((xp/100)*14);
-        const barStr = '[' + '#'.repeat(bar) + '-'.repeat(14-bar) + ']';
-
-        return `
-          <div class="mono-box">
-            <div>LEVEL: ${lvl}</div>
-            <div>XP: ${xp}/100</div>
-            <div class="mt-2">${barStr}</div>
-            <div class="mt-3">(Press OK to play)</div>
-            <div class="mt-3">${renderDolphinAscii()}</div>
-          </div>
-        `;
-      }
-    };
-
-    function renderDolphinAscii(){
-      // Original playful ASCII (not the official).
-      return `
-<pre style="font-family:var(--fontPixel); font-size:9px; line-height:1.15; margin:0;">
-   __
- _(  )_   *
-(  o o )
- \  ^  /  ~
-  ||||| 
-</pre>`.trim();
-    }
-
-    Screens.about = {
-      title: 'About',
-      soft: { left: 'BACK', center: 'OK', right: 'MENU' },
-      handle(action){
-        if(action === 'back') popScreen();
-        if(action === 'home') gotoMain();
-        if(action === 'ok') sim.lastEvent = 'UI simulator mode.';
-      },
-      render(){
-        return `
-          <div class="mono-box">
-            <div>Flipper Pocket UI</div>
-            <div class="mt-2">A touch-first, fan-made
-            UI simulator inspired by
-            handheld tool menus.</div>
-
-            <div class="mt-3">Limitations:</div>
-            <div>- No real RF/NFC/RFID/IR</div>
-            <div>- Safe demo features only</div>
-
-            <div class="mt-3">Controls:</div>
-            <div>- D-PAD / swipes</div>
-            <div>- OK / BACK / MENU</div>
-          </div>
-        `;
-      }
-    };
-
-    // --- Sub-GHz (sim) ---
-    Screens.subghz = {
-      init(){
-        return {
-          sel: 0,
-          page: 'menu',
-          items: ['Read', 'Send', 'Analyze', 'Saved'],
-          last: null,
-          saved: ['Doorbell_433', 'Outlet_315', 'Garage_433']
-        };
-      },
-      title: 'Sub-GHz',
-      soft: { left: 'BACK', center: 'OK', right: 'MENU' },
-      handle(action, ctx){
-        const s = ctx.state;
-        if(action === 'back'){
-          if(s.page !== 'menu') s.page = 'menu';
-          else popScreen();
-          return;
-        }
-        if(action === 'home') gotoMain();
-
-        if(s.page === 'menu'){
-          if(action === 'up') s.sel = (s.sel - 1 + s.items.length) % s.items.length;
-          if(action === 'down') s.sel = (s.sel + 1) % s.items.length;
-          if(action === 'ok'){
-            const pick = s.items[s.sel];
-            if(pick === 'Read'){
-              s.page = 'read';
-              s.last = null;
-              sim.lastEvent = 'Listening...';
-              simulateAfter(700, ()=>{
-                s.last = {
-                  freq: (Math.random() < .5 ? '433.92' : '315.00'),
-                  mod: (Math.random() < .5 ? 'ASK' : 'FSK'),
-                  bits: 24 + Math.floor(Math.random()*16),
-                  key: randHex(6)
-                };
-                sim.lastEvent = 'Signal captured (sim).';
-                render();
-              });
-            }
-            if(pick === 'Send'){
-              s.page = 'send';
-              sim.lastEvent = 'Pick a saved signal.';
-            }
-            if(pick === 'Analyze'){
-              s.page = 'analyze';
-              sim.lastEvent = 'Analyzing...';
-              simulateAfter(500, ()=>{ sim.lastEvent = 'Looks like a fixed-code remote (sim).'; render(); });
-            }
-            if(pick === 'Saved'){
-              s.page = 'saved';
-            }
-          }
-          return;
-        }
-
-        if(s.page === 'send' || s.page === 'saved'){
-          const list = s.saved;
-          if(action === 'up') s.sel = (s.sel - 1 + list.length) % list.length;
-          if(action === 'down') s.sel = (s.sel + 1) % list.length;
-          if(action === 'ok'){
-            sim.lastEvent = `Sent: ${list[s.sel]} (sim)`;
-          }
-        }
-
-        if(s.page === 'read'){
-          if(action === 'ok' && s.last){
-            s.saved.unshift(`Capture_${s.last.freq}_${s.last.key}`);
-            sim.lastEvent = 'Saved capture (sim).';
-          }
-        }
-      },
-      render(ctx){
-        const s = ctx.state;
-        if(s.page === 'menu'){
-          return `
-            <div class="space-y-1">
-              ${s.items.map((it, i)=>{
-                const cls = i===s.sel ? 'menu-item sel' : 'menu-item';
-                return `<div class="${cls}"><span class="icon">${iconSVG('subghz')}</span><span>${it}</span></div>`;
-              }).join('')}
-            </div>
-          `;
-        }
-
-        if(s.page === 'read'){
-          return `
-            <div class="mono-box">
-              <div>READ (sim)</div>
-              <div class="mt-2">Status: ${s.last ? 'CAPTURED' : 'LISTENING'}</div>
-              ${s.last ? `
-                <div class="mt-2">Freq: ${s.last.freq} MHz</div>
-                <div>Mod: ${s.last.mod}</div>
-                <div>Bits: ${s.last.bits}</div>
-                <div>Key: ${s.last.key}</div>
-                <div class="mt-2">OK: Save capture</div>
-              ` : `<div class="mt-2">Move closer…</div>`}
-            </div>
-          `;
-        }
-
-        if(s.page === 'send'){
-          return `
-            <div class="mono-box">
-              <div>SEND (sim)</div>
-              <div class="mt-2">Select:</div>
-              <div class="mt-2 space-y-1">
-                ${s.saved.map((name, i)=>{
-                  const cls = i===s.sel ? 'menu-item sel' : 'menu-item';
-                  return `<div class="${cls}"><span class="icon">${iconSVG('subghz')}</span><span>${name}</span></div>`;
-                }).join('')}
-              </div>
-            </div>
-          `;
-        }
-
-        if(s.page === 'analyze'){
-          return `
-            <div class="mono-box">
-              <div>ANALYZE (sim)</div>
-              <div class="mt-2">No raw data available.</div>
-              <div class="mt-2">Tip: capture first.</div>
-            </div>
-          `;
-        }
-
-        if(s.page === 'saved'){
-          return `
-            <div class="mono-box">
-              <div>SAVED</div>
-              <div class="mt-2 space-y-1">
-                ${s.saved.map((name, i)=>{
-                  const cls = i===s.sel ? 'menu-item sel' : 'menu-item';
-                  return `<div class="${cls}"><span class="icon">${iconSVG('files')}</span><span>${name}</span></div>`;
-                }).join('')}
-              </div>
-              <div class="mt-2">OK: Send (sim)</div>
-            </div>
-          `;
-        }
-
-        return `<div class="mono-box">...</div>`;
-      }
-    };
-
-    // --- NFC (sim) ---
-    Screens.nfc = {
-      init(){
-        return { mode: 'idle', uid: null, tech: null };
-      },
-      title: 'NFC',
-      soft: { left: 'BACK', center: 'SCAN', right: 'MENU' },
-      handle(action, ctx){
-        const s = ctx.state;
-        if(action === 'back') popScreen();
-        if(action === 'home') gotoMain();
-        if(action === 'ok'){
-          s.mode = 'scanning';
-          s.uid = null;
-          sim.lastEvent = 'Hold tag near phone…';
-          simulateAfter(650, ()=>{
-            s.mode = 'found';
-            s.uid = randHex(8);
-            s.tech = Math.random() < .5 ? 'MIFARE Ultralight' : 'ISO14443-A';
-            sim.lastEvent = 'Tag read (sim).';
-            render();
-          });
-        }
-      },
-      render(ctx){
-        const s = ctx.state;
-        return `
-          <div class="mono-box">
-            <div>NFC (sim)</div>
-            <div class="mt-2">Mode: ${s.mode.toUpperCase()}</div>
-            ${s.uid ? `
-              <div class="mt-2">UID: ${s.uid}</div>
-              <div>Tech: ${s.tech}</div>
-              <div class="mt-2">(No real NFC access in web)</div>
-            ` : `
-              <div class="mt-2">OK: Scan</div>
-            `}
-          </div>
-        `;
-      }
-    };
-
-    // --- RFID (sim) ---
-    Screens.rfid = {
-      init(){
-        return { mode: 'idle', id: null, proto: null };
-      },
-      title: 'RFID',
-      soft: { left: 'BACK', center: 'READ', right: 'MENU' },
-      handle(action, ctx){
-        const s = ctx.state;
-        if(action === 'back') popScreen();
-        if(action === 'home') gotoMain();
-        if(action === 'ok'){
-          s.mode = 'reading';
-          s.id = null;
-          sim.lastEvent = 'Waiting for card…';
-          simulateAfter(700, ()=>{
-            s.mode = 'found';
-            s.proto = Math.random() < .5 ? 'EM4100' : 'HID Prox';
-            s.id = randHex(10);
-            sim.lastEvent = 'Card read (sim).';
-            render();
-          });
-        }
-      },
-      render(ctx){
-        const s = ctx.state;
-        return `
-          <div class="mono-box">
-            <div>RFID (sim)</div>
-            <div class="mt-2">Mode: ${s.mode.toUpperCase()}</div>
-            ${s.id ? `
-              <div class="mt-2">Proto: ${s.proto}</div>
-              <div>ID: ${s.id}</div>
-            ` : `<div class="mt-2">OK: Read</div>`}
-          </div>
-        `;
-      }
-    };
-
-    // --- Infrared (sim) ---
-    Screens.ir = {
-      init(){
-        return {
-          sel: 0,
-          keys: ['POWER','VOL+','VOL-','CH+','CH-','MUTE'],
-          brand: 'Generic TV'
-        };
-      },
-      title: 'Infrared',
-      soft: { left: 'BACK', center: 'SEND', right: 'MENU' },
-      handle(action, ctx){
-        const s = ctx.state;
-        if(action === 'back') popScreen();
-        if(action === 'home') gotoMain();
-        if(action === 'left') s.sel = (s.sel - 1 + s.keys.length) % s.keys.length;
-        if(action === 'right') s.sel = (s.sel + 1) % s.keys.length;
-        if(action === 'up') s.sel = (s.sel - 1 + s.keys.length) % s.keys.length;
-        if(action === 'down') s.sel = (s.sel + 1) % s.keys.length;
-        if(action === 'ok'){
-          sim.lastEvent = `IR: ${s.keys[s.sel]} (sim)`;
-        }
-      },
-      render(ctx){
-        const s = ctx.state;
-        return `
-          <div class="mono-box">
-            <div>IR REMOTE (sim)</div>
-            <div class="mt-2">Profile: ${s.brand}</div>
-            <div class="mt-2">Select: <span style="background:rgba(0,0,0,.75); color:#e9ffe9; padding:2px 6px; border-radius:6px;">${s.keys[s.sel]}</span></div>
-            <div class="mt-3 grid grid-cols-3 gap-2" style="font-family:var(--fontUI); font-size:11px;">
-              ${s.keys.map((k,i)=>{
-                const active = i===s.sel;
-                return `<div class="px-2 py-2 rounded-xl border ${active ? 'bg-black/75 text-[#e9ffe9] border-black' : 'bg-white/10 border-black/20'} text-center">${k}</div>`;
-              }).join('')}
-            </div>
-            <div class="mt-3">OK: send (sim)</div>
-          </div>
-        `;
-      }
-    };
-
-    // --- BadUSB (sim) ---
-    Screens.badusb = {
-      init(){
-        return {
-          sel: 0,
-          scripts: [
-            { name: 'hello_world', code: ['STRING Hello from BadUSB (sim)', 'ENTER'] },
-            { name: 'wifi_passwords (fake)', code: ['STRING Not available in browser', 'ENTER'] },
-            { name: 'open_browser', code: ['GUI r', 'STRING https://example.com', 'ENTER'] },
-          ],
-          running: false,
-          out: ''
-        };
-      },
-      title: 'BadUSB',
-      soft: { left: 'BACK', center: 'RUN', right: 'MENU' },
-      handle(action, ctx){
-        const s = ctx.state;
-        if(action === 'back'){
-          if(s.running){
-            s.running = false;
-            sim.lastEvent = 'Stopped.';
-          } else {
-            popScreen();
-          }
-          return;
-        }
-        if(action === 'home') gotoMain();
-        if(s.running) return;
-        if(action === 'up') s.sel = (s.sel - 1 + s.scripts.length) % s.scripts.length;
-        if(action === 'down') s.sel = (s.sel + 1) % s.scripts.length;
-        if(action === 'ok') runBadUSBSim(s);
-      },
-      render(ctx){
-        const s = ctx.state;
-        if(!s.running){
-          return `
-            <div class="mono-box">
-              <div>BADUSB (sim)</div>
-              <div class="mt-2">Select script:</div>
-              <div class="mt-2 space-y-1">
-                ${s.scripts.map((sc,i)=>{
-                  const cls = i===s.sel ? 'menu-item sel' : 'menu-item';
-                  return `<div class="${cls}"><span class="icon">${iconSVG('badusb')}</span><span>${sc.name}</span></div>`;
-                }).join('')}
-              </div>
-              <div class="mt-2">OK: run (virtual)</div>
-            </div>
-          `;
-        }
-
-        return `
-          <div class="mono-box">
-            <div>RUNNING...</div>
-            <div class="mt-2" style="font-family:var(--fontUI); font-size:11px;">
-              <div class="rounded-xl bg-black/70 text-[#e9ffe9] border border-black/70 p-2" style="min-height:120px; white-space:pre-wrap;">${escapeHTML(s.out)}</div>
-            </div>
-            <div class="mt-2">BACK: stop</div>
-          </div>
-        `;
-      }
-    };
-
-    function escapeHTML(str){
-      return String(str)
-        .replaceAll('&','&amp;')
-        .replaceAll('<','&lt;')
-        .replaceAll('>','&gt;')
-        .replaceAll('"','&quot;')
-        .replaceAll("'",'&#039;');
-    }
-
-    async function runBadUSBSim(s){
-      s.running = true;
-      s.out = '';
-      const script = s.scripts[s.sel];
-      sim.lastEvent = `Running: ${script.name} (virtual)`;
-      render();
-
-      const lines = [
-        `> ${script.name}`,
-        `> mode: VIRTUAL`,
-        `> start...`,
-        ''
-      ];
-
-      for(const line of lines){
-        if(!s.running) break;
-        await typeLine(s, line);
-      }
-
-      for(const cmd of script.code){
-        if(!s.running) break;
-        await typeLine(s, `$ ${cmd}`);
-        await wait(180);
-      }
-
-      if(s.running){
-        await typeLine(s, 'DONE.');
-        sim.lastEvent = 'Finished.';
-      }
-      s.running = false;
-      render();
-    }
-
-    function wait(ms){ return new Promise(r=>setTimeout(r, ms)); }
-
-    async function typeLine(s, line){
-      for(const ch of line){
-        if(!s.running) return;
-        s.out += ch;
-        if(settings.sound) beep(520, 10, 0.025);
-        renderThrottled();
-        await wait(12 + Math.random()*6);
-      }
-      s.out += '\n';
-      renderThrottled();
-      await wait(80);
-    }
-
-    // --- GPIO (sim) ---
-    Screens.gpio = {
-      init(){
-        return {
-          sel: 0,
-          pins: [
-            { name: '5V', type: 'PWR', val: 1 },
-            { name: 'GND', type: 'GND', val: 0 },
-            { name: 'PA7', type: 'IO', val: 0 },
-            { name: 'PA6', type: 'IO', val: 0 },
-            { name: 'PB3', type: 'IO', val: 0 },
-            { name: 'PB2', type: 'IO', val: 0 },
-          ]
-        };
-      },
-      title: 'GPIO',
-      soft: { left: 'BACK', center: 'TOGGLE', right: 'MENU' },
-      handle(action, ctx){
-        const s = ctx.state;
-        if(action === 'back') popScreen();
-        if(action === 'home') gotoMain();
-        if(action === 'up') s.sel = (s.sel - 1 + s.pins.length) % s.pins.length;
-        if(action === 'down') s.sel = (s.sel + 1) % s.pins.length;
-        if(action === 'ok'){
-          const p = s.pins[s.sel];
-          if(p.type !== 'IO'){
-            sim.lastEvent = `${p.name}: locked`;
-          } else {
-            p.val = p.val ? 0 : 1;
-            sim.lastEvent = `${p.name} = ${p.val}`;
-          }
-        }
-      },
-      render(ctx){
-        const s = ctx.state;
-        return `
-          <div class="mono-box">
-            <div>GPIO (sim)</div>
-            <div class="mt-2">Pins:</div>
-            <div class="mt-2 space-y-1">
-              ${s.pins.map((p,i)=>{
-                const cls = i===s.sel ? 'menu-item sel' : 'menu-item';
-                const v = p.type === 'IO' ? (p.val ? 'HIGH' : 'LOW') : (p.type);
-                return `
-                  <div class="${cls}">
-                    <span class="icon">${iconSVG('gpio')}</span>
-                    <span>${p.name}  ${v}</span>
-                  </div>
-                `;
-              }).join('')}
-            </div>
-            <div class="mt-2">OK: toggle IO</div>
-          </div>
-        `;
-      }
-    };
-
-    // --- Settings ---
-    Screens.settings = {
-      init(){
-        return { sel: 0, items: ['Sound', 'Vibration', 'Brightness', 'Demo battery drain'] };
-      },
-      title: 'Settings',
-      soft: { left: 'BACK', center: 'CHANGE', right: 'MENU' },
-      handle(action, ctx){
-        const s = ctx.state;
-
-        if(action === 'back') popScreen();
-        if(action === 'home') gotoMain();
-        if(action === 'up') s.sel = (s.sel - 1 + s.items.length) % s.items.length;
-        if(action === 'down') s.sel = (s.sel + 1) % s.items.length;
-
-        if(action === 'left' || action === 'right' || action === 'ok'){
-          const item = s.items[s.sel];
-          if(item === 'Sound'){
-            settings.sound = !settings.sound;
-            sim.lastEvent = `Sound: ${settings.sound ? 'ON' : 'OFF'}`;
-          }
-          if(item === 'Vibration'){
-            settings.vibrate = !settings.vibrate;
-            sim.lastEvent = `Vibration: ${settings.vibrate ? 'ON' : 'OFF'}`;
-          }
-          if(item === 'Brightness'){
-            const dir = (action === 'left') ? -1 : 1;
-            if(action === 'ok'){
-              settings.brightness = 1;
-            } else {
-              settings.brightness = clamp(settings.brightness + dir*0.1, 0.6, 1.2);
-            }
-            document.documentElement.style.setProperty('--brightness', String(settings.brightness));
-            sim.lastEvent = `Brightness: ${Math.round(settings.brightness*100)}%`;
-          }
-          if(item === 'Demo battery drain'){
-            sim.battery = clamp(sim.battery - 0.05, 0, 1);
-            sim.lastEvent = 'Battery drained (demo).';
-          }
-        }
-      },
-      render(ctx){
-        const s = ctx.state;
-        const rows = [
-          { k: 'Sound', v: settings.sound ? 'ON' : 'OFF' },
-          { k: 'Vibration', v: settings.vibrate ? 'ON' : 'OFF' },
-          { k: 'Brightness', v: `${Math.round(settings.brightness*100)}%` },
-          { k: 'Demo battery drain', v: 'OK' },
-        ];
-
-        return `
-          <div class="mono-box">
-            <div>SETTINGS</div>
-            <div class="mt-2 space-y-1">
-              ${rows.map((row, i)=>{
-                const cls = i===s.sel ? 'menu-item sel' : 'menu-item';
-                return `<div class="${cls}"><span class="icon">${iconSVG('settings')}</span><span>${row.k}: ${row.v}</span></div>`;
-              }).join('')}
-            </div>
-            <div class="mt-2">Left/Right/OK: change</div>
-          </div>
-        `;
-      }
-    };
-
-    // -----------------------------
-    // Render loop
-    // -----------------------------
-    const screenContent = $('#screenContent');
-    const statusLeft = $('#statusLeft');
-    const statusTime = $('#statusTime');
-    const batteryFill = $('#batteryFill');
-    const softLeft = $('#softLeft');
-    const softCenter = $('#softCenter');
-    const softRight = $('#softRight');
-
-    function updateStatusBar(){
-      statusTime.textContent = nowTime();
-      const percent = clamp(sim.battery, 0, 1);
-      batteryFill.style.width = `${Math.round(percent*100)}%`;
-      statusLeft.textContent = currentTitle().toUpperCase();
-    }
-
-    function currentTitle(){
-      const cur = current();
-      return Screens[cur.id].title || cur.id;
-    }
-
-    function render(){
-      const cur = current();
-      const def = Screens[cur.id];
-      updateStatusBar();
-
-      // Soft keys
-      const soft = def.soft || { left: 'BACK', center: 'OK', right: 'MENU' };
-      softLeft.textContent = soft.left;
-      softCenter.textContent = soft.center;
-      softRight.textContent = soft.right;
-
-      // Content
-      screenContent.innerHTML = def.render({ ...cur, settings, sim });
-    }
-
-    let _rt = 0;
-    function renderThrottled(){
-      const t = performance.now();
-      if(t - _rt < 50) return;
-      _rt = t;
-      render();
-    }
-
-    function handleAction(action){
-      const cur = current();
-      const def = Screens[cur.id];
-
-      // A little "device" effect
-      clickFX();
-      sim.battery = clamp(sim.battery - 0.0008, 0, 1);
-
-      def.handle?.(action, { ...cur, settings, sim });
-      render();
-    }
-
-    // -----------------------------
-    // Input handlers: buttons, keyboard, swipe
-    // -----------------------------
-    function pressVisual(el, on){
-      if(!el) return;
-      if(on) el.classList.add('pressed');
-      else el.classList.remove('pressed');
-    }
-
-    $$('#device button[data-action]').forEach(btn => {
-      const action = btn.dataset.action;
-      btn.addEventListener('pointerdown', (e)=>{
-        e.preventDefault();
-        btn.setPointerCapture?.(e.pointerId);
-        pressVisual(btn, true);
-        handleAction(action);
-      });
-      btn.addEventListener('pointerup', ()=> pressVisual(btn, false));
-      btn.addEventListener('pointercancel', ()=> pressVisual(btn, false));
-      btn.addEventListener('pointerleave', ()=> pressVisual(btn, false));
     });
+}
+function attachVideoTo(container){
+  video = document.createElement('video');
+  video.autoplay = true;
+  video.muted = true;
+  video.playsInline = true;
+  video.srcObject = stream;
+  container.appendChild(video);
+  vcanvas = document.createElement('canvas');
+  vcanvas.width = 320;
+  vcanvas.height = 240;
+  vctx = vcanvas.getContext('2d');
+}
 
-    // Keyboard controls for desktop
-    window.addEventListener('keydown', (e)=>{
-      const k = e.key;
-      if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Enter','Escape','Backspace',' '].includes(k)) e.preventDefault();
-      if(k === 'ArrowUp') return flashAnd('up');
-      if(k === 'ArrowDown') return flashAnd('down');
-      if(k === 'ArrowLeft') return flashAnd('left');
-      if(k === 'ArrowRight') return flashAnd('right');
-      if(k === 'Enter') return flashAnd('ok');
-      if(k === 'Escape' || k === 'Backspace') return flashAnd('back');
-      if(k === ' ') return flashAnd('home');
-    }, { passive:false });
+/* Stop camera */
+function stopStreams(){
+  if(stream){ stream.getTracks().forEach(t=>t.stop()); stream=null; }
+  if(video && video.srcObject){ video.srcObject=null; }
+}
 
-    function flashAnd(action){
-      const el = $(`#device button[data-action="${action}"]`);
-      if(el){
-        pressVisual(el, true);
-        setTimeout(()=>pressVisual(el,false), 120);
-      }
-      handleAction(action);
+/* Helper: sample frame and compute simple heuristics */
+function sampleFrame(){
+  if(!vctx || !video) return null;
+  try{
+    vctx.drawImage(video,0,0,vcanvas.width,vcanvas.height);
+    const img = vctx.getImageData(0,0,vcanvas.width,vcanvas.height);
+    return img;
+  } catch(e){ return null; }
+}
+
+/* Simple "human present" detector using skin-tone heuristic + motion */
+let prevData = null;
+function detectHuman(img){
+  if(!img) return false;
+  const d = img.data;
+  let skinCount = 0;
+  let motionCount = 0;
+  for(let i=0;i<d.length;i+=4){
+    const r=d[i], g=d[i+1], b=d[i+2];
+    // simple skin color test in RGB (not robust, but purely heuristic)
+    const max = Math.max(r,g,b), min=Math.min(r,g,b);
+    const rg = r/g;
+    if(r>95 && g>40 && b>20 && (max-min)>15 && r>g && r>b) skinCount++;
+    // motion detection vs previous frame
+    if(prevData){
+      const diff = Math.abs(r - prevData[i]) + Math.abs(g - prevData[i+1]) + Math.abs(b - prevData[i+2]);
+      if(diff>60) motionCount++;
     }
+  }
+  prevData = new Uint8ClampedArray(d); // store snapshot
+  const px = d.length/4;
+  const skinRatio = skinCount/px;
+  const motionRatio = motionCount/px;
+  // heuristics: if skin pixels > 1% and motion > 1% assume person present
+  return (skinRatio>0.01 && motionRatio>0.01) || motionRatio>0.03;
+}
 
-    // Swipe on screen area
-    const screenEl = $('#screen');
-    let swipe = null;
-
-    screenEl.addEventListener('pointerdown', (e)=>{
-      swipe = { x: e.clientX, y: e.clientY, t: performance.now() };
-    });
-    screenEl.addEventListener('pointerup', (e)=>{
-      if(!swipe) return;
-      const dx = e.clientX - swipe.x;
-      const dy = e.clientY - swipe.y;
-      const dt = performance.now() - swipe.t;
-      swipe = null;
-
-      const ax = Math.abs(dx), ay = Math.abs(dy);
-      if(dt < 30) return;
-      if(ax < 26 && ay < 26){
-        // tap = OK
-        handleAction('ok');
-        return;
-      }
-
-      if(ax > ay){
-        handleAction(dx > 0 ? 'right' : 'left');
-      } else {
-        handleAction(dy > 0 ? 'down' : 'up');
-      }
-    });
-
-    // Extra buttons X/Y -> map to common actions
-    function mapExtra(action){
-      if(action === 'x'){
-        // quick "details"
-        sim.lastEvent = `Event: ${sim.lastEvent}`;
-        return;
-      }
-      if(action === 'y'){
-        // quick "screenshot" simulation
-        fakeScreenshot();
-        return;
-      }
+/* Simple "car present" detection using edge brightness + motion */
+function detectCar(img){
+  if(!img) return false;
+  const d = img.data;
+  let brightCount = 0;
+  let motionCount = 0;
+  for(let i=0;i<d.length;i+=4){
+    const r=d[i], g=d[i+1], b=d[i+2];
+    const lum = 0.2126*r + 0.7152*g + 0.0722*b;
+    if(lum>150) brightCount++;
+    if(prevData){
+      const diff = Math.abs(r - prevData[i]) + Math.abs(g - prevData[i+1]) + Math.abs(b - prevData[i+2]);
+      if(diff>80) motionCount++;
     }
+  }
+  const px = d.length/4;
+  return (brightCount/px>0.02 && motionCount/px>0.02) || motionCount/px>0.04;
+}
 
-    function fakeScreenshot(){
-      const text = `[SCREENSHOT]\n${currentTitle()}\n${nowTime()}\n(but real capture not implemented)`;
-      try{
-        navigator.clipboard?.writeText(text);
-        sim.lastEvent = 'Screenshot copied (sim).';
-      } catch(e){
-        sim.lastEvent = 'Screenshot (sim).';
-      }
+/* Traffic light detection: look for concentrated red/green blobs */
+function detectTrafficLight(img){
+  if(!img) return null;
+  const d = img.data;
+  const w = img.width, h = img.height;
+  // scanning for bright red/green pixels
+  let red=0, green=0;
+  for(let i=0;i<d.length;i+=4){
+    const r=d[i], g=d[i+1], b=d[i+2];
+    if(r>160 && r>g+40 && r>b+40 && r>100) red++;
+    if(g>160 && g>r+40 && g>b+40 && g>100) green++;
+  }
+  const px = d.length/4;
+  if(red/px>0.002) return 'red';
+  if(green/px>0.002) return 'green';
+  return null;
+}
+
+/* ---------- App: Profiler ---------- */
+function loadProfiler(){
+  appBody.innerHTML = `
+    <div class="fake-card">
+      <div style="font-weight:800">Profiler</div>
+      <div class="status">Uses camera to detect human figures only. No face recognition.</div>
+      <div style="margin-top:8px" id="camArea"></div>
+      <div style="margin-top:8px">
+        <button class="fake-btn" id="btnStartProf">Start Camera</button>
+        <button class="fake-btn" id="btnScanProf">Scan Person</button>
+        <button class="close" id="btnStopProf">Stop</button>
+      </div>
+      <div class="log" id="profLog">Logs appear here...</div>
+    </div>
+  `;
+  const camArea = document.getElementById('camArea');
+  const btnStart = document.getElementById('btnStartProf');
+  const btnScan = document.getElementById('btnScanProf');
+  const btnStop = document.getElementById('btnStopProf');
+  const profLog = document.getElementById('profLog');
+  btnStart.onclick = async ()=>{
+    profLog.innerHTML = "Starting camera...";
+    try{
+      await startCamera();
+      attachVideoTo(camArea);
+      prevData = null;
+      profLog.innerHTML = "Camera running. Point at a person and press Scan Person.";
+    } catch(e){
+      profLog.innerHTML = "Camera error: "+(e.message||e);
     }
-
-    // Intercept x/y actions before dispatching screen handlers
-    function handleAction(action){
-      const cur = current();
-      const def = Screens[cur.id];
-
-      clickFX();
-      sim.battery = clamp(sim.battery - 0.0008, 0, 1);
-
-      if(action === 'x' || action === 'y'){
-        mapExtra(action);
-        render();
-        return;
-      }
-
-      def.handle?.(action, { ...cur, settings, sim });
-      render();
+  };
+  btnStop.onclick = ()=>{ stopStreams(); camArea.innerHTML=''; profLog.innerHTML='Stopped.'; };
+  btnScan.onclick = ()=>{
+    const img = sampleFrame();
+    if(!img){ profLog.innerHTML = "No frame available. Start camera first."; return; }
+    const human = detectHuman(img);
+    if(human){
+      const p = fakeProfile();
+      profLog.innerHTML = `
+        <strong>Human detected:</strong><br>
+        Name: <span style="color:var(--accent)">${p.name}</span><br>
+        ID: ${p.id}<br>
+        Job: ${p.job}<br>
+        Traits: ${p.traits}<br>
+        Crimes: ${p.crimes}<br>
+        Hobbies: ${p.hobbies}<br>
+        Income: ${p.income}
+      `;
+      // animated bar
+      const anim = document.createElement('div'); anim.className='anim'; anim.innerHTML='<div class="bar-inner" style="width:0%"></div>';
+      profLog.appendChild(anim);
+      setTimeout(()=> anim.querySelector('.bar-inner').style.width='82% ',20);
+    } else {
+      profLog.innerHTML = "No human-like figure detected. Try moving the camera or point at a person.";
     }
+  };
+}
 
-    // -----------------------------
-    // Orientation + fullscreen
-    // -----------------------------
-    const rotateOverlay = $('#rotateOverlay');
-    const dismissRotate = $('#dismissRotate');
-    const requestFullscreenBtn = $('#requestFullscreen');
-    let forcePreview = false;
-
-    function isLandscape(){
-      return window.matchMedia('(orientation: landscape)').matches;
+/* ---------- App: Car Controller ---------- */
+function loadCarCtrl(){
+  appBody.innerHTML = `
+    <div class="fake-card">
+      <div style="font-weight:800">Car Controller</div>
+      <div class="status">Detects large moving objects (car-like) and generates a fake car panel.</div>
+      <div id="carCam"></div>
+      <div style="margin-top:8px">
+        <button class="fake-btn" id="btnCarStart">Start Camera</button>
+        <button class="fake-btn" id="btnCarScan">Scan Vehicle</button>
+        <button class="close" id="btnCarStop">Stop</button>
+      </div>
+      <div class="log" id="carLog">Awaiting action...</div>
+    </div>
+  `;
+  const camArea = document.getElementById('carCam');
+  const btnStart = document.getElementById('btnCarStart');
+  const btnScan = document.getElementById('btnCarScan');
+  const btnStop = document.getElementById('btnCarStop');
+  const carLog = document.getElementById('carLog');
+  btnStart.onclick = async ()=>{
+    carLog.innerHTML='Starting camera...';
+    try{ await startCamera(); attachVideoTo(camArea); prevData=null; carLog.innerHTML='Camera live. Press Scan Vehicle.'; } catch(e){ carLog.innerHTML='Camera error: '+e.message; }
+  };
+  btnStop.onclick = ()=>{ stopStreams(); camArea.innerHTML=''; carLog.innerHTML='Stopped.'; };
+  btnScan.onclick = ()=>{
+    const img = sampleFrame();
+    if(!img){ carLog.innerHTML='No frame. Start camera.'; return; }
+    const car = detectCar(img);
+    if(car){
+      const carId = "CAR-"+Math.random().toString(36).slice(2,10).toUpperCase();
+      carLog.innerHTML = `
+        <strong>Vehicle panel:</strong><br>ID: <span style="color:var(--neon)">${carId}</span><br>
+        Status: <em>Nearby vehicle detected</em><br>
+        <div style="margin-top:8px">
+          <button class="fake-btn" onclick="fakeCarAction('start','${carId}')">Remote Start</button>
+          <button class="fake-btn" onclick="fakeCarAction('left','${carId}')">Turn Left</button>
+          <button class="fake-btn" onclick="fakeCarAction('unlock','${carId}')">Unlock</button>
+        </div>
+      `;
+    } else {
+      carLog.innerHTML = 'No car-like object detected. Try scanning a moving vehicle.';
     }
+  };
+}
 
-    function updateRotateOverlay(){
-      if(forcePreview) {
-        rotateOverlay.classList.remove('show');
-        return;
-      }
-      if(isLandscape()) rotateOverlay.classList.remove('show');
-      else rotateOverlay.classList.add('show');
+/* stub used by generated markup above (global) */
+window.fakeCarAction = function(action, id){
+  const el = document.querySelector('#carLog');
+  if(!el) return;
+  el.innerHTML += `<div style="margin-top:10px">Executing <strong>${action}</strong> on <span style="color:var(--accent)">${id}</span> <span style="opacity:.7">... (simulation)</span></div>`;
+  // show progress
+  const anim = document.createElement('div'); anim.className='anim'; anim.innerHTML='<div class="bar-inner" style="width:0%"></div>';
+  el.appendChild(anim); setTimeout(()=> anim.querySelector('.bar-inner').style.width='100%',20);
+  setTimeout(()=> el.innerHTML += '<div style="color:#8f8; margin-top:6px">Action complete (visual only)</div>',1200);
+};
+
+/* ---------- App: Traffic Light ---------- */
+function loadTraffic(){
+  appBody.innerHTML = `
+    <div class="fake-card">
+      <div style="font-weight:800">Traffic Light Override</div>
+      <div class="status">Detects red/green signals and offers fake overrides.</div>
+      <div id="trafficCam"></div>
+      <div style="margin-top:8px">
+        <button class="fake-btn" id="btnTrafficStart">Start Camera</button>
+        <button class="fake-btn" id="btnTrafficScan">Scan Light</button>
+        <button class="close" id="btnTrafficStop">Stop</button>
+      </div>
+      <div class="log" id="trafficLog">Idle.</div>
+    </div>
+  `;
+  const camArea = document.getElementById('trafficCam');
+  const btnStart = document.getElementById('btnTrafficStart');
+  const btnScan = document.getElementById('btnTrafficScan');
+  const btnStop = document.getElementById('btnTrafficStop');
+  const trafficLog = document.getElementById('trafficLog');
+  btnStart.onclick = async ()=>{
+    trafficLog.innerHTML='Starting camera...';
+    try{ await startCamera({ video:{ facingMode:"environment", width:640, height:480}, audio:false }); attachVideoTo(camArea); prevData=null; trafficLog.innerHTML='Camera live. Press Scan Light.'; } catch(e){ trafficLog.innerHTML='Camera error: '+e.message; }
+  };
+  btnStop.onclick = ()=>{ stopStreams(); camArea.innerHTML=''; trafficLog.innerHTML='Stopped.'; };
+  btnScan.onclick = ()=>{
+    const img = sampleFrame();
+    if(!img){ trafficLog.innerHTML='No frame. Start camera.'; return; }
+    const light = detectTrafficLight(img);
+    if(light){
+      trafficLog.innerHTML = `Traffic light detected: <strong style="color:${light==='red'?'#ff5c5c':'#7bffb4'}">${light.toUpperCase()}</strong><br>
+      <div style="margin-top:8px">
+        <button class="fake-btn" onclick="fakeLight('forceGreen')">Force Green</button>
+        <button class="fake-btn" onclick="fakeLight('forceRed')">Force Red</button>
+        <button class="fake-btn" onclick="fakeLight('cycle')">Cycle</button>
+      </div>`;
+    } else {
+      trafficLog.innerHTML = 'No red/green traffic light detected. Try pointing at a traffic signal.';
     }
+  };
+}
+window.fakeLight = function(cmd){
+  const el = document.querySelector('#trafficLog');
+  el.innerHTML += `<div style="margin-top:8px">Sending <strong>${cmd}</strong>... <em>(simulation)</em></div>`;
+  const anim = document.createElement('div'); anim.className='anim'; anim.innerHTML='<div class="bar-inner" style="width:0%"></div>';
+  el.appendChild(anim); setTimeout(()=> anim.querySelector('.bar-inner').style.width='80%',20);
+  setTimeout(()=> el.innerHTML += '<div style="color:#8f8; margin-top:6px">Override shown locally only.</div>',1400);
+};
 
-    window.addEventListener('resize', updateRotateOverlay);
-    window.addEventListener('orientationchange', updateRotateOverlay);
+/* ---------- Other simple apps ---------- */
+function loadDedsec(){
+  appBody.innerHTML = `
+    <div class="fake-card">
+      <div style="font-weight:900; font-size:18px">DEDSEC HUB</div>
+      <div class="status">Welcome back. This is a fictional interactive toy. Enjoy the vibes.</div>
+      <div style="margin-top:12px">
+        <div style="font-weight:800">Alerts</div>
+        <div class="log">No real infra scanned. All outputs are random & client-side.</div>
+      </div>
+    </div>
+  `;
+}
+function loadResearch(){
+  appBody.innerHTML = `<div class="fake-card"><div style="font-weight:900">Research</div><ul>
+    <li>Signal Jammer — visual mockup</li><li>Network Worm — visual only</li><li>Authority Scrambler — animation</li></ul>
+    <div class="log">Upgrades are cosmetic. Use for role-play and demos.</div></div>`;
+}
+function loadMedia(){
+  appBody.innerHTML = `<div class="fake-card"><div style="font-weight:900">Media Player</div>
+    <audio controls src="https://cdn.jsdelivr.net/gh/jackd248/sample-audio@main/beat.mp3">Your browser doesn't support audio.</audio>
+    <div class="log">Glitch tracks & ambient loops (sample).</div></div>`;
+}
+function loadKnowIt(){
+  appBody.innerHTML = `<div class="fake-card"><div style="font-weight:900">Know-It-All</div>
+    <div class="log">${rand(["Did you know? Neon signs were first developed in 1910.","Fun fact: A floppy disk icon still represents Save.","Tip: This is a simulated device."])}</div></div>`;
+}
+function loadShop(){
+  appBody.innerHTML = `<div class="fake-card"><div style="font-weight:900">App Shop</div><div class="log">Buy fake plugins with imaginary credits. Everything is cosmetic.</div></div>`;
+}
 
-    dismissRotate.addEventListener('click', ()=>{
-      forcePreview = true;
-      updateRotateOverlay();
-    });
+/* Close modal on background click */
+modal.addEventListener('click', e=>{
+  if(e.target===modal) closeApp();
+});
 
-    requestFullscreenBtn.addEventListener('click', async ()=>{
-      try{
-        await document.documentElement.requestFullscreen?.();
-      } catch(e) {}
-    });
-
-    // -----------------------------
-    // Help + reset
-    // -----------------------------
-    const helpDialog = $('#helpDialog');
-    $('#helpBtn').addEventListener('click', ()=> helpDialog.showModal());
-    $('#closeHelp').addEventListener('click', ()=> helpDialog.close());
-
-    $('#resetBtn').addEventListener('click', ()=>{
-      sim.battery = 0.76;
-      sim.dolphin = { level: 3, xp: 42 };
-      sim.lastEvent = 'Reset.';
-      settings.sound = true;
-      settings.vibrate = true;
-      settings.brightness = 1;
-      document.documentElement.style.setProperty('--brightness', String(settings.brightness));
-      stack.length = 0;
-      pushScreen('mainMenu');
-    });
-
-    // -----------------------------
-    // Timing + simulated events
-    // -----------------------------
-    function simulateAfter(ms, fn){
-      setTimeout(fn, ms);
-    }
-
-    // Idle tick: update time + tiny battery drain
-    setInterval(()=>{
-      sim.battery = clamp(sim.battery - 0.00035, 0, 1);
-      renderThrottled();
-    }, 1000);
-
-    // -----------------------------
-    // Boot
-    // -----------------------------
-    pushScreen('mainMenu');
-    updateRotateOverlay();
-    document.documentElement.style.setProperty('--brightness', String(settings.brightness));
-  </script>
+/* Prevent accidental unload while camera on */
+window.addEventListener('beforeunload', (e)=>{
+  if(stream){ e.returnValue = "Camera in use"; return "Camera in use"; }
+});
+</script>
 </body>
 </html>
