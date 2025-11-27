@@ -1,469 +1,1199 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-<title>DedSec Phone — Web Toy</title>
-<style>
-  :root{
-    --bg:#050505;
-    --accent:#ff2bd3;
-    --neon:#00ffd5;
-    --glass: rgba(255,255,255,0.03);
-    --mono: 'Courier New', monospace;
-  }
-  html,body{height:100%;margin:0;background:var(--bg);color:#ddd;font-family:var(--mono);}
-  .phone { max-width:420px; margin:10px auto; border-radius:18px; overflow:hidden; background:
-    linear-gradient(180deg,#070707 0%, #0b0b0b 100%); box-shadow: 0 10px 40px rgba(0,0,0,.8); }
-  .screen { padding:14px; min-height:760px; box-sizing:border-box; background-image:
-    radial-gradient(circle at 10% 10%, rgba(255,255,255,0.01), transparent 10%),
-    repeating-linear-gradient(45deg, rgba(255,255,255,0.01) 0 2px, transparent 2px 6px);
-  }
-  header { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
-  .bar { height:18px; background:linear-gradient(90deg,var(--accent),#8a00ff);
-    border-radius:6px; padding:2px 8px; font-size:12px; display:flex; align-items:center; gap:8px;}
-  .home-grid{ display:grid; grid-template-columns: repeat(4,1fr); gap:10px; margin-top:10px; }
-  .app { background:var(--glass); border-radius:12px; padding:10px; text-align:center; font-size:12px; cursor:pointer;
-    border:1px solid rgba(255,255,255,0.03); box-shadow: 0 6px 14px rgba(0,0,0,0.6); }
-  .app .icon{ width:48px;height:48px;margin:0 auto 6px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:20px;}
-  .app:hover{ transform:translateY(-4px); transition:transform .12s ease; }
-  .modal { position:fixed; inset:0; display:none; align-items:center; justify-content:center; z-index:40;}
-  .modal.open{ display:flex; }
-  .card { width:92%; max-width:420px; height:86vh; background:linear-gradient(180deg, rgba(0,0,0,0.85), rgba(0,0,0,0.95));
-    border-radius:14px; border:1px solid rgba(255,255,255,0.04); padding:12px; box-sizing:border-box; overflow:hidden; color:#ddd;}
-  .card header{display:flex; justify-content:space-between; align-items:center; gap:8px;}
-  .close{ background:transparent; border:1px solid rgba(255,255,255,0.06); padding:6px 10px; border-radius:8px; cursor:pointer;}
-  canvas,video{ width:100%; height:auto; border-radius:10px; background:#000; display:block; }
-  .fake-btn{ background:var(--accent); padding:8px 12px; border-radius:8px; color:#fff; cursor:pointer; display:inline-block; margin-right:6px; font-weight:700; font-size:13px;}
-  .log{ font-size:13px; line-height:1.3; margin-top:8px; max-height:28vh; overflow:auto; background:rgba(0,0,0,0.2); padding:8px; border-radius:8px;}
-  .status { font-size:12px; color: #aaa; }
-  .glitch { color:var(--accent); text-shadow: 1px 0 var(--neon), -1px 0 #7b00b3; letter-spacing:1px; font-weight:900;}
-  .fake-card { background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); padding:10px; border-radius:10px; margin-top:8px; }
-  .anim { height:6px; background:linear-gradient(90deg,#111,#222); border-radius:6px; overflow:hidden; margin-top:8px; }
-  .bar-inner { height:6px; width:0%; background:linear-gradient(90deg,var(--accent),var(--neon)); transition:width .6s ease; }
-  footer{ text-align:center; color:#777; font-size:12px; margin-top:6px; }
-  /* tiny retro pixel skull in background */
-  body::after{ content:""; position:fixed; inset:0; pointer-events:none;
-    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><text x="0" y="16" font-family="monospace" font-size="14" fill="%23222">☠︎ ☠︎ ☠︎</text></svg>');
-    mix-blend-mode:overlay; opacity:0.07; z-index:0;}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DedSec Mobile OS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Share Tech Mono', monospace;
+            background: #000;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .glitch-bg {
+            background: linear-gradient(45deg, #0a0015 0%, #1a0030 50%, #0a0015 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .glitch-bg::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 255, 255, 0.03) 0px,
+                transparent 1px,
+                transparent 2px,
+                rgba(0, 255, 255, 0.03) 3px
+            );
+            animation: scan 8s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes scan {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(100%); }
+        }
+
+        .glitch-text {
+            position: relative;
+            color: #00ff9f;
+            text-shadow: 0 0 10px rgba(0, 255, 159, 0.8);
+        }
+
+        .glitch-text::before,
+        .glitch-text::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .glitch-text::before {
+            animation: glitch-1 2.5s infinite;
+            color: #ff00ff;
+            z-index: -1;
+        }
+
+        .glitch-text::after {
+            animation: glitch-2 3s infinite;
+            color: #00ffff;
+            z-index: -2;
+        }
+
+        @keyframes glitch-1 {
+            0%, 100% { transform: translate(0); }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(-2px, -2px); }
+            60% { transform: translate(2px, 2px); }
+            80% { transform: translate(2px, -2px); }
+        }
+
+        @keyframes glitch-2 {
+            0%, 100% { transform: translate(0); }
+            20% { transform: translate(2px, -2px); }
+            40% { transform: translate(2px, 2px); }
+            60% { transform: translate(-2px, -2px); }
+            80% { transform: translate(-2px, 2px); }
+        }
+
+        .app-icon {
+            background: rgba(10, 0, 30, 0.8);
+            border: 2px solid #00ff9f;
+            box-shadow: 0 0 20px rgba(0, 255, 159, 0.3), inset 0 0 20px rgba(0, 255, 159, 0.1);
+            transition: all 0.3s;
+        }
+
+        .app-icon:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(0, 255, 159, 0.6), inset 0 0 30px rgba(0, 255, 159, 0.2);
+            border-color: #ff00ff;
+        }
+
+        .app-window {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #0a0015;
+            z-index: 1000;
+            display: none;
+            overflow-y: auto;
+        }
+
+        .app-window.active {
+            display: block;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(100%);
+            }
+            to {
+                transform: translateY(0);
+            }
+        }
+
+        .neon-border {
+            border: 2px solid #00ff9f;
+            box-shadow: 0 0 15px rgba(0, 255, 159, 0.5), inset 0 0 15px rgba(0, 255, 159, 0.1);
+        }
+
+        .neon-text {
+            color: #00ff9f;
+            text-shadow: 0 0 10px rgba(0, 255, 159, 0.8);
+        }
+
+        .neon-purple {
+            color: #ff00ff;
+            text-shadow: 0 0 10px rgba(255, 0, 255, 0.8);
+        }
+
+        .neon-cyan {
+            color: #00ffff;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.8);
+        }
+
+        .btn-hack {
+            background: linear-gradient(45deg, #00ff9f, #00ffff);
+            color: #000;
+            font-weight: bold;
+            padding: 12px 24px;
+            border: none;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .btn-hack::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.3);
+            transition: left 0.3s;
+        }
+
+        .btn-hack:hover::before {
+            left: 100%;
+        }
+
+        .static-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iMzAwIj48ZmlsdGVyIGlkPSJhIj48ZmVUdXJidWxlbmNlIGJhc2VGcmVxdWVuY3k9Ii43NSIgc3RpdGNoVGlsZXM9InN0aXRjaCIgdHlwZT0iZnJhY3RhbE5vaXNlIi8+PGZlQ29sb3JNYXRyaXggdHlwZT0ic2F0dXJhdGUiIHZhbHVlcz0iMCIvPjwvZmlsdGVyPjxwYXRoIGQ9Ik0wIDBoMzAwdjMwMEgweiIgZmlsdGVyPSJ1cmwoI2EpIiBvcGFjaXR5PSIuMDUiLz48L3N2Zz4=');
+            pointer-events: none;
+            opacity: 0.3;
+            z-index: 9999;
+        }
+
+        .skull-ascii {
+            font-size: 8px;
+            line-height: 8px;
+            color: #00ff9f;
+            opacity: 0.3;
+            white-space: pre;
+        }
+
+        .progress-bar {
+            height: 20px;
+            background: rgba(0, 255, 159, 0.2);
+            border: 1px solid #00ff9f;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00ff9f, #00ffff);
+            transition: width 0.3s;
+            box-shadow: 0 0 10px rgba(0, 255, 159, 0.8);
+        }
+
+        .camera-view {
+            width: 100%;
+            height: 300px;
+            background: #000;
+            border: 2px solid #00ff9f;
+            position: relative;
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 255, 159, 0.1);
+            border: 2px solid #00ff9f;
+            padding: 15px;
+            max-width: 300px;
+            animation: slideIn 0.3s ease-out;
+            z-index: 10000;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+            }
+            to {
+                transform: translateX(0);
+            }
+        }
+
+        .upgrade-node {
+            width: 80px;
+            height: 80px;
+            border: 2px solid #666;
+            background: rgba(20, 20, 40, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .upgrade-node.unlocked {
+            border-color: #00ff9f;
+            background: rgba(0, 255, 159, 0.2);
+            box-shadow: 0 0 20px rgba(0, 255, 159, 0.5);
+        }
+
+        .upgrade-node:hover {
+            transform: scale(1.1);
+        }
+
+        @keyframes blink {
+            0%, 50%, 100% { opacity: 1; }
+            25%, 75% { opacity: 0.3; }
+        }
+
+        .blink {
+            animation: blink 2s infinite;
+        }
+
+        .grid-overlay {
+            background-image: 
+                linear-gradient(rgba(0, 255, 159, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 159, 0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+    </style>
 </head>
-<body>
-<div class="phone">
-  <div class="screen">
-    <header>
-      <div class="bar glitch">DEDSEC — <span style="font-weight:600">#BURN</span></div>
-      <div style="margin-left:auto" class="status">online • 4G</div>
-    </header>
+<body class="glitch-bg">
+    <div class="static-overlay"></div>
 
-    <div class="home-grid" id="home">
-      <div class="app" data-app="dedsec">
-        <div class="icon" style="background:linear-gradient(90deg,#111,#222)">☠</div>DedSec
-      </div>
-      <div class="app" data-app="profiler">
-        <div class="icon" style="background:linear-gradient(90deg,#440044,#220022)">P</div>Profiler
-      </div>
-      <div class="app" data-app="car">
-        <div class="icon" style="background:linear-gradient(90deg,#223,#112)">C</div>Car Ctrl
-      </div>
-      <div class="app" data-app="traffic">
-        <div class="icon" style="background:linear-gradient(90deg,#114,#221)">T</div>Traffic
-      </div>
-
-      <div class="app" data-app="research">
-        <div class="icon" style="background:linear-gradient(90deg,#440022,#110011)">R</div>Research
-      </div>
-      <div class="app" data-app="media">
-        <div class="icon" style="background:linear-gradient(90deg,#002244,#001122)">M</div>Media
-      </div>
-      <div class="app" data-app="knowit">
-        <div class="icon" style="background:linear-gradient(90deg,#222200,#111100)">?</div>Know-It-All
-      </div>
-      <div class="app" data-app="shop">
-        <div class="icon" style="background:linear-gradient(90deg,#552200,#331100)">$</div>App Shop
-      </div>
-    </div>
-
-    <footer>Fake hacking toy • purely fictional • no real recognition</footer>
-  </div>
-</div>
-
-<!-- Modal / app container -->
-<div class="modal" id="modal">
-  <div class="card" role="dialog" aria-modal="true">
-    <header>
-      <div class="glitch" id="appTitle">App</div>
-      <div>
-        <button class="close" id="btnClose">Close</button>
-      </div>
-    </header>
-
-    <div id="appBody" style="margin-top:10px"></div>
-  </div>
-</div>
-
-<script>
-/* Utility: random generators (fake data) */
-const rand = (arr)=> arr[Math.floor(Math.random()*arr.length)];
-const randInt = (n)=> Math.floor(Math.random()*n);
-function fakeProfile(){
-  const first = ["Alex","Sam","Taylor","Jordan","Riley","Morgan","Casey","Kai","Devon","Sky"];
-  const last = ["Hart","Mills","Rey","Nguyen","Ortiz","Vega","Blake","Stone","Rowe","Khan"];
-  const jobs = ["Barista","Coder","Delivery Rider","Artist","Paramedic","Student","Teacher","Bartender","Mechanic","DJ"];
-  const traits = ["Cautious","Outgoing","Methodical","Chaotic","Charismatic","Secretive"];
-  const crimes = ["None","Petty theft (2016)","Trespassing (2019)","Public disturbance (2020)","Fraud allegation (2017)"];
-  return {
-    name: rand(first)+" "+rand(last),
-    id: "ID-"+Math.random().toString(36).slice(2,10).toUpperCase(),
-    job: rand(jobs),
-    traits: rand(traits),
-    crimes: rand(crimes),
-    hobbies: rand(["Skating","Photography","Gaming","Gardening","Cooking","Skateboarding","Livestreaming"]),
-    income: "$"+(Math.floor(15000 + Math.random()*90000)).toLocaleString()
-  };
-}
-
-/* Modal app system */
-const modal = document.getElementById('modal');
-const appBody = document.getElementById('appBody');
-const appTitle = document.getElementById('appTitle');
-const btnClose = document.getElementById('btnClose');
-
-document.getElementById('home').addEventListener('click', e=>{
-  const app = e.target.closest('.app');
-  if(!app) return;
-  openApp(app.dataset.app);
-});
-
-btnClose.onclick = ()=> closeApp();
-
-function openApp(name){
-  modal.classList.add('open');
-  appTitle.textContent = name.toUpperCase();
-  appBody.innerHTML = '';
-  if(name==='dedsec') loadDedsec();
-  if(name==='profiler') loadProfiler();
-  if(name==='car') loadCarCtrl();
-  if(name==='traffic') loadTraffic();
-  if(name==='research') loadResearch();
-  if(name==='media') loadMedia();
-  if(name==='knowit') loadKnowIt();
-  if(name==='shop') loadShop();
-}
-function closeApp(){
-  stopStreams();
-  modal.classList.remove('open');
-}
-
-/* Camera helpers */
-let stream = null;
-let video = null;
-let vcanvas = null;
-let vctx = null;
-function startCamera(constraints={ video:{ facingMode:"environment", width:640, height:480 }, audio:false }) {
-  return navigator.mediaDevices.getUserMedia(constraints)
-    .then(s=>{
-      stream = s;
-      return s;
-    });
-}
-function attachVideoTo(container){
-  video = document.createElement('video');
-  video.autoplay = true;
-  video.muted = true;
-  video.playsInline = true;
-  video.srcObject = stream;
-  container.appendChild(video);
-  vcanvas = document.createElement('canvas');
-  vcanvas.width = 320;
-  vcanvas.height = 240;
-  vctx = vcanvas.getContext('2d');
-}
-
-/* Stop camera */
-function stopStreams(){
-  if(stream){ stream.getTracks().forEach(t=>t.stop()); stream=null; }
-  if(video && video.srcObject){ video.srcObject=null; }
-}
-
-/* Helper: sample frame and compute simple heuristics */
-function sampleFrame(){
-  if(!vctx || !video) return null;
-  try{
-    vctx.drawImage(video,0,0,vcanvas.width,vcanvas.height);
-    const img = vctx.getImageData(0,0,vcanvas.width,vcanvas.height);
-    return img;
-  } catch(e){ return null; }
-}
-
-/* Simple "human present" detector using skin-tone heuristic + motion */
-let prevData = null;
-function detectHuman(img){
-  if(!img) return false;
-  const d = img.data;
-  let skinCount = 0;
-  let motionCount = 0;
-  for(let i=0;i<d.length;i+=4){
-    const r=d[i], g=d[i+1], b=d[i+2];
-    // simple skin color test in RGB (not robust, but purely heuristic)
-    const max = Math.max(r,g,b), min=Math.min(r,g,b);
-    const rg = r/g;
-    if(r>95 && g>40 && b>20 && (max-min)>15 && r>g && r>b) skinCount++;
-    // motion detection vs previous frame
-    if(prevData){
-      const diff = Math.abs(r - prevData[i]) + Math.abs(g - prevData[i+1]) + Math.abs(b - prevData[i+2]);
-      if(diff>60) motionCount++;
-    }
-  }
-  prevData = new Uint8ClampedArray(d); // store snapshot
-  const px = d.length/4;
-  const skinRatio = skinCount/px;
-  const motionRatio = motionCount/px;
-  // heuristics: if skin pixels > 1% and motion > 1% assume person present
-  return (skinRatio>0.01 && motionRatio>0.01) || motionRatio>0.03;
-}
-
-/* Simple "car present" detection using edge brightness + motion */
-function detectCar(img){
-  if(!img) return false;
-  const d = img.data;
-  let brightCount = 0;
-  let motionCount = 0;
-  for(let i=0;i<d.length;i+=4){
-    const r=d[i], g=d[i+1], b=d[i+2];
-    const lum = 0.2126*r + 0.7152*g + 0.0722*b;
-    if(lum>150) brightCount++;
-    if(prevData){
-      const diff = Math.abs(r - prevData[i]) + Math.abs(g - prevData[i+1]) + Math.abs(b - prevData[i+2]);
-      if(diff>80) motionCount++;
-    }
-  }
-  const px = d.length/4;
-  return (brightCount/px>0.02 && motionCount/px>0.02) || motionCount/px>0.04;
-}
-
-/* Traffic light detection: look for concentrated red/green blobs */
-function detectTrafficLight(img){
-  if(!img) return null;
-  const d = img.data;
-  const w = img.width, h = img.height;
-  // scanning for bright red/green pixels
-  let red=0, green=0;
-  for(let i=0;i<d.length;i+=4){
-    const r=d[i], g=d[i+1], b=d[i+2];
-    if(r>160 && r>g+40 && r>b+40 && r>100) red++;
-    if(g>160 && g>r+40 && g>b+40 && g>100) green++;
-  }
-  const px = d.length/4;
-  if(red/px>0.002) return 'red';
-  if(green/px>0.002) return 'green';
-  return null;
-}
-
-/* ---------- App: Profiler ---------- */
-function loadProfiler(){
-  appBody.innerHTML = `
-    <div class="fake-card">
-      <div style="font-weight:800">Profiler</div>
-      <div class="status">Uses camera to detect human figures only. No face recognition.</div>
-      <div style="margin-top:8px" id="camArea"></div>
-      <div style="margin-top:8px">
-        <button class="fake-btn" id="btnStartProf">Start Camera</button>
-        <button class="fake-btn" id="btnScanProf">Scan Person</button>
-        <button class="close" id="btnStopProf">Stop</button>
-      </div>
-      <div class="log" id="profLog">Logs appear here...</div>
-    </div>
-  `;
-  const camArea = document.getElementById('camArea');
-  const btnStart = document.getElementById('btnStartProf');
-  const btnScan = document.getElementById('btnScanProf');
-  const btnStop = document.getElementById('btnStopProf');
-  const profLog = document.getElementById('profLog');
-  btnStart.onclick = async ()=>{
-    profLog.innerHTML = "Starting camera...";
-    try{
-      await startCamera();
-      attachVideoTo(camArea);
-      prevData = null;
-      profLog.innerHTML = "Camera running. Point at a person and press Scan Person.";
-    } catch(e){
-      profLog.innerHTML = "Camera error: "+(e.message||e);
-    }
-  };
-  btnStop.onclick = ()=>{ stopStreams(); camArea.innerHTML=''; profLog.innerHTML='Stopped.'; };
-  btnScan.onclick = ()=>{
-    const img = sampleFrame();
-    if(!img){ profLog.innerHTML = "No frame available. Start camera first."; return; }
-    const human = detectHuman(img);
-    if(human){
-      const p = fakeProfile();
-      profLog.innerHTML = `
-        <strong>Human detected:</strong><br>
-        Name: <span style="color:var(--accent)">${p.name}</span><br>
-        ID: ${p.id}<br>
-        Job: ${p.job}<br>
-        Traits: ${p.traits}<br>
-        Crimes: ${p.crimes}<br>
-        Hobbies: ${p.hobbies}<br>
-        Income: ${p.income}
-      `;
-      // animated bar
-      const anim = document.createElement('div'); anim.className='anim'; anim.innerHTML='<div class="bar-inner" style="width:0%"></div>';
-      profLog.appendChild(anim);
-      setTimeout(()=> anim.querySelector('.bar-inner').style.width='82% ',20);
-    } else {
-      profLog.innerHTML = "No human-like figure detected. Try moving the camera or point at a person.";
-    }
-  };
-}
-
-/* ---------- App: Car Controller ---------- */
-function loadCarCtrl(){
-  appBody.innerHTML = `
-    <div class="fake-card">
-      <div style="font-weight:800">Car Controller</div>
-      <div class="status">Detects large moving objects (car-like) and generates a fake car panel.</div>
-      <div id="carCam"></div>
-      <div style="margin-top:8px">
-        <button class="fake-btn" id="btnCarStart">Start Camera</button>
-        <button class="fake-btn" id="btnCarScan">Scan Vehicle</button>
-        <button class="close" id="btnCarStop">Stop</button>
-      </div>
-      <div class="log" id="carLog">Awaiting action...</div>
-    </div>
-  `;
-  const camArea = document.getElementById('carCam');
-  const btnStart = document.getElementById('btnCarStart');
-  const btnScan = document.getElementById('btnCarScan');
-  const btnStop = document.getElementById('btnCarStop');
-  const carLog = document.getElementById('carLog');
-  btnStart.onclick = async ()=>{
-    carLog.innerHTML='Starting camera...';
-    try{ await startCamera(); attachVideoTo(camArea); prevData=null; carLog.innerHTML='Camera live. Press Scan Vehicle.'; } catch(e){ carLog.innerHTML='Camera error: '+e.message; }
-  };
-  btnStop.onclick = ()=>{ stopStreams(); camArea.innerHTML=''; carLog.innerHTML='Stopped.'; };
-  btnScan.onclick = ()=>{
-    const img = sampleFrame();
-    if(!img){ carLog.innerHTML='No frame. Start camera.'; return; }
-    const car = detectCar(img);
-    if(car){
-      const carId = "CAR-"+Math.random().toString(36).slice(2,10).toUpperCase();
-      carLog.innerHTML = `
-        <strong>Vehicle panel:</strong><br>ID: <span style="color:var(--neon)">${carId}</span><br>
-        Status: <em>Nearby vehicle detected</em><br>
-        <div style="margin-top:8px">
-          <button class="fake-btn" onclick="fakeCarAction('start','${carId}')">Remote Start</button>
-          <button class="fake-btn" onclick="fakeCarAction('left','${carId}')">Turn Left</button>
-          <button class="fake-btn" onclick="fakeCarAction('unlock','${carId}')">Unlock</button>
+    <!-- Home Screen -->
+    <div id="homeScreen" class="min-h-screen p-6">
+        <!-- Status Bar -->
+        <div class="flex justify-between items-center mb-8 text-xs neon-text">
+            <div id="statusTime">12:34</div>
+            <div class="flex gap-2">
+                <span class="blink">⚡</span>
+                <span>█████</span>
+            </div>
         </div>
-      `;
-    } else {
-      carLog.innerHTML = 'No car-like object detected. Try scanning a moving vehicle.';
-    }
-  };
-}
 
-/* stub used by generated markup above (global) */
-window.fakeCarAction = function(action, id){
-  const el = document.querySelector('#carLog');
-  if(!el) return;
-  el.innerHTML += `<div style="margin-top:10px">Executing <strong>${action}</strong> on <span style="color:var(--accent)">${id}</span> <span style="opacity:.7">... (simulation)</span></div>`;
-  // show progress
-  const anim = document.createElement('div'); anim.className='anim'; anim.innerHTML='<div class="bar-inner" style="width:0%"></div>';
-  el.appendChild(anim); setTimeout(()=> anim.querySelector('.bar-inner').style.width='100%',20);
-  setTimeout(()=> el.innerHTML += '<div style="color:#8f8; margin-top:6px">Action complete (visual only)</div>',1200);
-};
+        <!-- DedSec Logo -->
+        <div class="text-center mb-8">
+            <h1 class="glitch-text text-4xl font-bold mb-2" data-text="DEDSEC" style="font-family: 'Orbitron', sans-serif;">DEDSEC</h1>
+            <p class="neon-cyan text-xs">// MOBILE OS v2.0 //</p>
+        </div>
 
-/* ---------- App: Traffic Light ---------- */
-function loadTraffic(){
-  appBody.innerHTML = `
-    <div class="fake-card">
-      <div style="font-weight:800">Traffic Light Override</div>
-      <div class="status">Detects red/green signals and offers fake overrides.</div>
-      <div id="trafficCam"></div>
-      <div style="margin-top:8px">
-        <button class="fake-btn" id="btnTrafficStart">Start Camera</button>
-        <button class="fake-btn" id="btnTrafficScan">Scan Light</button>
-        <button class="close" id="btnTrafficStop">Stop</button>
-      </div>
-      <div class="log" id="trafficLog">Idle.</div>
+        <!-- App Grid -->
+        <div class="grid grid-cols-3 gap-4 max-w-md mx-auto">
+            <!-- DedSec Hub -->
+            <div class="app-icon rounded-lg p-4 text-center cursor-pointer" onclick="openApp('dedsecHub')">
+                <div class="text-3xl mb-2">💀</div>
+                <div class="text-xs neon-text">DedSec</div>
+            </div>
+
+            <!-- Profiler -->
+            <div class="app-icon rounded-lg p-4 text-center cursor-pointer" onclick="openApp('profiler')">
+                <div class="text-3xl mb-2">👤</div>
+                <div class="text-xs neon-text">Profiler</div>
+            </div>
+
+            <!-- Car Control -->
+            <div class="app-icon rounded-lg p-4 text-center cursor-pointer" onclick="openApp('carControl')">
+                <div class="text-3xl mb-2">🚗</div>
+                <div class="text-xs neon-text">Car Ctrl</div>
+            </div>
+
+            <!-- Traffic -->
+            <div class="app-icon rounded-lg p-4 text-center cursor-pointer" onclick="openApp('traffic')">
+                <div class="text-3xl mb-2">🚦</div>
+                <div class="text-xs neon-text">Traffic</div>
+            </div>
+
+            <!-- Research -->
+            <div class="app-icon rounded-lg p-4 text-center cursor-pointer" onclick="openApp('research')">
+                <div class="text-3xl mb-2">🔬</div>
+                <div class="text-xs neon-text">Research</div>
+            </div>
+
+            <!-- Media -->
+            <div class="app-icon rounded-lg p-4 text-center cursor-pointer" onclick="openApp('media')">
+                <div class="text-3xl mb-2">🎵</div>
+                <div class="text-xs neon-text">Media</div>
+            </div>
+
+            <!-- Know-It-All -->
+            <div class="app-icon rounded-lg p-4 text-center cursor-pointer" onclick="openApp('knowItAll')">
+                <div class="text-3xl mb-2">🧠</div>
+                <div class="text-xs neon-text">Know-All</div>
+            </div>
+
+            <!-- App Shop -->
+            <div class="app-icon rounded-lg p-4 text-center cursor-pointer" onclick="openApp('appShop')">
+                <div class="text-3xl mb-2">🛒</div>
+                <div class="text-xs neon-text">Shop</div>
+            </div>
+        </div>
+
+        <!-- Bottom Dock -->
+        <div class="fixed bottom-0 left-0 right-0 p-4 bg-black bg-opacity-50 backdrop-blur">
+            <div class="text-center text-xs neon-purple">
+                <span class="blink">●</span> SYSTEM ACTIVE <span class="blink">●</span>
+            </div>
+        </div>
     </div>
-  `;
-  const camArea = document.getElementById('trafficCam');
-  const btnStart = document.getElementById('btnTrafficStart');
-  const btnScan = document.getElementById('btnTrafficScan');
-  const btnStop = document.getElementById('btnTrafficStop');
-  const trafficLog = document.getElementById('trafficLog');
-  btnStart.onclick = async ()=>{
-    trafficLog.innerHTML='Starting camera...';
-    try{ await startCamera({ video:{ facingMode:"environment", width:640, height:480}, audio:false }); attachVideoTo(camArea); prevData=null; trafficLog.innerHTML='Camera live. Press Scan Light.'; } catch(e){ trafficLog.innerHTML='Camera error: '+e.message; }
-  };
-  btnStop.onclick = ()=>{ stopStreams(); camArea.innerHTML=''; trafficLog.innerHTML='Stopped.'; };
-  btnScan.onclick = ()=>{
-    const img = sampleFrame();
-    if(!img){ trafficLog.innerHTML='No frame. Start camera.'; return; }
-    const light = detectTrafficLight(img);
-    if(light){
-      trafficLog.innerHTML = `Traffic light detected: <strong style="color:${light==='red'?'#ff5c5c':'#7bffb4'}">${light.toUpperCase()}</strong><br>
-      <div style="margin-top:8px">
-        <button class="fake-btn" onclick="fakeLight('forceGreen')">Force Green</button>
-        <button class="fake-btn" onclick="fakeLight('forceRed')">Force Red</button>
-        <button class="fake-btn" onclick="fakeLight('cycle')">Cycle</button>
-      </div>`;
-    } else {
-      trafficLog.innerHTML = 'No red/green traffic light detected. Try pointing at a traffic signal.';
-    }
-  };
-}
-window.fakeLight = function(cmd){
-  const el = document.querySelector('#trafficLog');
-  el.innerHTML += `<div style="margin-top:8px">Sending <strong>${cmd}</strong>... <em>(simulation)</em></div>`;
-  const anim = document.createElement('div'); anim.className='anim'; anim.innerHTML='<div class="bar-inner" style="width:0%"></div>';
-  el.appendChild(anim); setTimeout(()=> anim.querySelector('.bar-inner').style.width='80%',20);
-  setTimeout(()=> el.innerHTML += '<div style="color:#8f8; margin-top:6px">Override shown locally only.</div>',1400);
-};
 
-/* ---------- Other simple apps ---------- */
-function loadDedsec(){
-  appBody.innerHTML = `
-    <div class="fake-card">
-      <div style="font-weight:900; font-size:18px">DEDSEC HUB</div>
-      <div class="status">Welcome back. This is a fictional interactive toy. Enjoy the vibes.</div>
-      <div style="margin-top:12px">
-        <div style="font-weight:800">Alerts</div>
-        <div class="log">No real infra scanned. All outputs are random & client-side.</div>
-      </div>
+    <!-- DedSec Hub App -->
+    <div id="dedsecHub" class="app-window p-6">
+        <button onclick="closeApp()" class="neon-border px-4 py-2 mb-4 neon-text">← BACK</button>
+        
+        <h2 class="text-2xl font-bold neon-text mb-6" style="font-family: 'Orbitron', sans-serif;">DEDSEC HUB</h2>
+        
+        <div class="space-y-4">
+            <!-- ASCII Skull -->
+            <div class="neon-border p-4 bg-black bg-opacity-50">
+                <pre class="text-xs neon-text" style="line-height: 1.2;">
+    _______________
+   /               \
+  /                 \
+ |    X       X     |
+ |                  |
+ |   \___________/  |
+  \                /
+   \______________/
+   
+   DEDSEC ACTIVE
+                </pre>
+            </div>
+
+            <!-- Fake Notifications -->
+            <div id="notifications" class="space-y-2">
+                <div class="neon-border p-3 bg-black bg-opacity-50">
+                    <div class="neon-purple text-sm">⚠ SYSTEM BREACH DETECTED</div>
+                    <div class="text-xs text-gray-400">Firewall bypassed // Access granted</div>
+                </div>
+                <div class="neon-border p-3 bg-black bg-opacity-50">
+                    <div class="neon-cyan text-sm">🔓 DATABASE UNLOCKED</div>
+                    <div class="text-xs text-gray-400">12,847 records available</div>
+                </div>
+                <div class="neon-border p-3 bg-black bg-opacity-50">
+                    <div class="neon-text text-sm">📡 NETWORK INFILTRATED</div>
+                    <div class="text-xs text-gray-400">Monitoring 47 nodes</div>
+                </div>
+            </div>
+
+            <!-- Generate Random Alert -->
+            <button onclick="generateAlert()" class="btn-hack w-full">GENERATE ALERT</button>
+
+            <!-- System Stats -->
+            <div class="grid grid-cols-2 gap-4">
+                <div class="neon-border p-3 text-center">
+                    <div class="neon-purple text-2xl font-bold"><span id="hackCount">0</span></div>
+                    <div class="text-xs text-gray-400">HACKS EXECUTED</div>
+                </div>
+                <div class="neon-border p-3 text-center">
+                    <div class="neon-cyan text-2xl font-bold"><span id="targetCount">0</span></div>
+                    <div class="text-xs text-gray-400">TARGETS SCANNED</div>
+                </div>
+            </div>
+        </div>
     </div>
-  `;
-}
-function loadResearch(){
-  appBody.innerHTML = `<div class="fake-card"><div style="font-weight:900">Research</div><ul>
-    <li>Signal Jammer — visual mockup</li><li>Network Worm — visual only</li><li>Authority Scrambler — animation</li></ul>
-    <div class="log">Upgrades are cosmetic. Use for role-play and demos.</div></div>`;
-}
-function loadMedia(){
-  appBody.innerHTML = `<div class="fake-card"><div style="font-weight:900">Media Player</div>
-    <audio controls src="https://cdn.jsdelivr.net/gh/jackd248/sample-audio@main/beat.mp3">Your browser doesn't support audio.</audio>
-    <div class="log">Glitch tracks & ambient loops (sample).</div></div>`;
-}
-function loadKnowIt(){
-  appBody.innerHTML = `<div class="fake-card"><div style="font-weight:900">Know-It-All</div>
-    <div class="log">${rand(["Did you know? Neon signs were first developed in 1910.","Fun fact: A floppy disk icon still represents Save.","Tip: This is a simulated device."])}</div></div>`;
-}
-function loadShop(){
-  appBody.innerHTML = `<div class="fake-card"><div style="font-weight:900">App Shop</div><div class="log">Buy fake plugins with imaginary credits. Everything is cosmetic.</div></div>`;
-}
 
-/* Close modal on background click */
-modal.addEventListener('click', e=>{
-  if(e.target===modal) closeApp();
-});
+    <!-- Profiler App -->
+    <div id="profiler" class="app-window p-6">
+        <button onclick="closeApp()" class="neon-border px-4 py-2 mb-4 neon-text">← BACK</button>
+        
+        <h2 class="text-2xl font-bold neon-text mb-4" style="font-family: 'Orbitron', sans-serif;">PROFILER</h2>
+        
+        <div class="camera-view mb-4">
+            <video id="profilerVideo" autoplay playsinline></video>
+            <div class="absolute top-2 left-2 right-2 text-center neon-text text-xs">
+                <div class="blink">⊙ SCANNING ⊙</div>
+            </div>
+        </div>
 
-/* Prevent accidental unload while camera on */
-window.addEventListener('beforeunload', (e)=>{
-  if(stream){ e.returnValue = "Camera in use"; return "Camera in use"; }
-});
-</script>
+        <button onclick="startProfilerCamera()" class="btn-hack w-full mb-4">START CAMERA</button>
+        <button onclick="scanPerson()" class="neon-border w-full p-3 neon-text mb-4">SCAN TARGET</button>
+
+        <div id="profileData" class="space-y-2"></div>
+    </div>
+
+    <!-- Car Control App -->
+    <div id="carControl" class="app-window p-6">
+        <button onclick="closeApp()" class="neon-border px-4 py-2 mb-4 neon-text">← BACK</button>
+        
+        <h2 class="text-2xl font-bold neon-text mb-4" style="font-family: 'Orbitron', sans-serif;">CAR CONTROL</h2>
+        
+        <div class="camera-view mb-4">
+            <video id="carVideo" autoplay playsinline></video>
+            <div class="absolute top-2 left-2 right-2 text-center neon-cyan text-xs">
+                <div class="blink">⊞ VEHICLE DETECTION ACTIVE ⊞</div>
+            </div>
+        </div>
+
+        <button onclick="startCarCamera()" class="btn-hack w-full mb-4">START CAMERA</button>
+        <button onclick="detectCar()" class="neon-border w-full p-3 neon-text mb-4">DETECT VEHICLE</button>
+
+        <div id="carData" class="space-y-2"></div>
+    </div>
+
+    <!-- Traffic Light App -->
+    <div id="traffic" class="app-window p-6">
+        <button onclick="closeApp()" class="neon-border px-4 py-2 mb-4 neon-text">← BACK</button>
+        
+        <h2 class="text-2xl font-bold neon-text mb-4" style="font-family: 'Orbitron', sans-serif;">TRAFFIC OVERRIDE</h2>
+        
+        <div class="camera-view mb-4">
+            <video id="trafficVideo" autoplay playsinline></video>
+            <div class="absolute top-2 left-2 right-2 text-center neon-purple text-xs">
+                <div class="blink">◈ SIGNAL DETECTION ◈</div>
+            </div>
+        </div>
+
+        <button onclick="startTrafficCamera()" class="btn-hack w-full mb-4">START CAMERA</button>
+        <button onclick="detectTrafficLight()" class="neon-border w-full p-3 neon-text mb-4">DETECT SIGNAL</button>
+
+        <div id="trafficControls" class="hidden space-y-3">
+            <button onclick="hackTrafficLight('green')" class="neon-border w-full p-3 text-green-400">FORCE GREEN</button>
+            <button onclick="hackTrafficLight('red')" class="neon-border w-full p-3 text-red-400">FORCE RED</button>
+            <button onclick="hackTrafficLight('cycle')" class="neon-border w-full p-3 neon-cyan">CYCLE SEQUENCE</button>
+        </div>
+
+        <div id="trafficStatus" class="mt-4"></div>
+    </div>
+
+    <!-- Research App -->
+    <div id="research" class="app-window p-6">
+        <button onclick="closeApp()" class="neon-border px-4 py-2 mb-4 neon-text">← BACK</button>
+        
+        <h2 class="text-2xl font-bold neon-text mb-4" style="font-family: 'Orbitron', sans-serif;">RESEARCH</h2>
+        
+        <div class="mb-4 neon-border p-3 bg-black bg-opacity-50">
+            <div class="text-xs neon-cyan">RESEARCH POINTS: <span id="researchPoints" class="neon-text font-bold">100</span></div>
+        </div>
+
+        <div class="space-y-6">
+            <!-- Upgrade Tree 1 -->
+            <div>
+                <h3 class="neon-purple text-sm mb-3">NETWORK HACKING</h3>
+                <div class="flex justify-around items-center">
+                    <div class="upgrade-node unlocked" data-cost="0" onclick="unlockUpgrade(this, 'Network Scanner')">
+                        <div class="text-center">
+                            <div class="text-2xl">📡</div>
+                            <div class="text-xs">Scanner</div>
+                        </div>
+                    </div>
+                    <div class="text-neon-text">→</div>
+                    <div class="upgrade-node" data-cost="30" onclick="unlockUpgrade(this, 'Signal Jammer')">
+                        <div class="text-center">
+                            <div class="text-2xl">📵</div>
+                            <div class="text-xs">Jammer</div>
+                        </div>
+                    </div>
+                    <div class="text-neon-text">→</div>
+                    <div class="upgrade-node" data-cost="50" onclick="unlockUpgrade(this, 'Network Worm')">
+                        <div class="text-center">
+                            <div class="text-2xl">🐛</div>
+                            <div class="text-xs">Worm</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upgrade Tree 2 -->
+            <div>
+                <h3 class="neon-purple text-sm mb-3">URBAN INFRASTRUCTURE</h3>
+                <div class="flex justify-around items-center">
+                    <div class="upgrade-node unlocked" data-cost="0" onclick="unlockUpgrade(this, 'Traffic Light')">
+                        <div class="text-center">
+                            <div class="text-2xl">🚦</div>
+                            <div class="text-xs">Traffic</div>
+                        </div>
+                    </div>
+                    <div class="text-neon-text">→</div>
+                    <div class="upgrade-node" data-cost="40" onclick="unlockUpgrade(this, 'Authority Scrambler')">
+                        <div class="text-center">
+                            <div class="text-2xl">🚨</div>
+                            <div class="text-xs">Scrambler</div>
+                        </div>
+                    </div>
+                    <div class="text-neon-text">→</div>
+                    <div class="upgrade-node" data-cost="60" onclick="unlockUpgrade(this, 'City Grid Control')">
+                        <div class="text-center">
+                            <div class="text-2xl">🏙️</div>
+                            <div class="text-xs">Grid</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upgrade Tree 3 -->
+            <div>
+                <h3 class="neon-purple text-sm mb-3">SOCIAL ENGINEERING</h3>
+                <div class="flex justify-around items-center">
+                    <div class="upgrade-node unlocked" data-cost="0" onclick="unlockUpgrade(this, 'Basic Profiler')">
+                        <div class="text-center">
+                            <div class="text-2xl">👤</div>
+                            <div class="text-xs">Profile</div>
+                        </div>
+                    </div>
+                    <div class="text-neon-text">→</div>
+                    <div class="upgrade-node" data-cost="35" onclick="unlockUpgrade(this, 'Deep Scan')">
+                        <div class="text-center">
+                            <div class="text-2xl">🔍</div>
+                            <div class="text-xs">DeepScan</div>
+                        </div>
+                    </div>
+                    <div class="text-neon-text">→</div>
+                    <div class="upgrade-node" data-cost="55" onclick="unlockUpgrade(this, 'Identity Theft')">
+                        <div class="text-center">
+                            <div class="text-2xl">🎭</div>
+                            <div class="text-xs">ID Theft</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Media Player App -->
+    <div id="media" class="app-window p-6">
+        <button onclick="closeApp()" class="neon-border px-4 py-2 mb-4 neon-text">← BACK</button>
+        
+        <h2 class="text-2xl font-bold neon-text mb-4" style="font-family: 'Orbitron', sans-serif;">MEDIA PLAYER</h2>
+        
+        <div class="neon-border p-6 mb-4 text-center">
+            <div class="text-6xl mb-4"><span id="mediaIcon">▶️</span></div>
+            <div class="neon-purple text-xl mb-2" id="trackName">Cyberpunk Beats</div>
+            <div class="text-xs text-gray-400" id="artistName">DedSec Underground</div>
+            
+            <div class="progress-bar mt-4">
+                <div class="progress-fill" id="progressBar" style="width: 0%"></div>
+            </div>
+            <div class="flex justify-between text-xs mt-2 text-gray-400">
+                <span id="currentTime">0:00</span>
+                <span id="duration">3:47</span>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-3 mb-4">
+            <button onclick="previousTrack()" class="neon-border p-4 text-2xl neon-text">⏮</button>
+            <button onclick="togglePlay()" class="btn-hack p-4 text-2xl" id="playBtn">▶</button>
+            <button onclick="nextTrack()" class="neon-border p-4 text-2xl neon-text">⏭</button>
+        </div>
+
+        <div class="neon-border p-4">
+            <h3 class="neon-cyan text-sm mb-3">PLAYLIST</h3>
+            <div class="space-y-2 text-xs" id="playlist">
+                <div class="p-2 bg-black bg-opacity-50 neon-border cursor-pointer hover:bg-opacity-70" onclick="selectTrack(0)">
+                    <div class="neon-text">01. Cyberpunk Beats</div>
+                    <div class="text-gray-400">DedSec Underground</div>
+                </div>
+                <div class="p-2 bg-black bg-opacity-50 border border-gray-700 cursor-pointer hover:bg-opacity-70" onclick="selectTrack(1)">
+                    <div class="text-gray-300">02. Digital Resistance</div>
+                    <div class="text-gray-400">Anonymous Collective</div>
+                </div>
+                <div class="p-2 bg-black bg-opacity-50 border border-gray-700 cursor-pointer hover:bg-opacity-70" onclick="selectTrack(2)">
+                    <div class="text-gray-300">03. Neon Dreams</div>
+                    <div class="text-gray-400">Synth Hackers</div>
+                </div>
+                <div class="p-2 bg-black bg-opacity-50 border border-gray-700 cursor-pointer hover:bg-opacity-70" onclick="selectTrack(3)">
+                    <div class="text-gray-300">04. System Override</div>
+                    <div class="text-gray-400">Code Breakers</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Know-It-All App -->
+    <div id="knowItAll" class="app-window p-6">
+        <button onclick="closeApp()" class="neon-border px-4 py-2 mb-4 neon-text">← BACK</button>
+        
+        <h2 class="text-2xl font-bold neon-text mb-4" style="font-family: 'Orbitron', sans-serif;">KNOW-IT-ALL</h2>
+        
+        <div class="neon-border p-4 mb-4">
+            <input type="text" id="searchInput" placeholder="Search anything..." 
+                   class="w-full bg-black text-neon-text p-3 outline-none" 
+                   onkeypress="if(event.key==='Enter') searchFact()">
+        </div>
+
+        <button onclick="searchFact()" class="btn-hack w-full mb-4">SEARCH DATABASE</button>
+        <button onclick="randomFact()" class="neon-border w-full p-3 neon-purple mb-4">RANDOM FACT</button>
+
+        <div id="factDisplay" class="neon-border p-4 bg-black bg-opacity-50 min-h-[200px]">
+            <div class="text-center text-gray-500 text-sm">
+                // SEARCH FOR INFORMATION //
+            </div>
+        </div>
+    </div>
+
+    <!-- App Shop -->
+    <div id="appShop" class="app-window p-6">
+        <button onclick="closeApp()" class="neon-border px-4 py-2 mb-4 neon-text">← BACK</button>
+        
+        <h2 class="text-2xl font-bold neon-text mb-4" style="font-family: 'Orbitron', sans-serif;">APP SHOP</h2>
+        
+        <div class="space-y-3" id="appList">
+            <div class="neon-border p-4 flex justify-between items-center">
+                <div>
+                    <div class="neon-purple text-sm">🔓 Lockpick Pro</div>
+                    <div class="text-xs text-gray-400">Bypass any security system</div>
+                    <div class="text-xs neon-cyan mt-1">★★★★☆ 4.2 (1,847 reviews)</div>
+                </div>
+                <button class="btn-hack px-4 py-2 text-xs" onclick="installApp(this)">INSTALL</button>
+            </div>
+
+            <div class="neon-border p-4 flex justify-between items-center">
+                <div>
+                    <div class="neon-purple text-sm">📡 WiFi Infiltrator</div>
+                    <div class="text-xs text-gray-400">Access any network instantly</div>
+                    <div class="text-xs neon-cyan mt-1">★★★★★ 4.9 (3,241 reviews)</div>
+                </div>
+                <button class="btn-hack px-4 py-2 text-xs" onclick="installApp(this)">INSTALL</button>
+            </div>
+
+            <div class="neon-border p-4 flex justify-between items-center">
+                <div>
+                    <div class="neon-purple text-sm">💾 Data Miner</div>
+                    <div class="text-xs text-gray-400">Extract hidden data from devices</div>
+                    <div class="text-xs neon-cyan mt-1">★★★☆☆ 3.7 (892 reviews)</div>
+                </div>
+                <button class="btn-hack px-4 py-2 text-xs" onclick="installApp(this)">INSTALL</button>
+            </div>
+
+            <div class="neon-border p-4 flex justify-between items-center">
+                <div>
+                    <div class="neon-purple text-sm">🎭 DeepFake Generator</div>
+                    <div class="text-xs text-gray-400">Create realistic fake identities</div>
+                    <div class="text-xs neon-cyan mt-1">★★★★☆ 4.5 (2,156 reviews)</div>
+                </div>
+                <button class="btn-hack px-4 py-2 text-xs" onclick="installApp(this)">INSTALL</button>
+            </div>
+
+            <div class="neon-border p-4 flex justify-between items-center">
+                <div>
+                    <div class="neon-purple text-sm">🚨 Police Scanner</div>
+                    <div class="text-xs text-gray-400">Monitor law enforcement frequencies</div>
+                    <div class="text-xs neon-cyan mt-1">★★★★☆ 4.3 (1,523 reviews)</div>
+                </div>
+                <button class="btn-hack px-4 py-2 text-xs" onclick="installApp(this)">INSTALL</button>
+            </div>
+
+            <div class="neon-border p-4 flex justify-between items-center">
+                <div>
+                    <div class="neon-purple text-sm">🔐 CryptoVault</div>
+                    <div class="text-xs text-gray-400">Secure cryptocurrency wallet</div>
+                    <div class="text-xs neon-cyan mt-1">★★★★★ 4.8 (5,721 reviews)</div>
+                </div>
+                <button class="btn-hack px-4 py-2 text-xs" onclick="installApp(this)">INSTALL</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentApp = null;
+        let hackCount = 0;
+        let targetCount = 0;
+        let researchPoints = 100;
+        let isPlaying = false;
+        let currentTrack = 0;
+        let playProgress = 0;
+        let playInterval = null;
+
+        const tracks = [
+            { name: 'Cyberpunk Beats', artist: 'DedSec Underground', duration: 227 },
+            { name: 'Digital Resistance', artist: 'Anonymous Collective', duration: 195 },
+            { name: 'Neon Dreams', artist: 'Synth Hackers', duration: 242 },
+            { name: 'System Override', artist: 'Code Breakers', duration: 213 }
+        ];
+
+        // Update time
+        function updateTime() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            document.getElementById('statusTime').textContent = `${hours}:${minutes}`;
+        }
+        setInterval(updateTime, 1000);
+        updateTime();
+
+        // App Navigation
+        function openApp(appId) {
+            currentApp = appId;
+            document.getElementById('homeScreen').style.display = 'none';
+            document.getElementById(appId).classList.add('active');
+            
+            // Add glitch effect
+            setTimeout(() => {
+                document.getElementById(appId).style.display = 'block';
+            }, 50);
+        }
+
+        function closeApp() {
+            if (currentApp) {
+                document.getElementById(currentApp).classList.remove('active');
+                setTimeout(() => {
+                    document.getElementById(currentApp).style.display = 'none';
+                    document.getElementById('homeScreen').style.display = 'block';
+                }, 300);
+                
+                // Stop any active cameras
+                stopAllCameras();
+                currentApp = null;
+            }
+        }
+
+        function stopAllCameras() {
+            ['profilerVideo', 'carVideo', 'trafficVideo'].forEach(id => {
+                const video = document.getElementById(id);
+                if (video.srcObject) {
+                    video.srcObject.getTracks().forEach(track => track.stop());
+                    video.srcObject = null;
+                }
+            });
+        }
+
+        // DedSec Hub Functions
+        function generateAlert() {
+            const alerts = [
+                { title: '⚠ FIREWALL BREACH', desc: 'Unauthorized access detected' },
+                { title: '🔓 ENCRYPTION BROKEN', desc: 'AES-256 cracked in 2.3 seconds' },
+                { title: '📡 SATELLITE HIJACKED', desc: 'Control transferred to DedSec' },
+                { title: '💰 CRYPTO MINED', desc: '0.00047 BTC transferred' },
+                { title: '🎯 TARGET ACQUIRED', desc: 'New surveillance subject identified' },
+                { title: '🚨 ALERT SUPPRESSED', desc: 'Police dispatch delayed 5 minutes' }
+            ];
+            
+            const alert = alerts[Math.floor(Math.random() * alerts.length)];
+            const notif = document.createElement('div');
+            notif.className = 'notification neon-border p-4';
+            notif.innerHTML = `
+                <div class="neon-purple font-bold mb-1">${alert.title}</div>
+                <div class="text-xs text-gray-400">${alert.desc}</div>
+            `;
+            document.body.appendChild(notif);
+            
+            hackCount++;
+            document.getElementById('hackCount').textContent = hackCount;
+            
+            setTimeout(() => {
+                notif.remove();
+            }, 3000);
+        }
+
+        // Profiler Functions
+        async function startProfilerCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: 'environment' } 
+                });
+                document.getElementById('profilerVideo').srcObject = stream;
+                showNotification('📷 CAMERA ACTIVE', 'Scanning for targets...');
+            } catch (err) {
+                showNotification('❌ CAMERA ERROR', 'Permission denied or unavailable');
+            }
+        }
+
+        function scanPerson() {
+            const names = ['Alex Rivera', 'Jordan Chen', 'Morgan Blake', 'Casey Martinez', 'Riley Park', 'Quinn Thompson', 'Avery Lee', 'Dakota Smith'];
+            const jobs = ['Software Engineer', 'Data Analyst', 'Security Guard', 'Teacher', 'Nurse', 'Artist', 'Accountant', 'Sales Manager', 'Barista', 'CEO'];
+            const traits = ['Anxious', 'Confident', 'Paranoid', 'Friendly', 'Aggressive', 'Timid', 'Arrogant', 'Humble', 'Suspicious', 'Naive'];
+            const hobbies = ['Photography', 'Gaming', 'Reading', 'Hiking', 'Cooking', 'Music', 'Sports', 'Gardening', 'Collecting'];
+            const crimes = ['Clean Record', 'Parking Violations x3', 'Shoplifting (2019)', 'DUI (2020)', 'Fraud Investigation', 'Tax Evasion Suspect', 'None'];
+            
+            const profile = {
+                name: names[Math.floor(Math.random() * names.length)],
+                id: 'ID-' + Math.random().toString(36).substr(2, 9).toUpperCase(),
+                job: jobs[Math.floor(Math.random() * jobs.length)],
+                income: '$' + (Math.floor(Math.random() * 150000) + 25000).toLocaleString(),
+                traits: [
+                    traits[Math.floor(Math.random() * traits.length)],
+                    traits[Math.floor(Math.random() * traits.length)]
+                ],
+                crime: crimes[Math.floor(Math.random() * crimes.length)],
+                hobbies: [
+                    hobbies[Math.floor(Math.random() * hobbies.length)],
+                    hobbies[Math.floor(Math.random() * hobbies.length)]
+                ]
+            };
+
+            document.getElementById('profileData').innerHTML = `
+                <div class="neon-border p-4 bg-black bg-opacity-50">
+                    <div class="neon-purple text-lg font-bold mb-3">TARGET ACQUIRED</div>
+                    <div class="space-y-2 text-sm">
+                        <div><span class="neon-cyan">NAME:</span> ${profile.name}</div>
+                        <div><span class="neon-cyan">ID:</span> ${profile.id}</div>
+                        <div><span class="neon-cyan">OCCUPATION:</span> ${profile.job}</div>
+                        <div><span class="neon-cyan">INCOME:</span> ${profile.income}</div>
+                        <div><span class="neon-cyan">PERSONALITY:</span> ${profile.traits.join(', ')}</div>
+                        <div><span class="neon-cyan">HOBBIES:</span> ${profile.hobbies.join(', ')}</div>
+                        <div><span class="neon-cyan">CRIMINAL RECORD:</span> ${profile.crime}</div>
+                    </div>
+                </div>
+            `;
+
+            targetCount++;
+            document.getElementById('targetCount').textContent = targetCount;
+            showNotification('✅ SCAN COMPLETE', 'Profile data extracted');
+        }
+
+        // Car Control Functions
+        async function startCarCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: 'environment' } 
+                });
+                document.getElementById('carVideo').srcObject = stream;
+                showNotification('📷 CAMERA ACTIVE', 'Scanning for vehicles...');
+            } catch (err) {
+                showNotification('❌ CAMERA ERROR', 'Permission denied or unavailable');
+            }
+        }
+
+        function detectCar() {
+            const makes = ['Tesla', 'BMW', 'Audi', 'Mercedes', 'Toyota', 'Honda', 'Ford', 'Chevrolet'];
+            const models = ['Model S', 'X5', 'A4', 'C-Class', 'Camry', 'Civic', 'Mustang', 'Corvette'];
+            const colors = ['Black', 'White', 'Silver', 'Red', 'Blue', 'Gray'];
+            
+            const carId = 'CAR-ID-' + Math.random().toString(36).substr(2, 10).toUpperCase();
+            const make = makes[Math.floor(Math.random() * makes.length)];
+            const model = models[Math.floor(Math.random() * models.length)];
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            
+            document.getElementById('carData').innerHTML = `
+                <div class="neon-border p-4 bg-black bg-opacity-50 mb-4">
+                    <div class="neon-purple text-lg font-bold mb-3">VEHICLE DETECTED</div>
+                    <div class="space-y-2 text-sm">
+                        <div><span class="neon-cyan">VEHICLE ID:</span> ${carId}</div>
+                        <div><span class="neon-cyan">MAKE/MODEL:</span> ${make} ${model}</div>
+                        <div><span class="neon-cyan">COLOR:</span> ${color}</div>
+                        <div><span class="neon-cyan">STATUS:</span> <span class="text-green-400">ACCESSIBLE</span></div>
+                    </div>
+                </div>
+                
+                <div class="space-y-3">
+                    <button onclick="carCommand('start')" class="neon-border w-full p-3 neon-text">🔑 REMOTE START</button>
+                    <button onclick="carCommand('unlock')" class="neon-border w-full p-3 neon-text">🔓 UNLOCK DOORS</button>
+                    <button onclick="carCommand('left')" class="neon-border w-full p-3 neon-text">← TURN LEFT</button>
+                    <button onclick="carCommand('right')" class="neon-border w-full p-3 neon-text">→ TURN RIGHT</button>
+                    <button onclick="carCommand('horn')" class="neon-border w-full p-3 neon-text">📢 HONK HORN</button>
+                </div>
+            `;
+            
+            showNotification('✅ VEHICLE LINKED', 'Control interface active');
+        }
+
+        function carCommand(cmd) {
+            const commands = {
+                start: 'Engine started remotely',
+                unlock: 'All doors unlocked',
+                left: 'Steering left 15°',
+                right: 'Steering right 15°',
+                horn: 'Horn activated'
+            };
+            
+            showNotification('⚙️ COMMAND SENT', commands[cmd]);
+            hackCount++;
+            document.getElementById('hackCount').textContent = hackCount;
+        }
+
+        // Traffic Light Functions
+        async function startTrafficCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: 'environment' } 
+                });
+                document.getElementById('trafficVideo').srcObject = stream;
+                showNotification('📷 CAMERA ACTIVE', 'Scanning for traffic signals...');
+            } catch (err) {
+                showNotification('❌ CAMERA ERROR', 'Permission denied or unavailable');
+            }
+        }
+
+        function detectTrafficLight() {
+            const lightId = 'TL-' + Math.random().toString(36).substr(2, 8).toUpperCase();
+            document.getElementById('trafficControls').classList.remove('hidden');
+            
+            document.getElementById('trafficStatus').innerHTML = `
+                <div class="neon-border p-4 bg-black bg-opacity-50">
+                    <div class="neon-purple text-lg font-bold mb-3">SIGNAL DETECTED</div>
+                    <div class="space-y-2 text-sm">
+                        <div><span class="neon-cyan">SIGNAL ID:</span> ${lightId}</div>
+                        <div><span class="neon-cyan">STATUS:</span> <span class="text-yellow-400">READY FOR OVERRIDE</span></div>
+                        <div><span class="neon-cyan">CONNECTION:</span> <span class="text-green-400">ESTABLISHED</span></div>
+                    </div>
+                </div>
+            `;
+            
+            showNotification('✅ SIGNAL LINKED', 'Override controls active');
+        }
+
+        function hackTrafficLight(action) {
+            const actions = {
+                green: { color: 'green', text: 'FORCING GREEN LIGHT' },
+                red: { color: 'red', text: 'FORCING RED LIGHT' },
+                cycle: { color: 'yellow', text: 'CYCLING SEQUENCE' }
+            };
+            
+            const act = actions[action];
+            const statusDiv = document.getElementById('trafficStatus');
+            
+            statusDiv.innerHTML += `
+                <div class="neon-border p-3 mt-3 bg-black bg-opacity-50">
+                    <div class="text-${act.color}-400 mb-2">${act.text}</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 0%;" id="trafficProgress"></div>
+                    </div>
+                </div>
+            `;
+            
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += 10;
+                document.getElementById('trafficProgress').style.width = progress + '%';
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    showNotification('✅ OVERRIDE COMPLETE', act.text + ' - SUCCESS');
+                    hackCount++;
+                    document.getElementById('hackCount').textContent = hackCount;
+                }
+            }, 100);
+        }
+
+        // Research Functions
+        function unlockUpgrade(node, name) {
+            if (node.classList.contains('unlocked')) {
+                showNotification('ℹ️ ALREADY UNLOCKED', name);
+                return;
+            }
+            
+            const cost = parseInt(node.getAttribute('data-cost'));
+            if (researchPoints >= cost) {
+                researchPoints -= cost;
+                document.getElementById('researchPoints').textContent = researchPoints;
+                node.classList.add('unlocked');
+                showNotification('✅ UNLOCKED', name + ' - ' + cost + ' points spent');
+                hackCount++;
+                document.getElementById('hackCount').textContent = hackCount;
+            } else {
+                showNotification('❌ INSUFFICIENT POINTS', 'Need ' + cost + ' points');
+            }
+        }
+
+        // Media Player Functions
+        function togglePlay() {
+            isPlaying = !isPlaying;
+            const btn = document.getElementById('playBtn');
+            const icon = document.getElementById('mediaIcon');
+            
+            if (isPlaying) {
+                btn.textContent = '⏸';
+                icon.textContent = '⏸️';
+                startPlayback();
+            } else {
+                btn.textContent = '▶';
+                icon.textContent = '▶️';
+                stopPlayback();
+            }
+        }
+
+        function startPlayback() {
+            playInterval = setInterval(() => {
+                playProgress++;
+                const track = tracks[currentTrack];
+                if (playProgress >= track.duration) {
+                    nextTrack();
+                } else {
+                    updateProgress();
+                }
+            }, 1000);
+        }
+
+        function stopPlayback() {
+            if (playInterval) {
+                clearInterval(playInterval);
+                playInterval = null;
+            }
+        }
+
+        function updateProgress() {
+            const track = tracks[currentTrack];
+            const percent = (playProgress / track.duration) * 100;
+            document.getElementById('progressBar').style.width = percent + '%';
+            
+            const mins = Math.floor(playProgress / 60);
+            const secs = playProgress % 60;
+            document.getElementById('currentTime').textContent = `${mins}:${String(secs).padStart(2, '0')}`;
+        }
+
+        function selectTrack(index) {
+            currentTrack = index;
+            playProgress = 0;
+            loadTrack();
+            if (isPlaying) {
+                stopPlayback();
+                startPlayback();
+            }
+        }
+
+        function nextTrack() {
+            currentTrack = (currentTrack + 1) % tracks.length;
+            playProgress = 0;
+            loadTrack();
+            if (isPlaying) {
+                stopPlayback();
+                startPlayback();
+            }
+        }
+
+        function previousTrack() {
+            currentTrack = (currentTrack - 1 + tracks.length) % tracks.length;
+            playProgress = 0;
+            loadTrack();
+            if (isPlaying) {
+                stopPlayback();
+                startPlayback();
+            }
+        }
+
+        function loadTrack() {
+            const track = tracks[currentTrack];
+            document.getElementById('trackName').textContent = track.name;
+            document.getElementById('artistName').textContent = track.artist;
+            
+            const mins = Math.floor(track.duration / 60);
+            const secs = track.duration % 60;
+            document.getElementById('duration').textContent = `${mins}:${String(secs).padStart(2, '0')}`;
+            
+            // Update playlist highlight
+            const playlistItems = document.querySelectorAll('#playlist > div');
+            playlistItems.forEach((item, index) => {
+                if (index === currentTrack) {
+                    item.classList.add('neon-border');
+                    item.classList.remove('border-gray-700');
+                } else {
+                    item.classList.remove('neon-border');
+                    item.classList.add('border-gray-700');
+                }
+            });
+            
+            updateProgress();
+        }
+
+        // Know-It-All Functions
+        function searchFact() {
+            const query = document.getElementById('searchInput').value || 'random topic';
+            generateFact(query);
+        }
+
+        function randomFact() {
+            const topics = ['quantum computing', 'artificial intelligence', 'blockchain', 'cybersecurity', 'neural networks', 'encryption', 'data mining', 'cloud computing'];
+            const topic = topics[Math.floor(Math.random() * topics.length)];
+            generateFact(topic);
+        }
+
+        function generateFact(topic) {
+            const facts = [
+                `${topic} was first theorized in ${1950 + Math.floor(Math.random() * 70)} by researchers at MIT.`,
+                `Studies show that ${topic} increases efficiency by ${Math.floor(Math.random() * 300) + 50}% in controlled environments.`,
+                `The global market for ${topic} is expected to reach $${Math.floor(Math.random() * 900) + 100} billion by 2030.`,
+                `${topic} uses approximately ${Math.floor(Math.random() * 10000)} different algorithms to process data.`,
+                `Only ${Math.floor(Math.random() * 30) + 5}% of the world population understands ${topic} at an advanced level.`,
+                `${topic} can process ${Math.floor(Math.random() * 1000000)} operations per second on modern hardware.`,
+                `The first implementation of ${topic} was created by a team of ${Math.floor(Math.random() * 50) + 3} scientists.`,
+                `${topic} is protected by ${Math.floor(Math.random() * 500) + 100} international patents worldwide.`
+            ];
+            
+            const fact = facts[Math.floor(Math.random() * facts.length)];
+            
+            document.getElementById('factDisplay').innerHTML = `
+                <div class="neon-purple text-lg font-bold mb-3">${topic.toUpperCase()}</div>
+                <div class="text-sm text-gray-300 mb-4">${fact}</div>
+                <div class="text-xs neon-cyan">
+                    SOURCE: DedSec Database // ACCURACY: ${Math.floor(Math.random() * 20) + 80}% // 
+                    LAST UPDATED: ${new Date().toLocaleDateString()}
+                </div>
+            `;
+        }
+
+        // App Shop Functions
+        function installApp(button) {
+            button.textContent = 'INSTALLING...';
+            button.classList.add('opacity-50');
+            
+            setTimeout(() => {
+                let progress = 0;
+                const interval = setInterval(() => {
+                    progress += 10;
+                    button.textContent = `${progress}%`;
+                    
+                    if (progress >= 100) {
+                        clearInterval(interval);
+                        button.textContent = 'INSTALLED';
+                        button.classList.remove('btn-hack');
+                        button.classList.add('neon-border', 'neon-text');
+                        showNotification('✅ INSTALLATION COMPLETE', 'App ready to use');
+                        hackCount++;
+                        document.getElementById('hackCount').textContent = hackCount;
+                    }
+                }, 200);
+            }, 500);
+        }
+
+        // Notification System
+        function showNotification(title, message) {
+            const notif = document.createElement('div');
+            notif.className = 'notification';
+            notif.innerHTML = `
+                <div class="neon-purple font-bold mb-1">${title}</div>
+                <div class="text-xs neon-text">${message}</div>
+            `;
+            document.body.appendChild(notif);
+            
+            setTimeout(() => {
+                notif.style.opacity = '0';
+                setTimeout(() => notif.remove(), 300);
+            }, 3000);
+        }
+
+        // Random system alerts
+        setInterval(() => {
+            if (currentApp === 'dedsecHub') {
+                const chance = Math.random();
+                if (chance > 0.7) {
+                    generateAlert();
+                }
+            }
+        }, 5000);
+
+        // Initialize
+        loadTrack();
+    </script>
 </body>
 </html>
